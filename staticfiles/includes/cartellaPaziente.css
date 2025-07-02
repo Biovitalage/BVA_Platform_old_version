@@ -1,0 +1,412 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+  
+:root {
+    --dark1: #0c042c;
+    --dark2: #0c214b;
+    --light1: #c3ccd4;
+  
+    --neutral-gray: #b0b8c1;
+    --neutral-bg-color: rgba(176, 184, 193, 0.2);
+    --neutral-bg-color-contrast: rgba(124, 81, 149, 0.2);
+  
+    --contrast-color: #3a255d;
+    --contrast-color-shadow: #3b255d2c;
+    --contrast-color2: #6a2dcc;
+    --positive-color: #2ac670;
+  
+    --tittle1: whitesmoke;
+    --tittle2: #2ac4dd;
+  
+    --circle-color-shadow: rgba(42, 196, 221, 0.15);
+    --circle-color-shadow-two: rgba(42, 196, 221, 0.05);
+    --text-color: rgb(34, 34, 34);
+}
+
+
+.containerStyle{
+    padding: 20px;
+}
+
+.header-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.header-card h2,
+.section-tittle{
+    color: var(--dark2);
+    font-size: 25px;
+    padding-left: 12px;
+    font-weight: bold;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
+}
+.card-body{
+    display: flex;
+    flex-wrap: wrap;
+}
+.card-body p{
+    width: 30%;
+    font-size: 20px
+}
+
+.button-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    grid-gap: 10px;
+    padding-right: 10px;
+}
+.button-grid a img{
+    transition: transform 0.3s ease-in-out;
+    width: 40px;
+    height: 40px;
+}
+.button-grid a img:hover{
+    transform: scale(1.1);
+}
+strong{
+    color: var(--contrast-color);
+}
+
+
+
+.container-indicatori{
+    margin-top: -1rem;
+    display: grid;
+    grid-template-columns: 70% 29.2%;
+    gap: 15px;
+    height: 370px;
+}
+
+
+
+/* Clock style*/
+.score-clock-graph {
+    width: 100%;
+    height: 14rem;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}
+.clock {
+    position: relative;
+    width: 11%;
+    height: 60%; 
+    border-radius: 50%; 
+    margin: 16px;
+    background: conic-gradient(black 0%, #e0e0e0 0%); 
+}
+.inner {
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    background-color: white;
+    border-radius: 50%;
+    z-index: 1;
+}
+.percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: bold;
+    z-index: 2;
+    color: var(--contrast-color);
+}
+#clock-description{
+    position: absolute;
+    top: 110%;
+    text-align: center;
+    font-size: 18px;
+    width: 105%;
+    color: var(--text-color) ;
+}
+.card5 h2{
+    font-size: 25px;
+    font-weight: bold;
+    padding: 10px 0px;
+    color: var(--dark2);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+.blood-container div,
+.exam-container div{
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+.blood-container div img,
+.exam-container div img{
+    width: 40px;
+    margin-right: 1rem;
+}
+.blood-container div p,
+.exam-container div p{
+    font-size: 18px;
+}
+.blood-container div img,
+.exam-container div img{  
+    transition: transform 0.3s ease-in-out;
+}
+.blood-container div img:hover,
+.exam-container div img:hover{  
+    transform: scale(1.1);
+}
+
+#button-fix{
+    padding-top: 4px;
+}
+
+.dashboard {
+    margin-top: -1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+.card-graphic {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    height: 395px;
+    overflow: hidden;
+}
+
+.card-graphic .icon img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+}
+.card-graphic h3 {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+.card-graphic p {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.container_chart_dashboard{
+    width: 100%;
+    height: 150px;
+}
+
+.card-graphic canvas {
+    width: 100%;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+.card-graphic .data {
+    width: 100%;
+}
+.card-graphic .data table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.card-graphic .data table td {
+    text-align: left;
+    padding: 5px;
+    border-top: 1px solid #ddd;
+}
+
+
+
+
+.dashboard2 {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: 20px;
+    margin-top: -1rem;
+}
+.cardChart {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 100%;
+    overflow: hidden;
+    height: 400px;
+}
+.cardChart h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.container-chart-dashboard2{
+    width: 100%;
+    overflow: hidden;
+    height: 295px;
+}
+
+.cardChart canvas {
+    width: 100%;
+    object-fit: cover;
+}
+.cardChart h2{
+    font-size: 25px;
+    font-weight: bold;
+    color: var(--dark2);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    padding: 20px;
+}
+
+#userModal{
+    top: 5.3rem !important;
+}
+
+.contenitore-tabella{
+    padding: 0 20px;
+    margin: 15px 0;
+}
+
+.recent-patients h2{
+    font-size: 25px;
+    padding: 20px;
+    font-weight: bold;
+    color: var(--dark2);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+.content-table{
+    display: flex;
+    padding: 20px 0px;
+}
+.cella a img{
+    width: 40px;
+    transition: transform 0.3s ease-in-out;
+}
+.cella a img:hover{
+    transform: scale(1.1);
+}
+
+
+.conteiner-operation{
+    padding: 20px;
+    margin-top: -1rem;
+    display: flex;
+    gap: 20px;
+    height: 300px;
+}
+.card7{
+    background-image: url(https://www.dimi.univr.it/documenti/Iniziativa/immagine/immagine268271.jpeg);
+    position: relative;
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 100%;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+.backdrop{
+    position: absolute;
+    top: 0rem;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+    border-radius: 8px;
+}
+.card8{
+    background-image: url(https://www.3ds.com/assets/invest/2024-10/lsh-pharmaceutical-and-biotech-hero-banner-1920x600.jpg);
+    position: relative;
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 100%;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.card8 h2,
+.card7 h2{
+    z-index: 3;
+    color: var(--tittle1);
+    padding-left: 40px;
+    padding-bottom: 60px;
+    font-size: 25px;
+    font-weight: bold;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.card8 button,
+.card7 button{
+    z-index: 3;
+    margin-left: 2.5rem;
+}
+
+.button-style{
+    height: 80%;
+    width: 50%;
+    background-color: transparent;
+    border: 2px solid var(--contrast-color2);
+    box-shadow: 10px 10px 10px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 30px;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--tittle1);
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s;
+    z-index: 1;
+    height: 2rem;
+    width: 10rem;
+}
+.button-style::before {
+    content: "";
+    width: 100%;
+    height: 100%;
+    top: 0;
+    position: absolute;
+    left: 0;
+    background-color: var(--contrast-color2);
+    z-index: -1;
+    transition: width 0.4s ease;
+}
+.button-style::after {
+    content: "";
+    width: 0%;
+    height: 100%;
+    top: 0;
+    position: absolute;
+    right: 0;
+    background-color: var(--dark2);
+    z-index: -1;
+    transition: width 0.4s ease;
+}
+.button-style:hover::before {
+    width: 0%;
+}
+.button-style:hover::after {
+    width: 100%;
+}
+.button-style:hover {
+    color: #d3d3d3;
+}
+
+.risultati-ricerca{
+    border: 1px solid var(--contrast-color-shadow);
+}

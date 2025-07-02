@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    <link rel="stylesheet" href="{% static 'css/errori.css' %}" />
+
+    <title>BVA - Errore 500</title>
+</head>
+<body>
+
+    <div class="bg-wrapper">
+        <div class="background-container"></div>
+        
+        <div class="card-errore">
+            
+            
+            <img src="{% static 'image/Errore.png' %}" alt=""> 
+            <h3 style="margin-bottom: -2rem;">Errore</h3>
+           
+            
+            <h3 id="title">500</h3>
+          
+            <p class="subtitle">Ops....Qualcosa è andato storto,</p>
+            <p>Ci scusiamo per il disagio e invitiamo a riprovare più tardi.</p>
+        </div>
+    </div>
+      
+    
+</body>
+</html>

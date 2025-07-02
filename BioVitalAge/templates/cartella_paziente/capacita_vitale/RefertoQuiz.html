@@ -1,0 +1,589 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    <title>BioVitalAge - Referto Capacità Vitale</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/capacita_vitale/Referto.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+
+    <!-- Js Import  -->
+    <script src="{% static 'js/indicatorNew.js' %}" defer></script>
+    <script src="{% static 'js/cartella_paziente/capacita_vitale/generatePDFCapacitaVitale.js' %}" defer></script>
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+   
+    <!-- CDN Import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+</head>
+<body>
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBarPatient.html' %}
+
+    <!-- Disclaimer Modal -->
+    <div id="pdfDisclaimerModal" class="modal-pdf-container hidden">
+        <div class="modal-pdf-content">
+            <h2>Avviso Importante</h2>
+            <p>
+                Scaricando il PDF, confermi di accettare che i dati sensibili contenuti saranno gestiti in conformità alle
+                normative vigenti in materia di privacy, incluse le disposizioni del GDPR (Regolamento UE 2016/679).
+            </p>
+            <button id="closeDisclaimerBtn" class="btn-pdf-close">Chiudi</button>
+        </div>
+    </div>
+
+    <main>
+
+        <!-- MENU TRACE NAV BAR -->
+        <div class="main-title-nav">
+            <div class="back-tittle">
+                <a id="back" href="{% url 'etaVitale' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"
+                        alt="back_ico" title="Back to Results"></a>
+                <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                    <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                    </span> |
+                    <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                        Email: {{ persona.email }}
+                    </span>
+                    {% endif %}
+                </h2>
+            </div>
+    
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>
+                <p>»</p>
+                <a href="{% url 'etaVitale' persona.id %}">Capacità BioVitale</a>
+                <p>»</p>
+                <p class="breadcrumb">Referto Capacità Biovitale</p>
+            </div>
+        </div>
+    
+        <!-- DATI ANAGRAFICI -->
+        <!-- <div class="container_data anagraphic_data stampa">
+            <h3>Informazioni Personali</h3>
+            <div class="container_box">
+                <div class="info_container">
+                    <div class="field">
+                        <p>Nome:&nbsp;</p>
+                        <p id="name">{{ persona.name }}</p>
+                    </div>
+    
+                    <div class="field">
+                        <p>Cognome:&nbsp;</p>
+                        <p id="surname">{{ persona.surname }}</p>
+                    </div>
+    
+                    <div class="field">
+                        <p>Codice Fiscale:&nbsp;</p>
+                        <p id="codice_fiscale">{{ persona.codice_fiscale }}</p>
+                    </div>
+    
+                    <div class="field">
+                        <p>Città di nascita:&nbsp;</p>
+                        <p id="place_birth">{{ persona.place_of_birth }}</p>
+                    </div>
+    
+                    <div class="field">
+                        <p>Età:&nbsp;</p>
+                        <p id="chronological_age">{{ persona.chronological_age }}</p>
+                    </div>
+    
+                    <div class="field">
+                        <p>Data di nascita:&nbsp;</p>
+                        <p id="dob">{{ persona.dob }}</p>
+                    </div>
+                </div>
+            </div>
+        </div> -->
+
+
+
+        <!-- RISULTATO CAPACITA' VITALE -->
+        <div class="container-box-score">
+            <h3>Risultato del calcolo della Capacità Vitale : <span>{{ referto.punteggio }}</span></h3>
+            <p>
+                {{ testo_risultato }}
+            </p>
+
+            <div class="container-score">
+                <div class="score-box" style="width: 100%;">
+                    <div class="score-label">Capacità Vitale</div>
+                    <div class="track">
+                        <div class="bar" id="risultato"></div>
+                    </div>
+                    <div class="indicators">
+                        <span>0</span><span>5</span><span>10</span>
+                    </div>
+                </div>                
+            </div>
+        </div>
+
+        <!-- DOMINIO COGNITIVO  -->
+        <div class="container-box-score">
+            <div class="tittle-container">
+                <h3> Dominio Cognitivo </h3>
+                <p class="punteggio">MMSE : {{ datiEstesi.MMSE }} </p>
+            </div>
+
+            <div class="container-score">
+                <div class="score-box" style="width: 100%;">
+                    <div class="score-label">Test MMSE</div>
+                    <div class="track">
+                        <div class="bar" id="mmse"></div>
+                    </div>
+                    <div class="indicators">
+                        <span>0</span><span>1</span><span>2</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOMINIO PSICOLOGICO -->
+        <div class="container-box-score">
+            <div class="tittle-container">
+                <h3> Dominio Psicologico </h3>
+                <p class="punteggio">GDS : {{ datiEstesi.GDS }} </p>
+                <p class="punteggio">Locus of control : {{ datiEstesi.LOC }} </p>
+            </div>
+            <div class="container-score">
+                <div class="score-box" style="width: 50%;">
+                    <div class="score-label">GDS</div>
+                    <div class="track">
+                        <div class="bar" id="gds"></div>
+                    </div>
+                    <div class="indicators">
+                        <span>0</span><span>0.5</span><span>1</span>
+                    </div>
+                </div>
+    
+                <div class="score-box" style="width: 50%;">
+                    <div class="score-label">Locus of Control</div>
+                    <div class="track">
+                        <div class="bar" id="loc"></div>
+                    </div>
+                    <div class="indicators">
+                        <span>0</span><span>0.5</span><span>1</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DOMINIO SENSORIALE -->
+        <div class="container-box-score">
+            <div class="tittle-container">
+                <h3> Dominio Sensoriale </h3>
+                <p class="punteggio">Vista : {{ datiEstesi.Vista }} </p>
+                <p class="punteggio">Udito : {{ datiEstesi.Udito }} </p>
+            </div>
+            <div class="container-score">
+                <div class="score-box" style="width: 50%;">
+                    <div class="score-label">Vista</div>
+                    <div class="track">
+                        <div class="bar" id="Vista"></div>
+                    </div>
+                    <div class="indicators">
+                        <span>0</span><span>0.5</span><span>1</span>
+                    </div>
+                </div>
+    
+                <div class="score-box" style="width: 50%;">
+                    <div class="score-label">Udito</div>
+                    <div class="track">
+                        <div class="bar" id="Udito"></div>
+                    </div>
+                    <div class="indicators">
+                        <span>0</span><span>0.5</span><span>1</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOMINIO DELLA VITALITA' -->
+        <div class="container-box-score">
+            <div class="tittle-container">
+                <h3> Dominio della Vitalità </h3>
+                <p class="punteggio">HGS test: {{ datiEstesi.HGS }} </p>
+                <p class="punteggio">Peak flow test : {{ datiEstesi.PFT }} </p>
+            </div>
+            <div class="container-score">
+                <div class="score-box" style="width: 50%;">
+                    <div class="score-label">HGS test</div>
+                    <div class="track">
+                        <div class="bar" id="hgs"></div>
+                    </div>
+                    <div class="indicators">
+                        <span>Weak</span><span>Normal</span><span>Strong</span>
+                    </div>
+                </div>
+    
+                <div class="score-box" style="width: 50%;">
+                    <div class="score-label">Peak flow test</div>
+                    <div class="track">
+                        <div class="bar" id="pft"></div>
+                    </div>
+                    <div class="indicators">
+                        <span>0</span><span>0.5</span><span>1</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 1rem;">Sistema Immunitario</h3>
+
+            <div class="container-score" style="margin-top: 1rem;">
+                <div class="secondType-scoreBox">
+                    <p>ISQ</p>
+                    <p class="value">{{ datiEstesi.ISQ }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>BMI</p>
+                    <p class="value">{{ datiEstesi.BMI }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Circonferenza del polpaccio</p>
+                    <p class="value">{{ datiEstesi.CDP }}</p>
+                </div>
+            </div>
+
+            <div class="container-score" style="margin-top: 1rem;">
+
+                <div class="secondType-scoreBox" style="width: 50%;">
+                    <p>WHR</p>
+                    <p class="value">{{ datiEstesi.WHR }}</p>
+                </div>
+
+                <div class="secondType-scoreBox" style="width: 50%;">
+                    <p>Weist Height Ratio</p>
+                    <p class="value">{{ datiEstesi.WHR_Ratio }}</p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DOMINIO DELLA LOCOMOZIONE -->
+        <div class="container-box-score">
+            <h3>Dominio della Locomozione</h3>
+
+            <div class="container-score" style="margin-top: 1rem;">
+                <div class="secondType-scoreBox">
+                    <p>Chair stand test</p>
+                    <p class="value">{{ datiEstesi.CST }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Gait speed</p>
+                    <p class="value">{{ datiEstesi.GS }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Pick pencil test</p>
+                    <p class="value">{{ datiEstesi.PPT }}</p>
+                </div>
+            </div>
+
+            <div class="container-score" style="margin-top: 1rem;">
+                <div class="secondType-scoreBox" style="width: 50%;">
+                    <p>Questionario sarc_f</p>
+                    <p class="value">{{ datiEstesi.SARC_F }}</p>
+                </div>
+
+                <div class="secondType-scoreBox" style="width: 50%;">
+                    <p>fss</p>
+                    <p class="value">{{ datiEstesi.FSS }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BIOMARCATORI CIRCOLANTI DELL'INFIAMMAZIONE-->
+        <div class="container-box-score">
+            <h3>Biomarcatori Circolanti dell'Infiammazione</h3>
+
+            <div class="container-score" style="margin-top: 1rem;">
+                <div class="secondType-scoreBox">
+                    <p>Glic</p>
+                    <p class="value">{{ datiEstesi.Glic }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Emog</p>
+                    <p class="value">{{ datiEstesi.Emog }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Insu</p>
+                    <p class="value">{{ datiEstesi.Insu }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Pept_c</p>
+                    <p class="value">{{ datiEstesi.Pept_c }}</p>
+                </div>
+            </div>
+
+            <div class="container-score" style="margin-top: 1rem;">
+
+                <div class="secondType-scoreBox">
+                    <p>Interleuchina 6</p>
+                    <p class="value">{{ datiEstesi.Inter_6 }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>TNF (Tumor Necrosis 
+                        Factor) alfa </p>
+                    <p class="value">{{ datiEstesi.Tnf }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Mono %</p>
+                    <p class="value">{{ datiEstesi.Mono }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Mono </p>
+                    <p class="value">{{ datiEstesi.Mono_el }}</p>
+                </div>
+            </div>
+
+            <div class="container-score" style="margin-top: 1rem;">
+
+                <div class="secondType-scoreBox">
+                    <p>Albumina</p>
+                    <p class="value">{{ datiEstesi.albumina }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Clearance_urea </p>
+                    <p class="value">{{ datiEstesi.clearance_urea }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Igf_1</p>
+                    <p class="value">{{ datiEstesi.igf_1 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BIOMARCATORI CIRCOLANTI DEL METABOLISMO -->
+        <div class="container-box-score">
+            <h3>Biomarcatori Circolanti del Metabolismo</h3>
+
+            <div class="container-score" style="margin-top: 1rem;">
+                <div class="secondType-scoreBox">
+                    <p>Inter_6</p>
+                    <p class="value">{{ datiEstesi.Inter_6 }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Tnf</p>
+                    <p class="value">{{ datiEstesi.Tnf }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Mono </p>
+                    <p class="value">{{ datiEstesi.Mono }}</p>
+                </div>
+                <div class="secondType-scoreBox">
+                    <p>Mono_el </p>
+                    <p class="value">{{ datiEstesi.Mono_el }}</p>
+                </div>
+            </div>
+
+            <div class="container-score" style="margin-top: 1rem;">
+                <div class="secondType-scoreBox">
+                    <p>Proteins_c </p>
+                    <p class="value">{{ datiEstesi.Proteins_c }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>wbc</p>
+                    <p class="value">{{ datiEstesi.wbc }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Lymph</p>
+                    <p class="value">{{ datiEstesi.Lymph }}</p>
+                </div>
+
+                <div class="secondType-scoreBox">
+                    <p>Lymph_el </p>
+                    <p class="value">{{ datiEstesi.Lymph_el }}</p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- GENERA PDF COMPLETO -->
+        <button class="generatePDFButton button" id="pdfCapacitaVitale" 
+            data-name = "{{ persona.name }}"
+            data-surname = "{{ persona.surname }}"
+            data-dob = "{{ persona.dob }}"
+            data-cf = "{{ persona.codice_fiscale }}"
+            data-place_birth = "{{ persona.place_of_birth }}"
+            data-chronological_age = "{{ persona.chronological_age }}"
+            data-risultato_capacita = "{{ referto.punteggio }}"
+            data-risultato_mmse = "{{ datiEstesi.MMSE }}"
+            data-risultato_gds = "{{ datiEstesi.GDS }}"
+            data-risultato_loc = "{{ datiEstesi.LOC }}"
+            data-risultato_vista = "{{ datiEstesi.Vista }}"
+            data-risultato_udito = "{{ datiEstesi.Udito }}"
+            data-risultato_hgs = "{{ datiEstesi.HGS }}"
+            data-risultato_pft = "{{ datiEstesi.PFT }}"
+            data-risultato_isq = "{{ datiEstesi.ISQ }}"
+            data-risultato_bmi = "{{ datiEstesi.BMI }}"
+            data-risultato_cdp = "{{ datiEstesi.CDP }}"
+            data-risultato_whr = "{{ datiEstesi.WHR }}"
+            data-risultato_whr_ratio = "{{ datiEstesi.WHR_Ratio }}"
+            data-risultato_cst = "{{ datiEstesi.CST }}"
+            data-risultato_gs = "{{ datiEstesi.GS }}"
+
+            data-risultato_ppt = "{{ datiEstesi.PPT }}"
+            data-risultato_sarc_f = "{{ datiEstesi.SARC_F }}"
+        >
+
+            <span class="button__icon-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg">
+                    <path d="M6 2H14L18 6V20C18 21.1 17.1 22 16 22H6C4.9 22 4 21.1 4 20V4C4 2.9 4.9 2 6 2Z"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <path d="M14 2V6H18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round"></path>
+                </svg>
+    
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18"
+                    class="button__icon-svg button__icon-svg--copy">
+                    <path d="M6 2H14L18 6V20C18 21.1 17.1 22 16 22H6C4.9 22 4 21.1 4 20V4C4 2.9 4.9 2 6 2Z"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <path d="M14 2V6H18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round"></path>
+                </svg>
+            </span>
+            Genera PDF Completo
+        </button>
+    
+        <!-- SPINNER -->
+        <div id="spinnerBackdrop">
+            <!-- From Uiverse.io by milley69 -->
+            <!-- From Uiverse.io by Nawsome -->
+            <div id="snipperStampa">
+                <div class="slide"><i></i></div>
+                <div class="paper"></div>
+                <div class="keyboard"></div>
+            </div>
+            <!-- <div id="snipperStampa">
+                        <svg width="128px" height="96px" viewBox="0 0 64 48" style="width: 128px; height: 96px;">
+                            <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="back"></polyline>
+                            <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="front"></polyline>
+                        </svg>
+                    </div> -->
+        </div>
+    
+        <!-- SCRIPT -->
+        <script>
+            /*  -----------------------------------------------------------------------------------------------
+            function to transform the first letter of a string to uppercase
+            --------------------------------------------------------------------------------------------------- */
+            document.addEventListener("DOMContentLoaded", function () {
+                // Seleziona tutti gli elementi con la classe 'field'
+                let fields = document.querySelectorAll(".info_container .field");
+
+                fields.forEach((field) => {
+                    let label = field.querySelector("p:first-of-type"); // Prende il primo <p> (etichetta)
+                    let valueP = field.querySelector("p:nth-of-type(2)"); // Prende il secondo <p> (valore)
+
+                    if (label && valueP) {
+                        let labelText = label.innerText.trim();
+
+                        // Controlla se il campo è "Nome:" o "Cognome:"
+                        if (labelText === "Nome:" || labelText === "Cognome:") {
+                            let text = valueP.innerText.trim();
+                            if (text.length > 0) {
+                                // Converte la prima lettera in maiuscolo di ogni parola se la parola è tutta in minuscolo
+                                let formattedText = text
+                                    .split(" ") // Divide il testo in parole
+                                    .map((word) =>
+                                        word === word.toLowerCase()
+                                            ? word.charAt(0).toUpperCase() + word.slice(1)
+                                            : word
+                                    ) // Se è minuscola, la corregge
+                                    .join(" "); // Ricompone la stringa
+
+                                valueP.innerText = formattedText;
+                            }
+                        }
+                    }
+                });
+            });
+            
+            
+            /*  -----------------------------------------------------------------------------------------------
+            Set Score with gsap
+            --------------------------------------------------------------------------------------------------- */
+        
+            function setScore(id, score, maxScore = 3) {
+                const percentage = (score / maxScore) * 100;
+                gsap.to(`#${id}`, {
+                    width: `${percentage}%`,
+                    duration: 1.5,
+                    ease: "power2.out",
+                });
+            }
+
+            setScore("risultato",{{ referto.punteggio }});
+            setScore("mmse",{{ datiEstesi.MMSE }});
+            setScore("gds",{{ datiEstesi.GDS }});
+            setScore("loc",{{ datiEstesi.LOC }});
+            setScore("Vista",{{ datiEstesi.Vista }});
+            setScore("Udito",{{ datiEstesi.Udito }});
+            
+
+            let hgsValue = "{{ datiEstesi.HGS }}";
+
+            let score;
+            if (hgsValue === "Weak") {
+                score = 0.1;
+            } else if (hgsValue === "Normal") {
+                score = 1.5;
+            } else {
+                score = 3;
+            }
+            setScore("hgs", score);
+            setScore("pft",{{ datiEstesi.PFT }});
+    
+
+        </script>
+        </div>
+    </main>
+
+</body>
+</html>
+

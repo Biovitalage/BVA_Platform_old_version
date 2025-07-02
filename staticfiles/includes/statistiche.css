@@ -1,0 +1,69 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Quicksand", sans-serif;
+}
+:root {
+    --dark1: #0c042c;
+    --dark2: #0c214b;
+    --light1: #c3ccd4;
+  
+    --neutral-gray: #b0b8c1;
+    --neutral-bg-color: rgba(176, 184, 193, 0.2);
+    --neutral-bg-color-contrast: rgba(124, 81, 149, 0.2);
+  
+    --contrast-color: #3a255d;
+    --contrast-color-shadow: #3b255d2c;
+    --contrast-color2: #6a2dcc;
+    --positive-color: #2ac670;
+  
+    --tittle1: whitesmoke;
+    --tittle2: #2ac4dd;
+  
+    --circle-color-shadow: rgba(42, 196, 221, 0.15);
+    --circle-color-shadow-two: rgba(42, 196, 221, 0.05);
+    --card-color: #f8f4fc;
+}
+::-webkit-scrollbar {
+    width: 12px; 
+}
+::-webkit-scrollbar-track {
+    background: var(--dark2); 
+}
+::-webkit-scrollbar-thumb {
+    background: var(--contrast-color); 
+    border-radius: 7px; 
+    transition: background-color 0.3s ease; /
+} 
+::-webkit-scrollbar-thumb:hover {
+    background: var(--contrast-color2);
+}
+
+
+#statistiche{
+    width: 18rem;
+}
+
+.content-chart{
+    margin: 1.2rem;
+}
+#adjust{
+    margin-top: -2.5rem;
+}
+.chart-container {
+    margin: 1rem auto;
+    width: 98%;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 4px 8px var(--contrast-color-shadow);
+    border-radius: 8px;
+}
+.chart-title {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    color: var(--contrast-color);
+}
+canvas {
+    max-height: 300px;
+}

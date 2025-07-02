@@ -1,0 +1,598 @@
+<!-- 
+    MICRIOBIOTA / ADD REPORT
+-->
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Favicon -->
+    <link rel="sortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <title>BVA - Microbiota</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link rel="stylesheet" href="{% static 'css/homePage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/microbiota/add.css' %}">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+    <!-- CDN IMPORT -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+</head>
+
+
+<body>
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBar.html' %}
+
+    <main>
+        <!-- MENU TRACE -->
+        <div class="main-title-nav">
+
+            <div class="back-tittle">
+                <a name="back" href="{% url 'microbiota_detail' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+                <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                    <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                    </span> |
+                    <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" wnameth="20px" height="20px">
+                        Email: {{ persona.email }}
+                    </span>
+                    {% endif %}
+                </h2>
+            </div>
+        
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>
+                <p>»</p>
+                <p>
+                    <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                </p>
+                <p>»</p>
+                <p>
+                    <a href="{% url 'microbiota_detail' persona.id %}">Microbiota</a>
+                </p>
+                <p>»</p>
+                <p class="breadcrumb">Compilazione Referto</p>
+            </div>
+        </div>  
+
+        <div class="container-principale">
+
+            <form id="mainForm" method="POST" action="{% url 'microbiota_add' persona.id %}">
+                {% csrf_token %}
+
+                <div class="container-card">
+
+                    <h3>Parametri di Biodiversità</h3>
+
+                    <div class="grid-container">
+                        <div class="container-input">
+                            <p>Indice di Biodiversità</p>
+                            <input type="text" name="ind_biod" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Numero di specie (Obs. species)</p>
+                            <input type="text" name="num_spec" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Distanza filogenetica (P.D. whole tree)</p>
+                            <input type="text" name="dis_filo" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Distribuzione delle specie (Indice di Pielou)</p>
+                            <input type="text" name="dis_spec" placeholder="Inserisci il valore">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="container-card">
+
+                    <h3>Patobionti Rilevati</h3>
+
+                    <div class="grid-container">
+                        <div class="container-input">
+                            <p>Batteri</p>
+                            <input type="text" name="batteri_g" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Miceti</p>
+                            <input type="text" name="miceti_g" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Virus</p>
+                            <input type="text" name="virus_g" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Parassiti</p>
+                            <input type="text" name="parassiti_g" placeholder="Inserisci il valore">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="container-card">
+
+                    <h3>Metabolismi Alterati</h3>
+
+                    <div class="grid-container">
+                        <div class="container-input">
+                            <p>Butirrato</p>
+                            <input type="text" name="butirrato" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Propionato</p>
+                            <input type="text" name="propionato" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Lattato</p>
+                            <input type="text" name="lattato" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>GABA</p>
+                            <input type="text" name="gaba" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Istamina</p>
+                            <input type="text" name="istamina" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Indolo</p>
+                            <input type="text" name="indolo" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Ac. Indolacetico (IAA)</p>
+                            <input type="text" name="ac_indolacetico" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Triptamina</p>
+                            <input type="text" name="triptamina" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Serotonina</p>
+                            <input type="text" name="serotonina" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Polifenoli</p>
+                            <input type="text" name="polifenoli" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Vitamine gr. B</p>
+                            <input type="text" name="vitamine_gr" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Vitamina K2</p>
+                            <input type="text" name="vitamina_k2" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Proteolisi</p>
+                            <input type="text" name="proteolisi" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Ac. Biliari Secondari</p>
+                            <input type="text" name="ac_biliari" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Etanolo</p>
+                            <input type="text" name="etanolo" placeholder="Inserisci il valore">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="container-card">
+
+                    <h3>Funzioni Alterate</h3>
+
+                    <div class="grid-container">
+                        <div class="container-input">
+                            <p>Omeostasi immunitaria</p>
+                            <input type="text" name="o_immu" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Omeostasi della mucosa</p>
+                            <input type="text" name="o_muco" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Omeostasi del glucosio</p>
+                            <input type="text" name="ome_gluc" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Metabolismo lipnameico</p>
+                            <input type="text" name="meta_lip" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Attività antinfiammatoria</p>
+                            <input type="text" name="att_antinf" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Attività antimicrobica</p>
+                            <input type="text" name="att_antim" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Asse intestino-cervello</p>
+                            <input type="text" name="as_cerv" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Asse intestino-cardiocircolatorio</p>
+                            <input type="text" name="as_card" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Asse intestino-fegato</p>
+                            <input type="text" name="as_fegato" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Asse intestino-pelle</p>
+                            <input type="text" name="as_pelle" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Ritmo circadiano</p>
+                            <input type="text" name="ri_circa" placeholder="Inserisci il valore">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container-card">
+
+                    <h3>Rapporto Firmicutes/Bacteronameetes</h3>
+
+                    <div class="grid-container">
+                        <div class="container-input">
+                            <p>Firmicutes</p>
+                            <input type="text" name="firmicutes" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Bacteronameetes</p>
+                            <input type="text" name="bacteronamees" placeholder="Inserisci il valore">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="container-card">
+
+                    <h3>Rapporto Prevotella/Bacteronamees</h3>
+
+                    <div class="grid-container">
+                        <div class="container-input">
+                            <p>Prevotella</p>
+                            <input type="text" name="prevotella" placeholder="Inserisci il valore">
+                        </div>
+                        <div class="container-input">
+                            <p>Bacteronamees</p>
+                            <input type="text" name="bacte_1" placeholder="Inserisci il valore">
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <div class="container-card">
+
+                    <h3>Enterotipo</h3>
+
+                    <div class="grid-container">
+                        <div class="container-input">
+                            <p>Enterotipo</p>
+                            <input type="text" name="enter" placeholder="Inserisci il valore">
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <div class="container-card">
+
+                    <h3>Ecologia Batterica – Livello Phylum</h3>
+
+                    <div class="grid-container">
+                        <div class="container-input">
+                            <p>Firmicutes</p>
+                            <input type="text" name="firmi" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Bacteronameetes</p>
+                            <input type="text" name="bacte_2" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Actinobacteria</p>
+                            <input type="text" name="actino" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Verrucomicrobia</p>
+                            <input type="text" name="verruc" placeholder="Inserisci il valore">
+                        </div>
+                    
+                        <div class="container-input">
+                            <p>Euryarchaeota</p>
+                            <input type="text" name="eurya" placeholder="Inserisci il valore">
+                        </div>
+                
+                        <div class="container-input">
+                            <p>Fusobacteria</p>
+                            <input type="text" name="fusob" placeholder="Inserisci il valore">
+                        </div>
+                
+                        <div class="container-input">
+                            <p>Lentisphaerae</p>
+                            <input type="text" name="lentis" placeholder="Inserisci il valore">
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <div class="container-card">
+
+                    <h3>Ecologia Batterica – Livello Famiglia</h3>
+
+                    <div class="grid-container">
+                        <div class="container-input">
+                            <p>Ruminococcaceae</p>
+                            <input type="text" name="rumino" placeholder="Inserisci il valore">
+                        </div>
+        
+                        <div class="container-input">
+                            <p>Lachnospiraceae</p>
+                            <input type="text" name="lachno" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Firmicutes_unclassified</p>
+                            <input type="text" name="firmicutes_u" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Eubacteriaceae</p>
+                            <input type="text" name="eubacteria" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Oscillospiraceae</p>
+                            <input type="text" name="oscillo" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Streptococcaceae</p>
+                            <input type="text" name="strept" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Veillonellaceae</p>
+                            <input type="text" name="veillo" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Peptostreptococcaceae</p>
+                            <input type="text" name="pepto" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Bacteronameaceae</p>
+                            <input type="text" name="bactero" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Rikenellaceae</p>
+                            <input type="text" name="rikene" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Tannerellaceae</p>
+                            <input type="text" name="tannere" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Odoribacteraceae</p>
+                            <input type="text" name="odoribac" placeholder="Inserisci il valore">
+                        </div>
+
+                        <div class="container-input">
+                            <p>Coriobacteriaceae</p>
+                            <input type="text" name="corioba" placeholder="Inserisci il valore">
+                        </div>
+                
+                        <div class="container-input">
+                            <p>Desulfovibrionaceae</p>
+                            <input type="text" name="desulfovi" placeholder="Inserisci il valore">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ecologia Batterica -->
+                <div class="container-card">
+                    <h3>Ecologia Batterica - Livello Genere</h3>
+                    <div class="dinamic-populate"></div>
+                    <div class="grid-container">
+                    <div class="container-input">
+                        <p>Patogeni rilevati</p>
+                        <div class="container-input-special">
+                        <input type="text" name="patogeni_rilevati" placeholder="Inserisci il valore" class="dynamic-input" />
+                        <button type="button" class="add-btn">+</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Micologia -->
+                <div class="container-card">
+                    <h3>Micologia</h3>
+                    <div class="dinamic-populate"></div>
+                    <div class="grid-container">
+                        
+                        <div class="container-input">
+                            <p>Abbondanza relativa</p>
+                            <input type="text" placeholder="Inserisci il valore" />
+                        </div>
+                        <div class="container-input">
+                            <p>Patogenicità: patogeno/non patogeno</p>
+                            <input type="text" placeholder="Inserisci il valore" />
+                        </div>
+
+                        <div class="container-input">
+                            <p>Micete nameentificato</p>
+                            <div class="container-input-special">
+                                <input type="text" name="miceti_n" placeholder="Inserisci il valore" class="dynamic-input" />
+                                <button  type="button" class="add-btn">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Componente virale -->
+                <div class="container-card">
+                    <h3>Componente virale</h3>
+                    <div class="dinamic-populate"></div>
+                    <div class="grid-container">
+                    <div class="container-input">
+                        <p>Virus nameentificati</p>
+                        <div class="container-input-special">
+                            <input type="text" name="virus_n" placeholder="Inserisci il valore" class="dynamic-input" />
+                            <button  type="button" class="add-btn">+</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Parassiti -->
+                <div class="container-card">
+                    <h3>Parassiti</h3>
+
+                    <div class="dinamic-populate"></div>
+                    
+                    <div class="grid-container">
+                    <div class="container-input">
+                        <p>Parassiti nameentificati</p>
+                        <div class="container-input-special">
+                            <input type="text" name="parassiti_n" placeholder="Inserisci il valore" class="dynamic-input" />
+                            <button type="button" class="add-btn">+</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- SCRIPT PER AGGIUNGERE INPUT AL DIV -->
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        // +1: ora esiste davvero un element con id "mainForm"
+                        const form = document.getElementById('mainForm');
+
+                        // (ri)definiamo makeTag e behavior dei +…
+                        function makeTag(text, container) {
+                        const tag = document.createElement('span');
+                        tag.classList.add('tag');
+                        const p = document.createElement('p');
+                        p.textContent = text; p.style.margin = 0;
+                        const xBtn = document.createElement('button');
+                        xBtn.textContent = '×';
+                        xBtn.addEventListener('click', () => container.removeChild(tag));
+                        tag.append(p, xBtn);
+                        return tag;
+                        }
+
+                        document.querySelectorAll('.add-btn').forEach(btn => {
+                        const input = btn.parentElement.querySelector('.dynamic-input');
+                        const dynContainer = btn.closest('.container-card').querySelector('.dinamic-populate');
+                        btn.addEventListener('click', () => {
+                            const text = input.value.trim();
+                            if (!text) return;
+                            dynContainer.appendChild(makeTag(text, dynContainer));
+                            input.value = '';
+                            input.focus();
+                        });
+                        input.addEventListener('keydown', e => {
+                            if (e.key === 'Enter') { btn.click(); e.preventDefault(); }
+                        });
+                        });
+
+                        // +2: ora registriamo davvero il submit sul form
+                        form.addEventListener('submit', () => {
+                        // per ogni card serializza i tag
+                        form.querySelectorAll('.container-card').forEach(card => {
+                            // trova l'unico input dinamico con name
+                            const dynInput = card.querySelector('input.dynamic-input[name]');
+                            if (!dynInput) return;
+
+                            // raccogli i testi
+                            const tags = Array.from(
+                            card.querySelectorAll('.dinamic-populate .tag p')
+                            ).map(p => p.textContent);
+
+                            // serializza (separatore a virgola, o JSON.stringify se preferisci)
+                            dynInput.value = tags.join(',');
+                        });
+                        // il form parte regolarmente subito dopo
+                        });
+                    });
+                </script>
+
+                <div class="toolkit">
+                    <img src="{% static 'image/Arrow_Back.png' %}" alt="" style="width: 40px; height: 40px;">
+
+                    <button class="button" type="submit" id="btn_blood_group">
+                        <span class="button__icon-wrapper">
+
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" class="button__icon-svg">
+                                <path d="M3 2C2.45 2 2 2.45 2 3V21C2 21.55 2.45 22 3 22H21C21.55 22 22 21.55 22 21V7.59C22 7.21 21.84 6.84 21.54 6.54L17.46 2.46C17.16 2.16 16.79 2 16.41 2H3Z" fill="#90CAF9"/>
+                                <path d="M16 2V7C16 7.55 15.55 8 15 8H5C4.45 8 4 7.55 4 7V3C4 2.45 4.45 2 5 2H16Z" fill="#1E88E5"/>
+                                <path d="M6 10H14V14H6V10Z" fill="#BBDEFB"/>
+                                <path d="M6 15H14V16H6V15Z" fill="#0D47A1"/>
+                            </svg>
+
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" class="button__icon-svg button__icon-svg--copy" >
+                                <path d="M3 2C2.45 2 2 2.45 2 3V21C2 21.55 2.45 22 3 22H21C21.55 22 22 21.55 22 21V7.59C22 7.21 21.84 6.84 21.54 6.54L17.46 2.46C17.16 2.16 16.79 2 16.41 2H3Z" fill="#90CAF9"/>
+                                <path d="M16 2V7C16 7.55 15.55 8 15 8H5C4.45 8 4 7.55 4 7V3C4 2.45 4.45 2 5 2H16Z" fill="#1E88E5"/>
+                                <path d="M6 10H14V14H6V10Z" fill="#BBDEFB"/>
+                                <path d="M6 15H14V16H6V15Z" fill="#0D47A1"/>
+                            </svg>
+
+                        </span>
+                        Salva Dati
+                    </button>
+                </div>
+            </form>            
+
+        </div>
+    </main>
+</body>
+</html>

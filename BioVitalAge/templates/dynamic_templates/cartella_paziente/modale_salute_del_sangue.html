@@ -1,0 +1,25 @@
+{% load static %}
+
+<div class="modale-indici" id="Sangue">
+    <div class="container-header">
+        <div class="title-container">
+            <img id="dynamicImage" src="{% static 'image/Reni.png' %}" alt="">
+            <h3 id="dynamicTitle">Titolo</h3>
+        </div>
+        <button id="closeModale">x</button>
+    </div>       
+
+    <div class="content-container-modale-indici" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px;">
+        
+
+        {% for key, value in Salute_del_sangue.items %}
+        <div class="celle-indici">
+            <p>{{ key }}:</p>
+            <p class="arrow">{{ value }}</p>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    
+</div>

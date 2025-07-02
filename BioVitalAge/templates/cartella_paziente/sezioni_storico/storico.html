@@ -1,0 +1,290 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+    
+    <title>BVA - Storico</title>
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet" />
+
+    <!-- CSS Import -->
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/sezioni_storico/storico.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- JS Import -->
+    <script src="{% static 'js/cartella_paziente/sezioni_storico/storico.js' %}" type="module" defer></script>
+
+    <!-- CDN Import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body data-appuntamenti-url="{% url 'appuntamenti' %}">
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBarStorico.html' %}
+
+    <main>
+        <!-- MENU TRACE -->
+        <div class="main-title-nav">
+
+            <div class="back-tittle">
+                
+                <a id="back" href="{% url 'cartella_paziente' persona.id %}">
+                    <img src="{% static 'image/Arrow_Back.png' %}">
+                </a>
+
+                <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                    <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                    </span> |
+                    <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                        Email: {{ persona.email }}
+                    </span>
+                    {% endif %}
+                </h2>
+            </div>
+        
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>
+                <p>»</p>
+                <p>
+                    <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                </p>
+                <p>»</p>
+                <p class="breadcrumb">Storico</p>
+            </div>
+        
+        </div>  
+
+        <div class="card-container" style="margin-top: 2rem; margin-bottom: 2rem;">
+
+        <div class="flex-row">
+            {% if ultimo_appuntamento %}
+            <div style="flex: 0.4;" class="sub-card {% if ultimo_appuntamento.tipologia_visita == 'Generale' %}
+            general-border
+            {% elif ultimo_appuntamento.tipologia_visita == 'Riabilitazione' %}
+            rehab-border
+            {% elif ultimo_appuntamento.tipologia_visita == 'Fisioterapia e Riabilitazione' %}
+            physio-ria-border
+            {% elif ultimo_appuntamento.tipologia_visita == 'Fisioterapia Sportiva' %}
+            physio-spo-border
+            {% elif ultimo_appuntamento.tipologia_visita == 'Fisioestetica' %}
+            physio-est-border
+            {% else %}
+            other-border
+            {% endif %}">
+                
+                <div class="container-title-badge">
+                    <h3>Ultimo Appuntamento</h3>
+                    <p class="badge
+                    {% if ultimo_appuntamento.tipologia_visita == 'Generale' %}
+                    general
+                    {% elif ultimo_appuntamento.tipologia_visita == 'Riabilitazione' %}
+                    rehab
+                    {% elif ultimo_appuntamento.tipologia_visita == 'Fisioterapia e Riabilitazione' %}
+                    physio-ria
+                    {% elif ultimo_appuntamento.tipologia_visita == 'Fisioterapia Sportiva' %}
+                    physio-spo
+                    {% elif ultimo_appuntamento.tipologia_visita == 'Fisioestetica' %}
+                    physio-est
+                    {% else %}
+                    other
+                    {% endif %}">{{ ultimo_appuntamento.tipologia_visita }}</p>
+                </div>
+
+                <div class="content-grid">
+                    <p class="appointment-note" title="{{  ultimo_appuntamento.note }}"><strong>Note:</strong> {{  ultimo_appuntamento.note|default:"Nessuna" }}</p>
+                    <p><strong>Data Appuntamento:</strong> {{ ultimo_appuntamento.data|date:"d/m/Y"|default:"Nessuno" }}</p>
+                    <p><strong>Orario:</strong> {{ ultimo_appuntamento.orario|time:"H:i"|default:"Nessuno" }} </p>
+                    <p><strong>Voce Prezzario:</strong> {{ ultimo_appuntamento.voce_prezzario|default:"Nessuno" }}</p>
+                    <p><strong>Durata:</strong> {% if ultimo_appuntamento.durata == 0 or ultimo_appuntamento.durata == null %}Nessuna{% else %}{{ ultimo_appuntamento.durata }} minuti{% endif %} </p>
+                </div>
+                
+            </div>
+            {% endif %}
+    
+            <div class="sub-card" {% if not ultimo_appuntamento %} style="flex: 1;" {% endif %} style="flex: 0.6;">
+                <h3>Statistiche Appuntamenti</h3>
+                <div {% if ultimo_appuntamento %} style="justify-content: space-between; flex: 1; align-items: center;" {% endif %} class="flex-layout">
+                    <div class="flex-row-statistic">
+                        <div class="border-violet">
+                            <img src="{% static 'image/Diagnosi_tot.png' %}" alt="">
+                        </div>
+                        <p><strong>Totale Appuntamenti: </strong> {{ totale_appuntamenti|default:"Nessuno" }}</p>
+                    </div>
+                    <div class="flex-row-statistic">
+                        <div class="border-violet">
+                            <img src="{% static 'image/Done.png' %}" alt="">
+                        </div>
+                        <p><strong>Appuntamenti confermati:</strong> {{ appuntamenti_confermati|default:"Nessuno" }}</p>
+                    </div>
+                    <div class="flex-row-statistic">
+                        <div class="border-violet">
+                            <img src="{% static 'image/Diagnosi_attive.png' %}" alt="">
+                        </div>
+                        <p><strong>Appuntamenti Passati:</strong> {{ appuntamenti_passati|default:"Nessuno" }}</p>
+                    </div>
+                    <div class="flex-row-statistic">
+                        <div class="border-violet">
+                            <img src="{% static 'image/Calendario.png' %}" alt="">
+                        </div>
+                        <p>
+                            <strong>Prossimo appuntamento:</strong>  
+                            {% if prossimo_appuntamento %}
+                                {{ prossimo_appuntamento.data|date:"d/m/Y" }} - {{ prossimo_appuntamento.orario|time:"H:i" }}
+                            {% else %}
+                                Nessun appuntamento futuro
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+
+        <div class="sub-card" id="storico-wrapper">
+            <h3>Storico Appuntamenti</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Descrizione</th>
+                            <th>Tipologia</th>
+                            <th>Data</th>
+                            <th>Stato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if storico_page %}
+                        {% for appointment in storico_page %}
+                        <tr>
+                            <td>{{ appointment.id }}</td>
+                            <td class="appointment-note" title="{{  appointment.note }}">{{ appointment.note|default:"Nessuna" }}</td>
+                            <td>
+                                <span class="badge
+                                            {% if appointment.tipologia_visita == 'Generale' %}
+                                            general
+                                            {% elif appointment.tipologia_visita == 'Riabilitazione' %}
+                                            rehab
+                                            {% elif appointment.tipologia_visita == 'Fisioterapia e Riabilitazione' %}
+                                            physio-ria
+                                            {% elif appointment.tipologia_visita == 'Fisioterapia Sportiva' %}
+                                            physio-spo
+                                            {% elif appointment.tipologia_visita == 'Fisioestetica' %}
+                                            physio-est
+                                            {% else %}
+                                            other
+                                            {% endif %}">
+                                    {{ appointment.tipologia_visita }}
+                                </span>
+                            </td>
+                            <td>{{ appointment.data|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if appointment.confermato %}
+                                Confermato
+                                {% else %}
+                                Non Confermato
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button data-id="{{ appointment.id }}" data-date="{{ appointment.data|date:'Y-m-d' }}" class="btn edit">✎</button>
+                                <button class="btn delete" data-id="{{ appointment.id }}">✖</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">Nessun appuntamento disponibile</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Sezione paginazione -->
+            <div class="pagination_tabella">
+                {% if storico_page.has_previous %}
+                <a class="previous" href="?page={{ storico_page.previous_page_number }}">Previous</a>
+                {% else %}
+                <span class="previous disabled">Previous</span>
+                {% endif %}
+        
+                {% for num in storico_page.paginator.page_range %}
+                {% if storico_page.number == num %}
+                <span class="current">{{ num }}</span>
+                {% else %}
+                <a href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+        
+                {% if storico_page.has_next %}
+                <a class="next" href="?page={{ storico_page.next_page_number }}">Next</a>
+                {% else %}
+                <span class="next disabled">Next</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="sub-card" style="margin-top: 1rem;">
+            <h3>Andamento Parametri</h3>
+            <canvas id="graficoDiagnosi"></canvas>
+        </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- Import CDN js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            let appuntamenti_per_mese_var = {{ appuntamenti_per_mese|safe }};
+        </script>
+
+    </main>
+
+</body>
+
+</html>

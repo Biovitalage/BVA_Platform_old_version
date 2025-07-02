@@ -1,0 +1,1732 @@
+<!-- 
+    MICROBIOTA
+-->
+
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Favicon -->
+    <link rel="sortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <title>BVA - Microbiota</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link rel="stylesheet" href="{% static 'css/homePage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/microbiota/microbiota.css' %}">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+    <!-- CDN IMPORT -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+</head>
+
+
+<body>
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBar.html' %}
+
+    <main>
+        <!-- MENU TRACE -->
+        <div class="main-title-nav">
+
+            <div class="back-tittle">
+                <a id="back" href="{% url 'cartella_paziente' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+                <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                    <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                    </span> |
+                    <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                        Email: {{ persona.email }}
+                    </span>
+                    {% endif %}
+                </h2>
+            </div>
+        
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>
+                <p>»</p>
+                <p>
+                    <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                </p>
+                <p>»</p>
+                <p class="breadcrumb">Microbiota</p>
+            </div>
+
+        </div>  
+
+        <div class="card-inserimento">
+            <h3>Referto Microbiota</h3>
+
+            <div class="card-content">
+
+                <div class="card-container">
+   
+                    <div class="container-title">
+                        <h5>Compila Referto Microbiota</h5>
+                        <img src="{% static 'image/upload.png' %}" alt="">
+                    </div>
+
+                    <div class="sub-content-container">
+
+                        <p>Clicca sotto per compilare il form e generare il referto:</p>
+
+                        <div class="img-container">
+                            <img src="{% static 'image/Referto.png' %}" alt="" style="width: 55px; height: 55px;">
+                            <img src="{% static 'image/Microbiota.png' %}" alt="" style="width: 25px; height: 25px; margin-left: -1.5rem; margin-bottom: -2rem;">
+                            <button onclick="window.location.href='{% url 'microbiota_add' persona.id %}'">Compila il modulo</button>
+                        </div>
+
+
+                        <!-- <form action="" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+
+                                <div class="container-seleziona">
+                                    <label for="pdfUpload" class="custom-file-label">
+                                        <img src="{% static 'image/Upload_shadow.png' %}" alt="Carica PDF">
+                                    </label>
+                                
+                                    <input type="file" id="pdfUpload" name="pdf_file" accept="application/pdf" required hidden>
+                                  
+                                    <span id="nome-file" aria-live="polite">Nessun PDF selezionato</span>
+                                </div>
+
+                                <div class="container-submit">
+                                <button type="submit">Salva PDF</button>
+                                </div>
+
+                                {% if error %}
+                                <p class="error">{{ error }}</p>
+                                {% endif %}
+                        </form> -->
+
+                        <!-- SCRIPT PER MOSTRARE IL NOME DEL FILE, O RIPRISTINARE IL TESTO DI DEFAULT -->
+                        <script>
+                                const inputFile = document.getElementById('pdfUpload');
+                                const nomeFile  = document.getElementById('nome-file');
+                                const defaultText = 'Nessun PDF selezionato';
+
+                                inputFile.addEventListener('change', () => {
+                                if (inputFile.files.length) {
+                                    nomeFile.textContent = inputFile.files[0].name;
+                                } else {
+                                    nomeFile.textContent = defaultText;
+                                }
+                                });
+                        </script>
+                
+                    </div>
+                </div>
+
+
+                <div class="card-container">
+
+                    <div class="container-title">
+                        <h5>Scarica Referto Microbiota</h5>
+                        <img src="{% static 'image/download.png' %}" alt="">
+                    </div>
+
+                    <div class="sub-content-container">
+                        {% if ultimo_report %}
+
+                        <p>Scarica l'ultimo pdf:</p>
+
+                        <div class="container-flex">
+
+                            <div class="container-scarica">
+                                <p style="font-weight: bold;">Ultimo PDF caricato:</p>
+                                <a href="#" target="_blank">
+                                    Referto – {{ persona }} (ID {{ ultimo_report.id }})
+                                </a>
+                            </div>
+
+                            <div class="container-scarica-pdf">
+                                <p style="font-weight: bold; margin-top: 0.5rem;">Data caricamento PDF:</p>
+                                <p>{{ ultimo_report.created_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+
+                            <a href="#" target="_blank">
+                                <button type="button" class="download-button">Anteprima PDF</button>
+                            </a>
+
+                        </div>
+
+                        {% else %}
+                            <div class="upload-container">
+                            <p>Nessun referto caricato.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                </div>
+
+            </div> 
+        </div>
+
+        <div class="card-result">
+            <h3>Risultato Analisi Referto</h3>
+
+            <div class="card-container-content">
+
+                <details class="parent-section mt-4">
+                    <summary>Parametri di Biodiversità</summary>
+                          
+                    <details>
+                        <summary id="sub-summary">show description</summary>
+                        <p class="description">
+                            La biodiversità microbica del campione è un importante parametro per la valutazione dello stato di salute del microbiota intestinale e si riferisce alla sua varietà qualitativa in termini tassonomici. In generale, una
+                            bassa biodiversità è associata a condizioni infiammatorie o patologiche, mentre un’elevata biodiversità può essere considerata come un indicatore di un buono stato di salute. La biodiversità è importante perché è
+                            anche una misura della resilienza del microbiota, ovvero della capacità di tornare a una condizione iniziale in seguito ad una perturbazione.
+                        </p>
+                    </details>
+      
+                    <div class="grid-container-indici">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>indice di biodiversità</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        restituisce una valutazione complessiva della biodiversità soppesando le eventuali
+                                        alterazioni dei singoli parametri di numero di specie, distanza filogenetica e distribuzione.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">punteggio: <span>{{ ultimo_report.ind_biod }}</span></p>
+                            <p>Intervallo di riferimento <= 4.05</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Numero di specie (Obs. Species)</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        calcolo delle diverse specie presenti.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">punteggio: <span>{{ ultimo_report.num_spec }}</span></p>
+                            <p>Intervallo di riferimento: ≥ 55</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Distanza filogenetica (P.D. whole tree)</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        descrive quanto le specie presenti sono distanti filogeneticamente
+                                        tra di loro. Maggiore è la distanza tra due specie e minore è la somiglianza a livello del loro DNA e
+                                        presumibilmente anche delle loro funzioni metaboliche.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">punteggio: <span>{{ ultimo_report.dis_filo }}</span></p>
+                            <p>Intervallo di riferimento: ≥ 4.5</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Distribuzione delle specie (Indice di Pielou)</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        esprime quanto è uniforme la distribuzione delle AR dei diversi gruppi batterici tra di loro.
+                                        Maggiore è l’uniformità e più equilibrata è la distribuzione dei diversi taxa batterici.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">punteggio: <span>{{ ultimo_report.dati_estratti.dis_spec }}</span></p>
+                            <p>Intervallo di riferimento: ≥ 0.55</p>
+                        </div>  
+
+                    </div>
+
+                </details>
+                
+                <details class="parent-section mt-4">
+                    <summary>Patobionti Rilevati</summary>
+                          
+                    <details>
+                        <summary id="sub-summary">show description</summary>
+                        <p class="description">
+                            Sono le specie pro-infiammatorie o potenzialmente patogene individuate nel campione, che contribuiscono
+                            all’alterazione della flora intestinale (disbiosi).
+                        </p>
+                    </details>
+                    
+                    <div class="grid-container-indici">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Batteri</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">punteggio: <span>{{ ultimo_report.batteri_g }}</span></p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Miceti</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">punteggio: <span>{{ ultimo_report.miceti_g }}</span></p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Virus</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">punteggio: <span>{{ ultimo_report.virus_g }}</span></p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Parassiti</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">    
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">punteggio: <span>{{ ultimo_report.parassiti_g }}</span></p>
+                        </div>  
+                    </div>
+                </details>  
+
+                <details class="parent-section mt-4">
+                    <summary>Metabolismi Alterati</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Acetato</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        acido grasso a catena corta che partecipa al mantenimento dell’integrità della barriera intestinale,
+                                        è coinvolto nei processi che favoriscono o contrastano l’instaurarsi di disturbi di tipo depressivo e partecipa
+                                        alla regolazione dell’omeostasi energetica. Inoltre, può essere convertito in butirrato da alcune specie
+                                        batteriche. L’acetato ha un ruolo benefico sulla soppressione dell’infiammazione e sulla regolazione
+                                        dell’appetito. Gioca anche un ruolo importante nel metabolismo dei grassi e del glucosio, e di conseguenza
+                                        nella gestione del peso corporeo.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                default  
+                            </p>
+                            <p>’ Alimenti consigliati -> fibre, aceto biologico1, alimenti fermentati, avena, asparagi, porri, aglio, cipolla,cicoria, carciofi, topinambur, tarassaco.’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Butirrato</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        acido grasso a catena corta che svolge un’azione antinfiammatoria e immunomodulante. La
+                                        maggior parte delle condizioni infiammatorie croniche dell’intestino, infatti - come colite ulcerosa, morbo
+                                        di Crohn e diverticolite - sono caratterizzate da una scarsa abbondanza di batteri produttori di butirrato. Il
+                                        butirrato partecipa anche al mantenimento dell’omeostasi energetica, riduce la permeabilità intestinale ed
+                                        è nutrimento per l’epitelio.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.butirrato }}
+                            </p>
+                            <p>’ Alimenti consigliati -> alimenti ricchi di amido resistente (avena, riso, legumi, cereali integrali) ’</p>
+                            <p>’ Integratori consigliati -> FOS, Inulina, Omega-3 ’</p>
+                            <p>’ Probiotici consigliati -> Lactobacillus kefiri ’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Propionato</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        acido grasso a catena corta prodotto dal microbiota intestinale importante per l’educazione, lo
+                                        sviluppo e il mantenimento della funzionalità del sistema immunitario, soprattutto per quanto riguarda
+                                        l’immunità innata. Inoltre è noto che il propionato può essere coinvolto nei meccanismi che influenzano il
+                                        senso di sazietà e le funzioni emotive e cognitive.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.propionato }}
+                            </p>
+                            <p>’ Alimenti consigliati -> alimenti ricchi di beta-glucani (orzo, avena e crusca dei cereali integrali) ’</p>
+                            <p>’ Integratori consigliati -> inulina ’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Succinato</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Acido organico conosciuto soprattutto perché coinvolto nel metabolismo energetico delle
+                                        cellule (ciclo di Krebs) ma può essere anche un regolatore positivo di processi come la gluconeogenesi e
+                                        termogenesi intestinale, nonché un mediatore chiave nella risoluzione dell’infiammazione associata
+                                        all’obesità. 
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                               default
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Lattato</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        prodotto principalmente da batteri lattici, è importante per il mantenimento di un corretto pH del
+                                        lume intestinale e può regolare diversi attori del sistema immunitario, modulando anche l’attivazione
+                                        infiammatoria delle cellule epiteliali. Inoltre, è un fondamentale substrato per la produzione di SCFAs
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.lattato }}
+                            </p>
+                            <p>’ Alimenti consigliati -> alimenti ricchi di fibre prebiotiche (cicoria, farina di frumento, banana, miele),
+                            alimenti ricchi di pectina (mele, pere), alimenti a fermentazione lattica (kefir bianco naturale, yogurt greco) ’</p>
+                            <p>’ Integratori consigliati -> FOS, inulina ’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Gaba</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                            Neurotrasmettitore importante nel comportamento, nella cognizione e nella risposta del corpo allo
+                                            stress. Il GABA può essere direttamente sintetizzato dai batteri intestinali (principalmente Bacteroides) e
+                                            avere un effetto su tutta la fisiologia dell’ospite tramite l’asse intestino-cervello mediato dal nervo vago,
+                                            influenzando pertanto lo stato di benessere mentale e psicologico. Una alterazione del microbiota può
+                                            causare alterazioni dei livelli di GABA e quindi alterazioni dell’umore e disturbi stress-associati (come ansia
+                                            e insonnia).
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.gaba }}
+                            </p>
+                            <p>’ Alimenti consigliati -> alimenti fermentati con lattobacilli (kefir, miso, crauti), cibi che possono stimolare la
+                            produzione di GABA (noci, mandorle, nocciole, legumi, spinaci, pomodori).’</p>
+                            <p>’ Probiotici consigliati -> Lactobacillus plantarum’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Istamina</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                            ammina biogena che gioca un ruolo importante nella regolazione immunitaria, nella funzione
+                                            intestinale e nel sistema nervoso. Può accumularsi a causa della degradazione enzimatica dell’istidina
+                                            effettuata da alcuni microrganismi del microbiota intestinale. Il consumo di alimenti con elevate
+                                            concentrazioni di istamina può causare una serie di effetti tossicologici di natura neurologica,
+                                            gastrointestinale o respiratoria. Infatti, l’istamina è una delle ammine biogene che può risultare più tossica
+                                            e quella che si trova più frequentemente negli alimenti. L’istamina svolge un ruolo importante nella risposta
+                                            immunitaria, nella neurotrasmissione e nella risposta allergica. 
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.dati_estratti.istamina }}
+                            </p>
+                            <p>’ Alimenti consigliati -> alimenti poveri di istamina (cacao, fragola, banana, kiwi, molluschi e crostacei, noci,nocciole, albume d’uovo)’</p>
+                            <p>’ Integratori consigliati -> diamino ossidasi (DAO)’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Indolo</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Principale derivato della degradazione batterica del triptofano che contribuisce alla regolazione di
+                                        numerose funzioni come l’omeostasi della mucosa intestinale riducendone la permeabilità, il metabolismo
+                                        lipidico e l’asse intestino-cervello. 
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.indolo }}
+                            </p>
+                            <p>’Alimenti consigliati -> alimenti ricchi di polifenoli (frutta, verdura, tè verde, caffè)’</p>
+                            <p>’Probiotici consigliati -> Clostridium sporogenes’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Acido indolacetico</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        derivato della degradazione batterica del triptofano, agisce come modulatore del
+                                        sistema immunitario tramite i recettori AHR, che sono in grado di alterarne la risposta innata e adattiva.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.ac_indolacetico }}
+                            </p>
+                            <p>’Alimenti consigliati -> carote crude, fagiolini’</p>
+                            <p>’Probiotici consigliati -> Bacteroides fragilis e Bacteroides thetaiotaomicron’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Acido indolpropionico</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        derivato della degradazione batterica del triptofano coinvolto nell’omeostasi della
+                                        mucosa intestinale, può essere assorbito dall’epitelio intestinale e riversato nel flusso sanguigno dove aiuta
+                                        a prevenire lo stress ossidativo, inibire la sintesi di citochine pro-infiammatorie e influenzare l’asse
+                                        intestinocervello. L’acido 3-indolepropionico controlla i livelli infiammatori, contribuisce a mantenere la
+                                        barriera intestinale e a migliorare il metabolismo del glucosio.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                Carenza
+                            </p>
+                            <p>’Alimenti consigliati -> fibre solubili (frutta), fibre insolubili (cereali integrali)’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Triptammina</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Importante derivato del triptofano caratterizzato da un’ampia varietà di attività biologiche. È
+                                        il precursore per la sintesi di altre ammine biogene come la serotonina e la melatonina ed è coinvolto nella
+                                        regolazione del sistema immunitario e nelle funzioni asse intestino-cervello.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.triptamina }}
+                            </p>
+                            <p>’Alimenti consigliati -> alimenti ricchi di proteine e alimenti fermentati (formaggi)’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Serotonina</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        derivato della triptammina, è un importante neurotrasmettitore coinvolto nella regolazione di
+                                        numerose funzioni come il transito intestinale, le funzioni emotive/cognitive, la pressione del sangue e il
+                                        ritmo circadiano.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.serotonina }}
+                            </p>
+                            <p>’Alimenti consigliati -> alimenti fermentati (yogurt, kefir)’</p>
+                            <p>’AProbiotici consigliati -> Lactiplantibacillus plantarum’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Trimetilammina</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Composto organico prodotto da alcuni batteri intestinali a partire dagli amminoacidi
+                                        colina e carnitina presenti negli alimenti. La TMA è quindi assorbita attraverso l’intestino raggiungendo il
+                                        fegato dove viene ossidata in trimetilammina N-ossido (TMAO), un composto associato all’aumento del
+                                        rischio cardiovascolare. Il TMAO si forma anche quando i batteri intestinali metabolizzano alcuni nutrienti
+                                        introdotti con la dieta, soprattutto nella carne rossa, nel tuorlo d’uovo e nei prodotti lattiero-caseari ricchi
+                                        di grassi.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                default
+                            </p>
+                            <p>’Alimenti consigliati -> verdure crucifere (broccoli, cavolfiore, cavolo, verza); ridurre il consumo di carni,soprattutto rosse, tuorlo d’uovo e formaggi grassi’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Polifenoli</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Composto organico prodotto da alcuni batteri intestinali a partire dagli amminoacidi
+                                        colina e carnitina presenti negli alimenti. La TMA è quindi assorbita attraverso l’intestino raggiungendo il
+                                        fegato dove viene ossidata in trimetilammina N-ossido (TMAO), un composto associato all’aumento del
+                                        rischio cardiovascolare. Il TMAO si forma anche quando i batteri intestinali metabolizzano alcuni nutrienti
+                                        introdotti con la dieta, soprattutto nella carne rossa, nel tuorlo d’uovo e nei prodotti lattiero-caseari ricchi
+                                        di grassi.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.polifenoli }}
+                            </p>
+                            <p>’Alimenti consigliati -> alimenti ricchi di polifenoli (melograno, frutti di bosco, tè).’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Vitamine gruppo B</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        importante gruppo di vitamine prodotte anche dai batteri intestinali che agiscono
+                                        come coenzimi in numerose reazioni cellulari e in particolare nella produzione di energia, nella sintesi di
+                                        neurotrasmettitori e nella regolazione del sistema immunitario.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                carenza
+                            </p>
+                            <p>’Alimenti consigliati -> alimenti ricchi di vitamine del gruppo B (proteine animali, latticini, verdure a foglia verde, fagioli)’</p>
+                            <p>Integratori consigliati -> vitamine del gruppo B</p>
+                            <p>Probiotici consigliati -> Lactobacillus and Bifidobacterium spp</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Vitamina K2</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        sintetizzata parzialmente dai batteri intestinali, è fondamentale nei processi di coagulazione
+                                        del sangue e di omeostasi ossea in particolare per l’effetto sinergico in co-presenza della vitamina D.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.vitamina_k2 }}
+                            </p>
+                            <p>’Alimenti consigliati -> alimenti ricchi di vitamina K2 (verdura a foglia verde, frutta, cereali)’</p>
+                            <p>’Probiotici consigliati -> Lactococcus Lactis’</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Degradazione glutine</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Attività legata alla presenza di specie batteriche in grado di degradare le proteine del glutine.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                default
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Mucolisi</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        La capacità di degradare le glicoproteine presenti nel muco intestinale favorendone un opportuno
+                                        rinnovamento, fondamentale per la salute della mucosa intestinale. Alcuni sottoprodotti della
+                                        degradazione del muco vengono rilasciati nel lume intestinale e sono una possibile fonte di nutrimento per
+                                        altri batteri commensali.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                test
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Proteolisi</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        capacità del microbiota intestinale di degradare le proteine il cui eccesso può portare alla
+                                        formazione di composti tossici e pro-infiammatori.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.proteolisi }}
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Lipopolisaccaride (LPS)</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Noto anche come endotossina, è un componente della membrana dei batteri
+                                        Gram-negativi e un marcatore ben riconosciuto di infiammazione. Si ritiene che l’LPS microbico intestinale
+                                        sia uno dei più potenti attivatori di segnalazione immunitaria innata e un importante mediatore del
+                                        microbiota sulla fisiologia dell’ospite. L’LPS può favorire l’insorgenza di disturbi o patologie, in particolare
+                                        quando è cronicamente presente anche a bassi livelli.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                default
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Acidi biliari secondari</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        piccola quantità di acidi biliari primari che raggiunge il colon e viene trasformata dal
+                                        microbiota in acidi biliari secondari. Nel colon essi esercitano una forte attività antimicrobica e citotossica
+                                        influenzando anche l’omeostasi del glucosio e il metabolismo lipidico.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio carenza">
+                                {{ ultimo_report.ac_biliari }}
+                            </p>
+                            <p>Alimenti consigliati -> alimenti ricchi di polifenoli</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Etanolo</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        alcol che può essere prodotto da alcuni processi fermentativi del microbiota intestinale anche in
+                                        quantità significative e in assenza di alcol nella dieta. Viene associato ad alterazioni del metabolismo
+                                        lipidico, ad un aumento del rischio cardiovascolare e all’insorgenza di steatoepatiti non alcoliche
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.etanolo }}
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Acido solfidrico</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Gas che può essere prodotto da microrganismi solfato-riduttori presenti nell’intestino. Se
+                                        in eccesso può causare l’alterazione del muco favorendo la permeabilità intestinale e l’infiammazione. Al
+                                        contrario, bassi livelli di H2S stabilizzano direttamente gli strati di muco, prevengono l’adesione del biofilm
+                                        del microbiota all’epitelio (che potrebbe rilasciare patogeni invasivi) e aiutano a risolvere l’infiammazione
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                test
+                            </p>
+                            <p>Alimenti consigliati -> alimenti ricchi di prebiotici (avena, asparagi, porri, aglio, cipolla, cicoria, carciofi
+                                topinambur, tarassaco, cibi fermentati come kefir e crauti, cacao, semi di lino ed alghe); ridurre
+                                l’assunzione di alimenti ricchi di amminoacidi solforati (albume d’uovo, pesce, pollame).
+                            </p>
+                            <p>Probiotici consigliati -> Lactobacillus e Bifidobacterium</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Metano</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        gas che può essere prodotto dalla fermentazione microbica nel tratto gastrointestinale umano. Il
+                                        metano è prodotto esclusivamente da una sottopopolazione di Archea del microbiota umano (es.
+                                        Methanobrevibacter)
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                default
+                            </p>
+                            <p>
+                                Alimenti consigliati  evitare il consumo di zucchero e farine raffinate, miele, ortaggi amidacei (patate,
+                                melanzane), latticini e ridurre per un periodo anche vegetali meteorizzanti come legumi, broccoli e
+                                cavolfiore, mela, pera, melone, cocomero, albicocche, pesche; preferire frutta meno fermentescibile come
+                                fragole, kiwi, agrumi, more e mirtilli.
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Omeostasi immunitaria</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        lo stato di equilibrio microbiota-ospite nella regolazione di funzioni necessarie allo
+                                        sviluppo, alla maturazione e al regolare funzionamento del sistema immunitario. Il microbiota rappresenta
+                                        un importante elemento anche nella prevenzione degli stati infiammatori di basso grado, anche cronici, che
+                                        possono contribuire all’insorgenza o al consolidamento di autoimmunità
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ulrtimo_report.o_immu }}
+                            </p> 
+                            <p>
+                                Alimenti consigliati -> Ribes nero, Yogurt bianco, Amido resistente di tipo 2 (es. Tuberi, Castagne, Banane
+                                acerbe, etc.), Cannella, Lampone nero, Noci, Broccoli, Cavolfiore, Cavolo verde, Cavolo rosso, Cannella,
+                                Tamarindo, Caffeina, Kiwi, Uva passa, Avocado, Melograno, Pompelmo.
+                            </p>
+                            <p>
+                                Integratori consigliati -> Acido retinoico, Acido tannico, Arbutina, Caffeina, Chitosano, Esperidina, Estratto
+                                di semi di pompelmo, FOS, Luteolina, Melatonina, Melone amaro (Momordica charantia), Radice di
+                                liquirizia, Resveratrolo, Vitamina B12, Vitamina B1, Vitamina B3, Vitamina B6, Vitamina B7, Vitamina C,
+                                Arabinogalattano, Estratto di semi di pompelmo, Inulina, Noni, Pectina, Psyllium, Resveratrolo, GOS,
+                                Vitamina D
+                            </p>
+                            <p>
+                                Probiotici consigliati -> Bacillus subtilis, Bifidobacterium lactis, Streptococcus thermophilus,
+                                Bifidobacterium longum, Lactobacillus casei, Lactobacillus gasseri, Lactobacillus kefiri (NON KEFIR),
+                                Lactobacillus plantarum, Lactobacillus reuteri, Lactobacillus rhamnosus GG, Lactobacillus acidophilus,
+                                Bacillus coagulans, Bifidobacterium adolescentis, Saccharomyces boulardii
+                            </p>
+
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Omeostasi della mucosa</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        lo stato di equilibrio microbiota-ospite nella regolazione di processi come la
+                                        protezione dalla colonizzazione di agenti patogeni, l’assorbimento dei nutrienti, la produzione di metaboliti
+                                        essenziali e lo sviluppo del sistema immunitario
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ultimo_report.ome_gluc }}
+                            </p> 
+                            <p>
+                                Alimenti consigliati -> Ribes nero, Yogurt bianco, Amido resistente di tipo 2 (es. Tuberi, Castagne, Banane
+                                acerbe, etc.), Cannella, Lampone nero, Noci, Broccoli, Cavolfiore, Cavolo verde, Cavolo rosso, Tamarindo,
+                                Caffeina, Kiwi, Uva passa, Avocado, Melograno, Pompelmo.
+                            </p>
+                            <p>
+                                Integratori consigliati -> Acido retinoico, Acido tannico, Arbutina, Caffeina, Chitosano, Esperidina, Estratto
+                                di semi di pompelmo, FOS, Luteolina, Melatonina, Melone amaro (Momordica charantia), Radice di
+                                liquirizia, Resveratrolo, Vitamina B12, Vitamina B1, Vitamina B3, Vitamina B6, Vitamina B7, Vitamina C, ,
+                                Arabinogalattano, Estratto di semi di pompelmo, Inulina, Noni, Pectina, Psyllium, Resveratrolo, GOS,
+                                Vitamina D
+                            </p>
+                            <p>
+                                Probiotici consigliati -> Bacillus subtilis, Bifidobacterium lactis, Streptococcus thermophilus,
+                                Bifidobacterium longum, Lactobacillus casei, Lactobacillus gasseri, Lactobacillus kefiri (NON KEFIR),
+                                Lactobacillus plantarum, Lactobacillus reuteri, Lactobacillus rhamnosus GG, Lactobacillus acidophilus,
+                                Bacillus coagulans, Bifidobacterium adolescentis, Saccharomyces boulardii
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Omeostasi del glucosio</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        lo stato di equilibrio microbiota-ospite nella regolazione dei metabolismi coinvolti
+                                        nel rilascio di insulina e nella regolazione della gluconeogenesi con possibile impatto in disturbi come il
+                                        diabete di tipo 2, l’obesità e la sindrome metabolica. Una crescita eccessiva di batteri particolarmente
+                                        efficienti nell’estrarre energia dal cibo può anche essere responsabile di produzione e accumulo di grasso
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.ome_gluc }}
+                            </p>
+                            <p>
+                                Alimenti consigliati -> Ribes nero, Yogurt bianco, Amido resistente di tipo 2 (es. Tuberi, Castagne, Banane
+                                acerbe, etc.), Cannella, Lampone nero, Noci, Broccoli, Cavolfiore, Cavolo verde, Cavolo rosso, Tamarindo,
+                                Caffeina, Kiwi, Uva passa, Avocado, Melograno, Pompelmo.
+                            </p>
+                            <p>
+                                Integratori consigliati -> Acido retinoico, Acido tannico, Arbutina, Caffeina, Chitosano, Esperidina, Estratto
+                                di semi di pompelmo, FOS, Luteolina, Melatonina, Melone amaro (Momordica charantia), Radice di
+                                liquirizia, Resveratrolo, Vitamina B12, Vitamina B1, Vitamina B3, Vitamina B6, Vitamina B7, Vitamina C, ,
+                                Arabinogalattano, Estratto di semi di pompelmo, Inulina, Noni, Pectina, Psyllium, Resveratrolo, GOS,
+                                Vitamina D
+                            </p>
+                            <p>
+                                Probiotici consigliati -> Bacillus subtilis, Bifidobacterium lactis, Streptococcus thermophilus,
+                                Bifidobacterium longum, Lactobacillus casei, Lactobacillus gasseri, Lactobacillus kefiri (NON KEFIR),
+                                Lactobacillus plantarum, Lactobacillus reuteri, Lactobacillus rhamnosus GG, Lactobacillus acidophilus,
+                                Bacillus coagulans, Bifidobacterium adolescentis, Saccharomyces boulardii
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Metabolismo lipidico</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        le vie metaboliche che coinvolgono la specifica classe biochimica dei lipidi (grassi). Il
+                                        microbiota intestinale ha la capacità di elaborare i lipidi producendo metaboliti con impatti positivi e/o
+                                        negativi sull’omeostasi dell’ospite. Studi sull’uomo hanno trovato associazioni tra composizioni microbiche
+                                        del microbiota, profili lipidici e prevalenza di malattie metaboliche
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.meta_lip }}
+                            </p>
+                            <p>
+                                Integratori consigliati -> Acido retinoico, Acido tannico, Arbutina, Caffeina, Chitosano, Esperidina, Estratto
+                                di semi di pompelmo, FOS, Luteolina, Melatonina, Melone amaro (Momordica charantia), Radice di
+                                liquirizia, Resveratrolo, Vitamina B12, Vitamina B1, Vitamina B3, Vitamina B6, Vitamina B7, Vitamina C,
+                                Amido resistente, Arabinogalattano, Inulina, Noni, Pectina, Psyllium.
+                            </p>
+                            <p>
+                                Probiotici consigliati -> Bacillus subtilis, Bifidobacterium lactis, Streptococcus thermophilus,
+                                Bifidobacterium longum, Lactobacillus casei, Lactobacillus gasseri, Lactobacillus kefiri (NON KEFIR),
+                                Lactobacillus plantarum, Lactobacillus reuteri, Lactobacillus rhamnosus GG, Lactobacillus acidophilus
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Attività antinfiammatoria</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        la capacità del microbiota di produrre metaboliti con attività spiccatamente
+                                        anti-infiammatoria, immunostimolante e di protezione della mucosa intestinale
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.att_antinf }}
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Asse intestino-cervello</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        il complesso sistema di mutua interazione tra le componenti dell’intestino e del
+                                        sistema nervoso centrale ed enterico. La comunicazione tra il sistema nervoso centrale, l’intestino e il
+                                        microbiota sfrutta principalmente la via del nervo vago ma anche il sistema endocrino, l’asse ipotalamoipofisi-surrene e il sistema immunitario
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.as_cerv }}
+                            </p>
+                            <p>
+                                Alimenti consigliati -> Ribes nero, Yogurt bianco, Amido resistente di tipo 2 (es. Tuberi, Castagne, Banane
+                                acerbe, etc.), Cannella, Lampone nero
+                            </p>
+                            <p>
+                                Integratori consigliati -> Acido retinoico, Acido tannico, Arbutina, Caffeina, Chitosano, Esperidina, Estratto
+                                di semi di pompelmo, FOS, Luteolina, Melatonina, Melone amaro (Momordica charantia), Radice di
+                                liquirizia, Resveratrolo, Vitamina B12, Vitamina B1, Vitamina B3, Vitamina B6, Vitamina B7, Vitamina C
+                            </p>
+                            <p>
+                                Probiotici consigliati -> Bacillus subtilis, Bifidobacterium lactis, Streptococcus thermophilus,
+                                Bifidobacterium longum, Lactobacillus casei, Lactobacillus gasseri, Lactobacillus kefiri (NON KEFIR),
+                                Lactobacillus plantarum, Lactobacillus reuteri, Lactobacillus rhamnosus GG
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Asse intestino-fegato</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        il complesso sistema di mutua interazione tra le componenti dell’intestino e
+                                        dell’apparato epatico. Il microbiota ne modula diversi aspetti tramite i metaboliti batterici che possono
+                                        raggiungere il fegato attraverso la vena porta, dove vengono riconosciuti da specifici recettori, attivando il
+                                        sistema immunitario e portando ad una risposta pro-infiammatoria. Inoltre, il microbiota intestinale è
+                                        coinvolto nello sviluppo e nella progressione dell’infiammazione e della fibrosi della steatosi epatica non
+                                        alcolica (NAFLD) nonché nel processo di epatocarcinogenesi
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.as_fegato }}
+                            </p>
+                            <p>
+                                Alimenti consigliati -> Ribes nero, Yogurt bianco, Amido resistente di tipo 2 (es. Tuberi, Castagne, Banane
+                                acerbe, etc.), Cannella, Lampone nero, Noci, Broccoli, Cavolfiore, Cavolo verde, Cavolo rosso, Tamarindo,
+                                Caffeina, Kiwi, Uva passa, Avocado, Melograno, Pompelmo
+                            </p>
+                            <p>
+                                Integratori consigliati -> Acido retinoico, Acido tannico, Arbutina, Caffeina, Chitosano, Esperidina, Estratto
+                                di semi di pompelmo, FOS, Luteolina, Melatonina, Melone amaro (Momordica charantia), Radice di
+                                liquirizia, Resveratrolo, Vitamina B12, Vitamina B1, Vitamina B3, Vitamina B6, Vitamina B7, Vitamina C, ,
+                                Arabinogalattano, Estratto di semi di pompelmo, Inulina, Noni, Pectina, Psyllium, Resveratrolo, GOS,
+                                Vitamina D
+                            </p>
+                            <p>
+                                Probiotici consigliati -> Bacillus subtilis, Bifidobacterium lactis, Streptococcus thermophilus,
+                                Bifidobacterium longum, Lactobacillus casei, Lactobacillus gasseri, Lactobacillus kefiri (NON KEFIR),
+                                Lactobacillus plantarum, Lactobacillus reuteri, Lactobacillus rhamnosus GG, Lactobacillus acidophilus,
+                                Bacillus coagulans, Bifidobacterium adolescentis, Saccharomyces boulardii
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Asse intestino-pelle</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        il complesso sistema di mutua interazione tra le componenti dell’intestino e della
+                                        cute. L’intestino in condizioni fisiologiche rappresenta una barriera che seleziona accuratamente le
+                                        molecole che la attraversano ed è in grado di bloccare ciò che è potenzialmente dannoso (come le tossine).
+                                        Se però diventa permeabile, viene a mancare la sua capacità protettiva, consentendo dunque il passaggio di
+                                        sostanze che raggiungono diversi distretti corporei, tra i quali la pelle. Le patologie
+                                        dermatologiche nascono, dunque, anche di conseguenza all’accumulo di queste sostanze, scatenando una
+                                        serie di processi di tipo infiammatorio. Di qui l’importanza di condurre appropriate indagini per capire
+                                        il legame tra microbiota e pelle di modo tale da individuare come curare eventuali patologie
+                                        dermatologiche in maniera mirata ed efficace
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.dati_estratti.as_pelle }}
+                            </p>
+                            <p>
+                                Alimenti consigliati -> Ribes nero, Yogurt bianco, Amido resistente di tipo 2 (es. Tuberi, Castagne, Banane
+                                acerbe, etc.), Cannella, Lampone nero, Noci, Broccoli, Cavolfiore, Cavolo verde, Cavolo rosso, Tamarindo,
+                                Caffeina, Kiwi, Uva passa, Avocado, Melograno, Pompelmo
+                            </p>
+                            <p>
+                                Integratori consigliati -> Acido retinoico, Acido tannico, Arbutina, Caffeina, Chitosano, Esperidina, Estratto
+                                di semi di pompelmo, FOS, Luteolina, Melatonina, Melone amaro (Momordica charantia), Radice di
+                                liquirizia, Resveratrolo, Vitamina B12, Vitamina B1, Vitamina B3, Vitamina B6, Vitamina B7, Vitamina C, ,
+                                Arabinogalattano, Estratto di semi di pompelmo, Inulina, Noni, Pectina, Psyllium, Resveratrolo, GOS,
+                                Vitamina D
+                            </p>
+                            <p>
+                                Probiotici consigliati -> Bacillus subtilis, Bifidobacterium lactis, Streptococcus thermophilus,
+                                Bifidobacterium longum, Lactobacillus casei, Lactobacillus gasseri, Lactobacillus kefiri (NON KEFIR),
+                                Lactobacillus plantarum, Lactobacillus reuteri, Lactobacillus rhamnosus GG, Lactobacillus acidophilus,
+                                Bacillus coagulans, Bifidobacterium adolescentis, Saccharomyces boulardii
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Ritmo circadiano</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Il ritmo circadiano è lo schema di 24 ore che regola il comportamento, i processi cellulari
+                                        e il ciclo veglia/sonno di un organismo vivente. L’alterazione di questo ritmo può favorire disturbi come la
+                                        sindrome metabolica e le malattie cardiovascolari. Il ritmo del microbiota è regolato dalla dieta e dall’ora
+                                        del pasto, che possono alterarne sia la struttura, sia l’attività metabolica, influenzando in modo significativo
+                                        la funzione immunitaria e, appunto, metabolica dell’ospite
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.dati_estratti.ri_circa }}
+                            </p>
+                            <p>
+                                Alimenti consigliati -> Ribes nero, Yogurt bianco, Amido resistente di tipo 2 (es. Tuberi, Castagne, Banane
+                                acerbe, etc.), Cannella, Lampone nero, Noci, Broccoli, Cavolfiore, Cavolo verde, Cavolo rosso, Tamarindo,
+                                Caffeina, Kiwi, Uva passa, Avocado, Melograno, Pompelmo
+                            </p>
+                            <p>
+                                Integratori consigliati -> Acido retinoico, Acido tannico, Arbutina, Caffeina, Chitosano, Esperidina, Estratto
+                                di semi di pompelmo, FOS, Luteolina, Melatonina, Melone amaro (Momordica charantia), Radice di
+                                liquirizia, Resveratrolo, Vitamina B12, Vitamina B1, Vitamina B3, Vitamina B6, Vitamina B7, Vitamina C, ,
+                                Arabinogalattano, Estratto di semi di pompelmo, Inulina, Noni, Pectina, Psyllium, Resveratrolo, GOS,
+                                Vitamina D
+                            </p>
+                            <p>
+                                Probiotici consigliati -> Bacillus subtilis, Bifidobacterium lactis, Streptococcus thermophilus,
+                                Bifidobacterium longum, Lactobacillus casei, Lactobacillus gasseri, Lactobacillus kefiri (NON KEFIR),
+                                Lactobacillus plantarum, Lactobacillus reuteri, Lactobacillus rhamnosus GG, Lactobacillus acidophilus,
+                                Bacillus coagulans, Bifidobacterium adolescentis, Saccharomyces boulardii
+                            </p>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="parent-section mt-4">
+                    <summary>Rapporto Firmicutes/Bacteroidetes</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Firmicutes</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Phylum batterico particolarmente abbondante che assieme a Bacteroidota può arrivare a
+                                        costituire oltre l’80% dell’intero microbiota intestinale. Molti membri di questo phylum scompongono per
+                                        fermentazione i carboidrati indigeribili per l’uomo, come alcune fibre e amido resistenti, producendo acidi
+                                        grassi a catena corta utili per la salute. Il Firmicutes è coinvolto in molti altri processi metabolici e il suo
+                                        equilibrio è considerato cruciale per il benessere dell’intestino. Tra i Firmicutes ci sono anche specie
+                                        patogene, come il Clostridioides difficile e lo Staphylococcus aureus che sono causa comune di alcune
+                                        infezioni gravi.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ultimo_report.firmicutes }}    
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Bacteroidetes</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Phylum batterico particolarmente abbondante che assieme a Bacteroidota può arrivare a
+                                        costituire oltre l’80% dell’intero microbiota intestinale. Molti membri di questo phylum scompongono per
+                                        fermentazione i carboidrati indigeribili per l’uomo, come alcune fibre e amido resistenti, producendo acidi
+                                        grassi a catena corta utili per la salute. Il Firmicutes è coinvolto in molti altri processi metabolici e il suo
+                                        equilibrio è considerato cruciale per il benessere dell’intestino. Tra i Firmicutes ci sono anche specie
+                                        patogene, come il Clostridioides difficile e lo Staphylococcus aureus che sono causa comune di alcune
+                                        infezioni gravi.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.bacteroidetes }}    
+                            </p>
+                            <!-- <p>Riduzione rapporto: si osserva nei pazienti affetti da malattia di Chron o colite ulcerosa</p> -->
+                        </div>
+                </details>  
+
+                <details class="parent-section mt-4">
+                    <summary>Rapporto Prevotella/Bacteroides</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Prevotella</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Genere di batteri appartenente al phylum Bacteroidota che rappresenta uno dei gruppi più
+                                        abbondanti del microbiota intestinale. Un ecosistema dominato da questo genere è solitamente associato a
+                                        un regime alimentare con un elevato apporto di fibre, in effetti, studi di profilazione condotti in popolazioni
+                                        agricole e ad alto consumo di fibre in tutto il mondo hanno costantemente riportato che il genere
+                                        Prevotella è più dominante che nelle società urbanizzate che tipicamente consumano diete a basso
+                                        contenuto di fibre. Inoltre, esistono alcune specie di Prevotella che sono tipiche del microbiota orale e, se
+                                        rilevate nell’intestino, possono essere indicatrici di un’alterazione della barriera gastrica
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ultimo_report.prevotella }} 
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Bacteroides</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        metabolizzano polisaccaridi e oligosaccaridi, procurando nutrienti e vitamine all’ospite e ad
+                                        altri membri della popolazione microbica residenti a livello intestinale.
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.bacte_1 }}    
+                            </p>
+                            <p>Valore di riferimento: 0.002 - 14.1</p>
+                            <!-- <p>Riduzione rapporto: si osserva nei pazienti affetti da malattia di Chron o colite ulcerosa</p> -->
+                        </div>
+
+                    </div>
+                </details>
+
+                <details class="parent-section mt-4">
+                    <summary>Enterotipo</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>ENTEROTIPO</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                       Termine con il quale si può classificare un microbiota intestinale sulla base del genere batterico dominante,
+                                        ovvero con la più alta abbondanza relativa. Si tratta di una semplificazione utilizzata per inquadrare
+                                        grossolanamente le caratteristiche metaboliche del microbiota intestinale. Diversi studi, infatti, hanno
+                                        evidenziato l’esistenza di due possibili enterotipi ben definiti. Il primo è l’Enterotipo Bacteroides (dominato
+                                        dall’omonimo genere) ed è associato al consumo frequente di alimenti di origine animale, mentre il
+                                        secondo è l’Enterotipo Prevotella (dominato dall’omonimo genere) associato al consumo frequente di
+                                        alimenti di origine vegetale. In aggiunta ai precedenti, è possibile trovare altri Enterotipi definiti dalla
+                                        dominanza di generi batterici che non sono Bacteroides né Prevotella e che sono da considerarsi come stadi
+                                        intermedi in un processo di transizione da Enterotipo Bacteroides a Prevotella, o viceversa. Questo
+                                        particolare enterotipo può prendere il nome del genere batterico dominante o più semplicemente Misto
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ultimo_report.enter }}    
+                            </p>
+                        </div>
+
+                    </div>
+
+                </details>
+
+                <details class="parent-section mt-4">
+                    <summary>Ecologia Batterica – Livello Phylum</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Firmicutes</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Phylum batterico particolarmente abbondante che assieme a Bacteroidota può arrivare a
+                                        costituire oltre l’80% dell’intero microbiota intestinale. Molti membri di questo phylum scompongono per
+                                        fermentazione i carboidrati indigeribili per l’uomo, come alcune fibre e amido resistenti, producendo acidi
+                                        grassi a catena corta utili per la salute
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.firmi }}</span>    
+                            </p>
+                            <p>Valore di riferimento: 33.9 – 63.2</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Bacteroidetes</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Uno dei principali phyla batterici che compongono il microbiota intestinale, rappresenta uno
+                                        dei gruppi metabolicamente più eterogenei. Diversi batteri appartenenti a questo phylum sono alleati del
+                                        nostro corpo, altri sono patogeni opportunisti capaci di produrre composti tossici
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.bacte_2 }}</span>    
+                            </p>
+                            <p>Valore di riferimento: 22.8 – 55.1</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Actinobacteria</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Phylum batterico comunemente presente nel microbiota intestinale in quantità
+                                        solitamente limitata. Comprende il noto genere Bifidobacterium a cui appartengono diverse specie
+                                        probiotiche. La maggioranza di Actinobacteria è composto da importanti saprofiti capaci di scomporre
+                                        un’ampia gamma di composti vegetali e animali
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.dati_estratti.actino }}
+                            </p>
+                            <p>Valore di riferimento: 0 – 14.2</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Verrucomicrobia</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        phylum di batteri Gram-negativi che appartengono al dominio dei procarioti
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.verruc }}</span>    
+                            </p>
+                            <p>Valore di riferimento: 0 – 10.1</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Euryarchaeota</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        costituiscono il gruppo più grande appartenente al regno degli Archaea. Tra loro troviamo
+                                        archebatteri che producono metano, organismi estremofili (come, ad esempio, alofili e ipertermofili), e
+                                        organismi marini
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.eurya }}</span>    
+                            </p>
+                            <p>Valore di riferimento: 0 – 2.2</p>
+                        </div>  
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Fusobacteria</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Genere di batteri commensali dell’intestino tra i quali si segnala la presenza del patobionte
+                                        Fusobacterium nucleatum. Esso è stato associato in numerosi studi a importanti stati infiammatori e
+                                        condizioni promuoventi il cancro al colon-retto, specie se in co-presenza di altri enterobatteri
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ultimo_report.fusob }}   
+                            </p>
+                            <p>Valore di riferimento: 0 – 6.4</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Lentisphaerae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        phylum che contiene due ordini, Lentisphaerales e Victivallales. I membri di questo phylum
+                                        possono essere aerobici o anaerobici
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ultimo_report.lentis }}    
+                            </p>
+                            <p>Valore di riferimento: 0 – 0.4</p>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="parent-section mt-4">
+                    <summary>Ecologia Batterica – Livello Famiglia</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Ruminococcaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Importante famiglia di Firmicutes capace di fermentare le fibre e produrre acidi grassi a
+                                        catena corta. È associata a marcatori di salute, come la ricchezza microbica (biodiversità) e la magrezza, e si
+                                        ritiene che presenti effetti antinfiammatori. Tra i principali generi si segnalano: Anaerostipes, Butyrivibrio,
+                                        Faecalibacterium, Oscillospira, Ruminococcus
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ultimo_report.rumino }}  
+                            </p>
+                            <p>Valore di riferimento: 10.4 – 27.9</p>
+                            <p>Alimenti consigliati -> noci</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Lachnospiraceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Importante famiglia di Firmicutes in grado di influenzare la salute umana attraverso la
+                                        produzione di molecole come gli acidi grassi a catena corta. Nell’ambiente intestinale alcuni taxa batterici
+                                        degradano fibre indigeribili aumentandone la biodisponibilità per l’assorbimento da parte dell’ospite. Le
+                                        specie Blautia e Roseburia, spesso associate ad uno stato di salute, sono alcuni dei principali produttori di
+                                        acidi grassi a catena corta e sono i generi maggiormente coinvolti nel controllo dei processi infiammatori
+                                        intestinali, dell’aterosclerosi e della maturazione del sistema immunitario, dimostrando che i prodotti finali
+                                        del metabolismo batterico mediano questi fenomeni. Tra i principali generi si segnalano, oltre alle già citate
+                                        Blautia e Roseburia: Anaerostipes, Butyrivibrio, Coprococcus, Dorea e Lachnospira
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ultimo_report.lachno }}   
+                            </p>
+                            <p>Valore di riferimento: 6.2 – 20.1</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Firmicutes_unclassified</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p>Valore di riferimento: 0.1 – 10.8</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Eubacteriaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p>Valore di riferimento: 0.1 – 10.8</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Oscillospiraceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.oscillo }}</span>    
+                            </p>
+                            <p>Valore di riferimento: 0 - 2.8</p>
+                        </div>  
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Streptococcaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        gruppo di batteri Gram-positivi che comprende diversi generi, tra cui lo streptococco
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio aumento">
+                                {{ ultimo_report.strept }}   
+                            </p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Veillonellaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p>Valore di riferimento: 0 – 1.9</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Peptostreptococcaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p>Valore di riferimento: 0 – 0.2</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Bacteroidaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        Famiglia del phylum Bacteroidota che contiene microrganismi molto diversificati e
+                                        versatili, in grado di sopravvivere e proliferare anche in condizioni non ottimali o addirittura sfavorevoli,
+                                        come la deprivazione di alcuni nutrienti chiave. Per questo motivo un’eccessiva proliferazione di questo
+                                        gruppo batterico può essere un segnale di un ecosistema in condizioni di stress, dovuto ad una scarsa
+                                        disponibilità di nutrienti, ad una terapia antibiotica o, in alcuni casi, ad una patologia in atto. Un’alterazione
+                                        a carico di una di queste famiglie batteriche può essere indice di un ecosistema particolarmente
+                                        destrutturato
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                {{ ultimo_report.bactero }}    
+                            </p>
+                            <p>Valore di riferimento: 5.6 – 32.2</p>
+                            <p>Alimenti consigliati -> cranberry</p>
+                        </div>
+                        
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Rikenellaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p>Valore di riferimento: 1.1 – 13.9</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Tannerellaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p>Valore di riferimento: 0.3 – 3.6</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Odoribacteraceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        batteri appartenenti al phylum Actinobacteria largamente studiato perché
+                                        comprensivo di specie con attività probiotica che possono contribuire alla salute intestinale e sistemica. Tra
+                                        gli effetti positivi dei Bifidobacterium si registrano la protezione da agenti patogeni, la regolazione del
+                                        sistema immunitario, la produzione di vitamine e la conversione di composti immessi con la dieta in
+                                        molecole bioattive. I bifidobatteri sono inoltre coinvolti nel miglioramento della riduzione della colite
+                                        ulcerosa e della sindrome del colon irritabile (IBS)
+                                    </p>
+                                </button>
+                            </div>
+                            <p>Valore di riferimento: 0 – 11.9</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Coriobacteriaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p>Valore di riferimento: 0 – 3.5</p>
+                        </div>
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Desulfovibrionaceae</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p>Valore di riferimento: 0 – 0.9</p>
+                        </div>
+
+                    </div>
+                </details>
+
+                <details class="parent-section mt-4">
+                    <summary>Ecologia Batterica – Livello Genere</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Patogeni rilevati:</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.patogeni_rilevati }}</span>    
+                            </p>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="parent-section mt-4">
+                    <summary>Micologia</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Micete identificato</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.miceti_n }}</span>    
+                            </p>
+                        </div>
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Abbondanza relativa</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.dati_estratti.numero_di_specie_obs_species }}</span>    
+                            </p>
+                        </div>
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Patogenicità: patogeno/non patogeno</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.dati_estratti.numero_di_specie_obs_species }}</span>    
+                            </p>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="parent-section mt-4">
+                    <summary>Componente virale</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Virus identificati:</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.virus_n }}</span>    
+                            </p>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="parent-section mt-4">
+                    <summary>Parassiti</summary>
+                          
+                    <div class="grid-container-indici" style="grid-template-columns: repeat(3, 1fr);">
+
+                        <div class="indici">
+                            <div class="indici-title">
+                                <h5>Parassiti identificati</h5>
+                                <button>
+                                    <img src="{% static 'image/Info.png' %}" alt="">
+                                    <p class="description-exam">
+                                        testo
+                                    </p>
+                                </button>
+                            </div>
+                            <p class="punteggio">
+                                punteggio: <span>{{ ultimo_report.parassiti_n }}</span>    
+                            </p>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>

@@ -1,0 +1,456 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+    
+    <title>Età Biologica - Grafici</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/eta_metabolica/etaMetabolica.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/eta_biologica/grafici.css' %}">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+    <!-- CDN import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>  
+    
+</head>
+
+<body>
+    <!-- LOADER -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBarPatient.html' %}
+
+    <main>
+
+        <!-- MAIN MENU TRACE -->
+        <div class="main-title-nav">
+            <div class="back-tittle">
+                <a id="back" href="{% url 'eta_biologica' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+                <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                      <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                      </span> |
+                      <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                        Email: {{ persona.email }}
+                      </span>
+                    {% endif %}
+                </h2>
+            </div>
+           
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>                    
+                <p>»</p>
+                <p>
+                  <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                </p>
+               
+                <p>»</p>
+                  <a href="{% url 'eta_biologica' persona.id %}">Età Biologica</a>
+                <p>»</p>
+                <p class="breadcrumb">Grafici Andamento</p>
+            </div>
+        </div>
+
+        <!-- CONTAINER GRAFICO COMPOSIZIONE CORPOREA-->
+        <div class="card_grafico">
+
+            <h3>Salute del Cuore</h3>
+            
+            <div class="chart-container" style="position: relative; width: 100%; margin: 0 auto;">
+              <canvas id="composizioneChart" style="min-height: 300px;"></canvas>
+
+              <div id="grafico-vuoto-overlay">
+                Non ci sono abbastanza valori per visualizzare l'andamento
+              </div>
+
+            </div>
+            
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                const ctx = document.getElementById('composizioneChart').getContext('2d');
+
+                // 1) Etichette e dati dal context
+                const labels      = {{ labels_heart|safe }};
+                const tot_chol    = {{ tot_chol|safe }};
+                const ldl_chol    = {{ ldl_chol|safe }};
+                const hdl_chol    = {{ hdl_chol|safe }};
+                const trigl       = {{ trigl|safe }};
+                const pai1        = {{ pai_1|safe }};
+                const dDimero     = {{ d_dimero|safe }};
+                const dRoms       = {{ d_roms|safe }};
+                const pat         = {{ pat|safe }};
+                const osi         = {{ osi|safe }};
+
+                // 2) Costruisco il grafico
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                    labels,
+                    datasets: [
+                        { label: 'Tot Chol (mg/dL)',        data: tot_chol,  borderColor: '#3a255d', fill:false },
+                        { label: 'LDL (mg/dL)',             data: ldl_chol,  borderColor: '#6a2dcc', fill:false },
+                        { label: 'HDL (mg/dL)',             data: hdl_chol,  borderColor: '#9b59b6', fill:false },
+                        { label: 'Trigliceridi (mg/dL)',    data: trigl,     borderColor: '#a29bfe', fill:false },
+                        { label: 'PAI-1',                   data: pai1,      borderColor: '#e53e3e', fill:false },
+                        { label: 'D-Dimero (ng/mL)',        data: dDimero,   borderColor: '#d69e2e', fill:false },
+                        { label: 'd-ROMs',                  data: dRoms,     borderColor: '#38a169', fill:false },
+                        { label: 'PAT',                     data: pat,       borderColor: '#2c7a7b', fill:false },
+                        { label: 'OSI',                     data: osi,       borderColor: '#dd6b20', fill:false }
+                    ]
+                    },
+                    options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Salute del Cuore – Andamento' }
+                    },
+                    scales: {
+                        y: { beginAtZero: false, title: { display: true, text: 'Valori Clinici' } }
+                    }
+                    }
+                });
+
+                // 3) Overlay “vuoto” se TUTTE le serie sono vuote
+                const overlay = document.getElementById('grafico-vuoto-overlay');
+                const isAllEmpty = arrs => arrs.every(a => !a || a.every(v => v===null));
+                if (isAllEmpty([tot_chol, ldl_chol, hdl_chol, trigl, pai1, dDimero, dRoms, pat, osi])) {
+                    overlay.style.display = 'flex';
+                } else {
+                    overlay.style.display = 'none';
+                }
+                });
+            </script>
+
+        </div>
+        
+        <div class="card_grafico">
+            <h3>Salute Renale</h3>
+            <div class="chart-container" style="position: relative; width:100%; margin:0 auto;">
+              <canvas id="renalChart" style="min-height:300px;"></canvas>
+              <div id="overlay-renal">Non ci sono abbastanza valori per visualizzare l’andamento</div>
+            </div>
+        </div>
+
+        <div class="card_grafico">
+            <h3>Salute Epatica</h3>
+            <div class="chart-container" style="position:relative; width:100%; margin:0 auto;">
+              <canvas id="liverChart" style="min-height:300px;"></canvas>
+              <div id="overlay-liver">Non ci sono abbastanza valori per visualizzare l'andamento</div>
+            </div>
+        </div>
+
+        <div class="card_grafico">
+            <h3>Salute Cerebrale</h3>
+            <div class="chart-container" style="position:relative; width:100%; margin:0 auto;">
+              <canvas id="brainChart" style="min-height:300px;"></canvas>
+              <div id="overlay-brain">Non ci sono abbastanza valori per visualizzare l'andamento</div>
+            </div>
+        </div>
+          
+        <div class="card_grafico">
+            <h3>Salute Ormonale</h3>
+            <div class="chart-container" style="position:relative; width:100%; margin:0 auto;">
+              <canvas id="hormonalChart" style="min-height:300px;"></canvas>
+              <div id="overlay-hormonal">Non ci sono abbastanza valori per visualizzare l'andamento</div>
+            </div>
+        </div>  
+
+        <div class="card_grafico">
+          <h3>Salute del Sistema Immunitario</h3>
+          <div class="chart-container" style="position:relative; width:100%; margin:0 auto;">
+            <canvas id="immuneChart" style="min-height:300px;"></canvas>
+            <div id="overlay-immune">Non ci sono abbastanza valori per visualizzare l'andamento</div>
+          </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('immuneChart').getContext('2d');
+
+            // Dati dal context
+            const labels  = {{ labels_immune | safe }};
+            const pcr     = {{ pcr_list      | safe }};
+            const tnf     = {{ tnf_list      | safe }};
+            const il6     = {{ il6_list      | safe }};
+            const il10    = {{ il10_list     | safe }};
+
+            // Costruisco il line chart
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels,
+                datasets: [
+                  { label: 'PCR-C (mg/L)',           data: pcr,  borderColor: '#6a2dcc', fill:false },
+                  { label: 'TNF-α (pg/mL)',          data: tnf,  borderColor: '#e53e3e', fill:false },
+                  { label: 'IL-6 (pg/mL)',           data: il6,  borderColor: '#38a169', fill:false },
+                  { label: 'IL-10 (ng/mL)',          data: il10, borderColor: '#3a255d', fill:false }
+                ]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { position: 'bottom' },
+                  title:  { display: true, text: 'Salute Sistema Immunitario – Andamento' }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Valori Clinici' }
+                  }
+                }
+              }
+            });
+
+            // Overlay “vuoto” se tutte le serie sono vuote
+            const overlay = document.getElementById('overlay-immune');
+            const isAllEmpty = arrs => arrs.every(a => !a || a.every(v => v===null));
+            if (isAllEmpty([pcr,tnf,il6,il10])) {
+              overlay.style.display = 'flex';
+            } else {
+              overlay.style.display = 'none';
+            }
+          });
+        </script>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('hormonalChart').getContext('2d');
+          
+            // 1) Prendo i dati dal context
+            const labels  = {{ labels_hormonal | safe }};
+            const glic    = {{ glicemia_list   | safe }};
+            const tsh     = {{ tsh_list        | safe }};
+            const insu    = {{ insulina_list   | safe }};
+            const homa    = {{ homa_list       | safe }};
+            const ir      = {{ ir_list         | safe }};
+          
+            // 2) Creo il line chart
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels,
+                datasets: [
+                  { label: 'Glicemia (mg/dL)',               data: glic,  borderColor: '#6a2dcc', fill: false },
+                  { label: 'TSH (µIU/mL)',                   data: tsh,   borderColor: '#9b59b6', fill: false },
+                  { label: 'Insulina (ng/mL)',               data: insu,  borderColor: '#3a255d', fill: false },
+                  { label: 'HOMA index',                     data: homa,  borderColor: '#e53e3e', fill: false },
+                  { label: 'IR (Insulin Resistance) index',  data: ir,    borderColor: '#d69e2e', fill: false }
+                ]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { position: 'bottom' },
+                  title:  { display: true, text: 'Salute Ormonale – Andamento' }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Valori Clinici' }
+                  }
+                }
+              }
+            });
+          
+            // 3) Overlay “vuoto” se tutte le serie sono vuote
+            const overlay = document.getElementById('overlay-hormonal');
+            const isAllEmpty = arrs => arrs.every(a => !a || a.every(v => v===null));
+            if (isAllEmpty([glic, tsh, insu, homa, ir])) {
+              overlay.style.display = 'flex';
+            } else {
+              overlay.style.display = 'none';
+            }
+          });
+        </script>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('brainChart').getContext('2d');
+          
+            // 1) Dati dal context
+            const labels = {{ labels_brain | safe }};
+            const mg     = {{ mag_list     | safe }};
+            const na     = {{ na_list      | safe }};
+            const k      = {{ k_list       | safe }};
+            const b12    = {{ b12_list     | safe }};
+          
+            // 2) Creo il grafico
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels,
+                datasets: [
+                  { label: 'Magnesio (mg/dL)',       data: mg,    borderColor: '#6a2dcc', fill: false },
+                  { label: 'Sodio (mEq/L)',          data: na,    borderColor: '#9b59b6', fill: false },
+                  { label: 'Potassio (mEq/L)',       data: k,     borderColor: '#3a255d', fill: false },
+                  { label: 'Vitamina B12 (pg/mL)',   data: b12,   borderColor: '#e53e3e', fill: false }
+                ]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { position: 'bottom' },
+                  title:  { display: true, text: 'Salute Cerebrale – Andamento' }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Valori Clinici' }
+                  }
+                }
+              }
+            });
+          
+            // 3) Overlay “vuoto”
+            const overlay = document.getElementById('overlay-brain');
+            const isAllEmpty = arrs => arrs.every(a => !a || a.every(v => v===null));
+            if (isAllEmpty([mg, na, k, b12])) {
+              overlay.style.display = 'flex';
+            } else {
+              overlay.style.display = 'none';
+            }
+          });
+        </script>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('liverChart').getContext('2d');
+          
+            // 1) Prendo i dati dal context
+            const labels     = {{ labels_liver   | safe }};
+            const ggt        = {{ ggt_list       | safe }};
+            const alp        = {{ alp_list       | safe }};
+            const got        = {{ got_list       | safe }};
+            const gpt        = {{ gpt_list       | safe }};
+            const biliDir    = {{ bili_dir_list  | safe }};
+            const biliIndir  = {{ bili_indir_list| safe }};
+            const albumin    = {{ albumin_list   | safe }};
+          
+            // 2) Costruisco il line chart
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels,
+                datasets: [
+                  { label: 'GGT (U/L)',                     data: ggt,      borderColor: '#6a2dcc', fill: false },
+                  { label: 'ALP (U/L)',                     data: alp,      borderColor: '#9b59b6', fill: false },
+                  { label: 'GOT (AST) (U/L)',               data: got,      borderColor: '#3a255d', fill: false },
+                  { label: 'GPT (ALT) (U/L)',               data: gpt,      borderColor: '#e53e3e', fill: false },
+                  { label: 'Bilirubina Diretta (mg/dL)',    data: biliDir,  borderColor: '#d69e2e', fill: false },
+                  { label: 'Bilirubina Indiretta (mg/dL)',  data: biliIndir,borderColor: '#38a169', fill: false },
+                  { label: 'Albumina (g/dL)',               data: albumin,  borderColor: '#2c7a7b', fill: false }
+                ]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { position: 'bottom' },
+                  title:  { display: true, text: 'Salute Epatica – Andamento' }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Valori Clinici' }
+                  }
+                }
+              }
+            });
+          
+            // 3) Overlay “vuoto”
+            const overlay = document.getElementById('overlay-liver');
+            const isAllEmpty = arrs => arrs.every(a => !a || a.every(v => v===null));
+            if (isAllEmpty([ggt, alp, got, gpt, biliDir, biliIndir, albumin])) {
+              overlay.style.display = 'flex';
+            } else {
+              overlay.style.display = 'none';
+            }
+          });
+        </script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const ctx = document.getElementById('renalChart').getContext('2d');
+            
+                // 1) Prendo i dati dal context
+                const labels  = {{ labels_renal    | safe }};
+                const creat   = {{ creat_in        | safe }};
+                const azot    = {{ azotemia_list   | safe }};
+                const cyst    = {{ cystatine_list  | safe }};
+                const uric    = {{ uric_in         | safe }};
+            
+                // 2) Disegno il chart
+                new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                    { label: 'Creatinina (mg/dL)',       data: creat, borderColor: '#6a2dcc', fill: false },
+                    { label: 'Azotemia (mg/dL)',         data: azot,  borderColor: '#9b59b6', fill: false },
+                    { label: 'Cistatina C (mg/L)',       data: cyst,  borderColor: '#3a255d', fill: false },
+                    { label: 'Uricemia (mg/dL)',         data: uric,  borderColor: '#e53e3e', fill: false },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                    legend:  { position: 'bottom' },
+                    title:   { display: true, text: 'Salute Renale – Andamento' }
+                    },
+                    scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Valori clinici' }
+                    }
+                    }
+                }
+                });
+            
+                // 3) Overlay se tutte le serie sono vuote
+                const overlay = document.getElementById('overlay-renal');
+                const isAllEmpty = arrs => arrs.every(a => !a || a.every(v => v===null));
+                if (isAllEmpty([creat, azot, cyst, uric])) {
+                overlay.style.display = 'flex';
+                } else {
+                overlay.style.display = 'none';
+                }
+            });
+        </script>
+        
+    </main>
+
+    <!-- Import CDN js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</body>
+</html>

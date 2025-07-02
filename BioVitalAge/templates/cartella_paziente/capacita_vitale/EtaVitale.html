@@ -1,0 +1,537 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <!-- Favicon -->
+    <link rel="sortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    <title>BVA - Età Bio Vitale</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/capacita_vitale/EtaVitale.css' %}">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+    <!-- JS CDN IMPORT -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
+</head>
+
+<body>
+    
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBarPatient.html' %}
+    
+
+    <main>
+
+        <!-- MENU TRACE -->
+        <div class="main-title-nav">
+            <div class="back-tittle">
+                <a id="back" href="{% url 'cartella_paziente' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+                <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                      <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                      </span> |
+                      <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                        Email: {{ persona.email }}
+                      </span>
+                    {% endif %}
+                </h2>
+            </div>
+
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>
+                <p>»</p>
+                <p>
+                    <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                </p>
+                <p>»</p>
+                <p class="breadcrumb">Età Bio Vitale</p>
+            </div>
+        </div>
+
+        <!-- MODALE RISULTATO -->
+        <script>
+            function closeModal(){
+                document.getElementById('ModalRisultato').style.display = 'none'
+                document.getElementById('backdropModal').style.display = 'none'
+            }
+        </script>
+       
+        {% if modal %}
+            <div class="backdropModale" id="backdropModal"></div>
+            <div class="modaleRisultato" id="ModalRisultato">
+                <h3>
+                    Risultato Calcolo Età BioVitale
+                </h3>
+                <p>{{ Referto.punteggio }}</p>
+
+                <button class="button button--submit" onclick="closeModal()">
+                    <span class="button__icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-label="Close" role="img" class="button__icon-svg">
+                            <!-- Icona close - Croce stilizzata -->
+                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-label="Close" role="img" class="button__icon-svg button__icon-svg--copy">
+                            <!-- Icona close - Croce stilizzata -->
+                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                    Chiudi
+                </button> 
+            </div>
+        {% endif %}
+
+
+
+        <div class="containerPrincipale">
+            <div class="contenitoreTest">
+                <div class="contenitoreTest-Header">
+                    <img src="{% static 'image/Sezione_Vitale.png' %}" alt="" width="50px" height="50px">
+                    <h3>Test della capacità Vitale</h3>
+                </div>
+                
+                <div class="contentTest">
+                    <p style="margin-bottom: 20px;">Per capacità vitale si intende uno stato fisiologico (dovuto a
+                        normali
+                        o accelerati processi di invecchiamento biologico) risultante dall'interazione tra più sistemi fisiologici, che
+                        si
+                        riflette nel livello di energia e nel metabolismo, nella funzione neuromuscolare e nelle funzioni immunitarie e
+                        di
+                        risposta allo stress del corpo (I. Bautmans et al.,2022).
+                    </p>
+                    <p>
+                        Il test si compone di 5 domini:
+                    <ul style="margin-top: 1rem; margin-bottom: 1rem;" id="lista_domini">
+                        <li><a href="{% url 'updateTestEtaVitale' persona.id %}?card_name=cognitivo">Dominio cognitivo;</a></li>
+                        <li><a href="{% url 'updateTestEtaVitale' persona.id %}?card_name=psicologico">Dominio psicologico;</a></li>
+                        <li><a href="{% url 'updateTestEtaVitale' persona.id %}?card_name=sensoriale">Dominio sensoriale;</a></li>
+                        <li><a href="{% url 'updateTestEtaVitale' persona.id %}?card_name=vitalità">Dominio della vitalità;</a></li>
+                        <li><a href="{% url 'updateTestEtaVitale' persona.id %}?card_name=locomozione">Dominio della locomozione.</a></li>
+                    </ul>
+                        <p style="margin-top: 2rem;">
+                            Il punteggio viene calcolato dai risultati dei test per ciascun dominio, complementati dall’analisi di biomarcatori
+                            circolanti dell’infiammazione e del metabolismo.
+                        </p>
+                    </p>
+                
+                
+                    
+                </div>
+                
+            </div>
+
+             <!-- TABELLA REFERTI -->
+            <div class="RefertiVitale">
+                <div class="TabellaVitale-header">
+                    <h3>Elenco referti capacità Vitale</h3>
+                    <div class="filtri-button">
+                        <select name="filter" id="filter" class="custom-select">
+                            <option value="name">Ordinato per data più recente</option>
+                            <option value="surname">Ordinato per data meno recente</option>
+                            <option value="fisc_code">Ordinato per valore positivo</option>
+                            <option value="personal_association">Ordinato per valore negativo</option>
+                        </select>
+                        <span class="custom-arrow"></span>
+                    </div>
+                </div>
+                <div class="table-container">
+                        <div class="table-header">
+                            <p>Punteggio Ottenuto</p>
+                            <p>Data Referto</p>
+                            <p>Mostra Referto</p>
+                            <p>Scarica Referto</p>
+                        </div>
+                        <div class="table-content">
+                            {% for referto in referti_test_recenti %}
+                            <div class="riga-container">
+                                <p>{{ referto.punteggio }}</p>
+                                <p>{{ referto.data_referto }}</p>
+                                <p>
+                                    <a href="{% url 'referto_test' persona.id referto.id %}">
+                                        <img src="{% static 'image/Referto.png' %}" alt="" />
+                                    </a>
+                                </p>
+                                <p>
+
+                                    <a href="{% url 'download_pdf_vitale' persona.id referto.id %}" 
+                                        id="pdfCapacitaVitale">
+                                        <img src="{% static 'image/Referto_Scarica.png' %}" alt="Scarica PDF">
+                                    </a>
+                                </p>
+                            </div>
+                            {% empty %}
+                            <p class="text-center mt-2 mb-2">Nessun referto recente trovato.</p>
+                            {% endfor %}
+
+
+                            <!-- <input type="hidden" id="pdfCapacitaVitale" 
+                                    data-name = "{{ persona.name }}"
+                                    data-surname = "{{ persona.surname }}"
+                                    data-dob = "{{ persona.dob }}"
+                                    data-cf = "{{ persona.codice_fiscale }}"
+                                    data-place_birth = "{{ persona.place_of_birth }}"
+                                    data-chronological_age = "{{ persona.chronological_age }}"
+                                    data-risultato_capacita = "{{ referto.punteggio }}"
+                                    data-risultato_mmse = "{{ datiEstesi.MMSE }}"
+                                    data-risultato_gds = "{{ datiEstesi.GDS }}"
+                                    data-risultato_loc = "{{ datiEstesi.LOC }}"
+                                    data-risultato_vista = "{{ datiEstesi.Vista }}"
+                                    data-risultato_udito = "{{ datiEstesi.Udito }}"
+                                    data-risultato_hgs = "{{ datiEstesi.HGS }}"
+                                    data-risultato_pft = "{{ datiEstesi.PFT }}"
+                                    data-risultato_isq = "{{ datiEstesi.ISQ }}"
+                                    data-risultato_bmi = "{{ datiEstesi.BMI }}"
+                                    data-risultato_cdp = "{{ datiEstesi.CDP }}"
+                                    data-risultato_whr = "{{ datiEstesi.WHR }}"
+                                    data-risultato_whr_ratio = "{{ datiEstesi.WHR_Ratio }}"
+                                    data-risultato_cst = "{{ datiEstesi.CST }}"
+                                    data-risultato_gs = "{{ datiEstesi.GS }}"
+                                    data-risultato_ppt = "{{ datiEstesi.PPT }}"
+                                    data-risultato_sarc_f = "{{ datiEstesi.SARC_F }}">
+
+                             -->
+                           
+                           <script>
+                                
+                                var pdfData = {
+                                    name: "{{ persona.name }}",
+                                    surname: "{{ persona.surname }}",
+                                    dob: "{{ persona.dob }}",
+                                    cf: "{{ persona.codice_fiscale }}",
+                                    place_birth: "{{ persona.place_of_birth }}",
+                                    chronological_age: "{{ persona.chronological_age }}",
+                                    risultato_capacita: "{{ referto.punteggio }}",
+                                    risultato_mmse: "{{ datiEstesi.MMSE }}",
+                                    risultato_gds: "{{ datiEstesi.GDS }}",
+                                    risultato_loc: "{{ datiEstesi.LOC }}",
+                                    risultato_vista: "{{ datiEstesi.Vista }}",
+                                    risultato_udito: "{{ datiEstesi.Udito }}",
+                                    risultato_hgs: "{{ datiEstesi.HGS }}",
+                                    risultato_pft: "{{ datiEstesi.PFT }}",
+                                    risultato_isq: "{{ datiEstesi.ISQ }}",
+                                    risultato_bmi: "{{ datiEstesi.BMI }}",
+                                    risultato_cdp: "{{ datiEstesi.CDP }}",
+                                    risultato_whr: "{{ datiEstesi.WHR }}",
+                                    risultato_whr_ratio: "{{ datiEstesi.WHR_Ratio }}",
+                                    risultato_cst: "{{ datiEstesi.CST }}",
+                                    risultato_gs: "{{ datiEstesi.GS }}",
+                                    risultato_ppt: "{{ datiEstesi.PPT }}",
+                                    risultato_sarc_f: "{{ datiEstesi.SARC_F }}"
+                                };
+                            
+
+                                if (typeof PDFDocument === "undefined" && typeof PDFLib !== "undefined") {
+                                    var { PDFDocument, rgb, StandardFonts } = PDFLib;
+                                }
+
+                                async function generatePDF() {
+
+                                    const hiddenInput = document.getElementById("pdfCapacitaVitale");
+
+                                    try {
+                                        if (!hiddenInput) {
+                                            console.error("Errore: hiddenInput non è stato trovato.");
+                                            return;
+                                        }
+
+                                        const existingPdfBytes = await fetch(
+                                            "/static/includes/pdfTemplates/RefertoCapacitaVitale.pdf"
+                                        ).then((res) => res.arrayBuffer());
+
+                                        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                                        const pages = pdfDoc.getPages();
+
+                                        function getHiddenData(attr) {
+                                            if (!hiddenInput) return ""; 
+                                            return hiddenInput.getAttribute(attr) || ""; 
+                                        }
+
+                                        // Recupero dati dinamico
+                                        const name = pdfData['name'];
+                                        const surname = pdfData['surname'];
+                                        const dob = pdfData['dob'];
+                                        const cf = pdfData['cf'];
+                                        const place_birth = pdfData['place_birth'];
+                                        const chronological_age = pdfData['chronological_age'];
+
+                                        const risultato_capacita = pdfData['risultato_capacita'];
+                                        const risultato_mmse = pdfData['risultato_mmse'];
+                                        const risultato_gds = pdfData['risultato_gds'];
+                                        const risultato_loc = pdfData['risultato_loc'];
+                                        const risultato_vista = pdfData['risultato_vista'];
+                                        const risultato_udito = pdfData['risultato_udito'];
+                                        const risultato_hgs = pdfData['risultato_hgs'];
+                                        const risultato_pft = pdfData['risultato_pft'];
+                                        const risultato_isq = pdfData['risultato_isq'];
+                                        const risultato_bmi = pdfData['risultato_bmi'];
+                                        const risultato_cdp = pdfData['risultato_cdp'];
+                                        const risultato_whr = pdfData['risultato_whr'];
+                                        const risultato_whr_ratio = pdfData['risultato_whr_ratio'];
+                                        const risultato_cst = pdfData['risultato_cst'];
+                                        const risultato_gs = pdfData['risultato_gs'];
+                                        const risultato_ppt = pdfData['risultato_ppt'];
+                                        const risultato_sarc_f = pdfData['risultato_sarc_f'];
+
+
+                                        // PAGINA 1 - Informazioni personali
+                                        const personalInformationPages = pages[0];
+
+                                        personalInformationPages.drawText(`${name}`, { x: 380, y: 654, size: 12, color: rgb(0, 0, 0) });
+                                        personalInformationPages.drawText(`${surname}`, { x: 455, y: 654, size: 12, color: rgb(0, 0, 0) });
+                                        personalInformationPages.drawText(`${dob}`, { x: 340, y: 638, size: 12, color: rgb(0, 0, 0) });
+                                        personalInformationPages.drawText(`${cf}`, { x: 295, y: 622, size: 12, color: rgb(0, 0, 0) });
+                                        personalInformationPages.drawText(`${place_birth}`, { x: 280, y: 638, size: 12, color: rgb(0, 0, 0) });
+                                        personalInformationPages.drawText(`${chronological_age}`, { x: 480, y: 638, size: 12, color: rgb(0, 0, 0) });
+                                        personalInformationPages.drawText(`${risultato_capacita}`, { x: 150, y: 530, size: 12, color: rgb(0, 0, 0) });
+
+                                        // PAGINA 2 - MMSE
+                                        const secondPage = pages[1];
+                                        secondPage.drawText(`${risultato_mmse}`, { x: 200, y: 438, size: 12, color: rgb(0, 0, 0) });
+
+                                        // PAGINA 3 - GDS e LOC
+                                        const thirdPage = pages[2];
+                                        thirdPage.drawText(`${risultato_gds}`, { x: 200, y: 684, size: 12, color: rgb(0, 0, 0) });
+                                        thirdPage.drawText(`${risultato_loc}`, { x: 200, y: 253, size: 12, color: rgb(0, 0, 0) });
+
+                                        // PAGINA 4 - Vista e Udito
+                                        const fourthPage = pages[3];
+                                        fourthPage.drawText(`${risultato_vista}`, { x: 200, y: 596, size: 12, color: rgb(0, 0, 0) });
+                                        fourthPage.drawText(`${risultato_udito}`, { x: 200, y: 237, size: 12, color: rgb(0, 0, 0) });
+
+                                        // PAGINA 5 - HGS
+                                        const fiftyPage = pages[4];
+                                        fiftyPage.drawText(`${risultato_hgs}`, { x: 200, y: 315, size: 12, color: rgb(0, 0, 0) });
+
+                                        // PAGINA 6 - PFT e ISQ
+                                        const sixPage = pages[5];
+                                        sixPage.drawText(`${risultato_pft}`, { x: 200, y: 730, size: 12, color: rgb(0, 0, 0) });
+                                        sixPage.drawText(`${risultato_isq}`, { x: 200, y: 300, size: 12, color: rgb(0, 0, 0) });
+
+                                        // PAGINA 7 - BMI e CDP
+                                        const sevenPage = pages[6];
+                                        sevenPage.drawText(`${risultato_bmi}`, { x: 200, y: 718, size: 12, color: rgb(0, 0, 0) });
+                                        sevenPage.drawText(`${risultato_cdp}`, { x: 200, y: 122, size: 12, color: rgb(0, 0, 0) });
+
+                                        // PAGINA 8 - WHR
+                                        const eightPage = pages[7];
+                                        eightPage.drawText(`${risultato_whr}`, { x: 200, y: 176, size: 12, color: rgb(0, 0, 0) });
+
+                                        // PAGINA 10 - WHR Ratio, CST, GS
+                                        const tenPage = pages[9];
+                                        tenPage.drawText(`${risultato_whr_ratio}`, { x: 200, y: 778, size: 12, color: rgb(0, 0, 0) });
+                                        tenPage.drawText(`${risultato_cst}`, { x: 200, y: 410, size: 12, color: rgb(0, 0, 0) });
+                                        tenPage.drawText(`${risultato_gs}`, { x: 200, y: 168, size: 12, color: rgb(0, 0, 0) });
+
+                                        // Salva Pdf e scarica
+                                        const modifiedPdfBytes = await pdfDoc.save();
+                                        const blob = new Blob([modifiedPdfBytes], { type: "application/pdf" });
+                                        const link = document.createElement("a");
+                                        link.href = URL.createObjectURL(blob);
+                                        link.download = `${name.toUpperCase()}-${surname.toUpperCase()}-CapacitaVitale.pdf`;
+                                        link.click();
+                                    } catch (error) {
+                                        console.error("Errore durante la generazione del PDF:", error);
+                                    }
+                                }
+
+                            </script>
+
+                            
+                            {% if scarica %}
+                                            
+                                <script>
+                                    
+                                    document.addEventListener("DOMContentLoaded", async function () {
+                                        await generatePDF()
+                                    });
+                                </script>
+
+                            {% endif %}
+
+                            
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-button-submit">
+            <button class="button button--submit" onclick="window.location.href= `{% url 'TestetaVitale' persona.id %}`">
+                <span class="button__icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-label="Start Quiz"
+                        role="img" class="button__icon-svg">
+                        <!-- Icona quiz - punto di domanda stilizzato -->
+                        <path
+                            d="M12 2C9.243 2 7 4.243 7 7H9C9 5.346 10.346 4 12 4C13.654 4 15 5.346 15 7C15 8.207 14.117 8.901 13.268 9.493C12.478 10.043 11.819 10.526 11.819 12H13.819C13.819 11.204 14.482 10.739 15.268 10.207C16.283 9.536 17 8.707 17 7C17 4.243 14.757 2 12 2ZM11 17H13V19H11V17ZM11 14H13V15H11V14Z"
+                            fill="currentColor" />
+                    </svg>
+            
+            
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-label="Start Quiz"
+                        role="img" class="button__icon-svg button__icon-svg--copy">
+                        <!-- Icona quiz - punto di domanda stilizzato -->
+                        <path
+                            d="M12 2C9.243 2 7 4.243 7 7H9C9 5.346 10.346 4 12 4C13.654 4 15 5.346 15 7C15 8.207 14.117 8.901 13.268 9.493C12.478 10.043 11.819 10.526 11.819 12H13.819C13.819 11.204 14.482 10.739 15.268 10.207C16.283 9.536 17 8.707 17 7C17 4.243 14.757 2 12 2ZM11 17H13V19H11V17ZM11 14H13V15H11V14Z"
+                            fill="currentColor" />
+                    </svg>
+            
+                </span>
+                Inizia Test
+            </button>
+        </div>
+    </main>
+
+    <!-- JS Import -->
+    <script>
+        /*  -----------------------------------------------------------------------------------------------
+      Funzione per paginazione
+      --------------------------------------------------------------------------------------------------- */
+        document.addEventListener("DOMContentLoaded", function () {
+            const rows = document.querySelectorAll(".riga-container");
+            const rowsPerPage = 5;
+            let currentPage = 1;
+            const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+            function showPage(page, filteredRows = rows) {
+                rows.forEach(row => gsap.to(row, { opacity: 0, height: 0, duration: 0.3, onComplete: () => (row.style.display = "none") }));
+
+                filteredRows.forEach((row, index) => {
+                    if (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage) {
+                        gsap.to(row, {
+                            opacity: 1,
+                            height: "5rem",
+                            duration: 0.3,
+                            display: "flex",
+                            onStart: () => (row.style.display = "flex")
+                        });
+                    }
+                });
+            }
+
+
+            function updatePaginationControls() {
+                const paginationContainer = document.querySelector(".table-content");
+                const existingControls = document.querySelector(".pagination-controls");
+
+                // Rimuovere i controlli esistenti
+                if (existingControls) existingControls.remove();
+
+                // Condizione per mostrare la paginazione solo se necessario
+                if (rows.length > rowsPerPage) {
+                    const controls = document.createElement("div");
+                    controls.classList.add("pagination-controls");
+
+                    const range = 10; // Numero massimo di bottoni visibili
+                    let startPage = Math.max(1, currentPage - Math.floor(range / 2));
+                    let endPage = Math.min(totalPages, startPage + range - 1);
+
+                    // Aggiusta la visualizzazione se siamo vicini all'inizio o alla fine
+                    if (endPage - startPage < range - 1) {
+                        startPage = Math.max(1, endPage - range + 1);
+                    }
+
+                    // Bottone per andare alla prima pagina
+                    if (startPage > 1) {
+                        const firstPageBtn = document.createElement("button");
+                        firstPageBtn.classList.add("button-style-pagination");
+                        firstPageBtn.textContent = "1";
+                        firstPageBtn.addEventListener("click", () => {
+                            currentPage = 1;
+                            showPage(currentPage);
+                            updatePaginationControls();
+                        });
+                        controls.appendChild(firstPageBtn);
+
+                        // Aggiungi i dots
+                        const dots = document.createElement("span");
+                        dots.textContent = "...";
+                        controls.appendChild(dots);
+                    }
+
+                    // Bottoni numerati
+                    for (let i = startPage; i <= endPage; i++) {
+                        const btn = document.createElement("button");
+                        btn.classList.add("button-style-pagination");
+                        btn.textContent = i;
+                        if (i === currentPage) {
+                            btn.classList.add("active");
+                        }
+                        btn.addEventListener("click", () => {
+                            currentPage = i;
+                            showPage(currentPage);
+                            updatePaginationControls();
+                        });
+                        controls.appendChild(btn);
+                    }
+
+                    // Bottone per andare all'ultima pagina
+                    if (endPage < totalPages) {
+                        const dots = document.createElement("span");
+                        dots.textContent = "...";
+                        controls.appendChild(dots);
+
+                        const lastPageBtn = document.createElement("button");
+                        lastPageBtn.classList.add("button-style-pagination");
+                        lastPageBtn.textContent = totalPages;
+                        lastPageBtn.addEventListener("click", () => {
+                            currentPage = totalPages;
+                            showPage(currentPage);
+                            updatePaginationControls();
+                        });
+                        controls.appendChild(lastPageBtn);
+                    }
+
+                    paginationContainer.appendChild(controls);
+                }
+            }
+
+            // Mostra la prima pagina e controlla se la paginazione è necessaria
+            showPage(currentPage);
+            updatePaginationControls();
+        });
+
+        /*  -----------------------------------------------------------------------------------------------
+        Funzione di animazione per il select
+        --------------------------------------------------------------------------------------------------- */
+        const select = document.querySelector('.custom-select');
+        const arrow = document.querySelector('.custom-arrow');
+        let isOpen = false; // Stato del menu
+
+        select.addEventListener('click', () => {
+            isOpen = !isOpen; // Toggle dello stato
+            gsap.to(arrow, { rotate: isOpen ? 180 : 0, duration: 0.2 });
+        });
+
+        select.addEventListener('blur', () => {
+            isOpen = false; // Reset dello stato quando perde il focus
+            gsap.to(arrow, { rotate: 0, duration: 0.2 });
+        });
+    </script>
+</body>
+
+</html>

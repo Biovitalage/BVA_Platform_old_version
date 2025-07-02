@@ -1,0 +1,236 @@
+/* STYLE CARD UPLOAD E DOWNLOAD */
+.card-inserimento{
+    background-color: var(--card-color);
+    border-radius: 8px;
+    width: 98%;
+    margin: 1rem auto;
+    padding: 20px;
+}
+.card-inserimento h3{
+    color: var(--contrast-color);
+}
+
+
+.card-content{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 1rem;
+}
+.card-container{
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    height: 250px;
+    width: 50%;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+.card-container h5{
+    color: var(--dark1);
+}
+.card-container .container-title{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+}
+.container-title img{
+    width: 20px;
+    height: 20px;
+    margin-top: -0.5rem;
+}
+.sub-content-container{
+    margin-top: 1rem;
+    height: 160px;
+    border: 2px solid #6a2dcc1c;
+    border-radius: 8px;
+    padding: 20px;
+}
+.sub-content-container form{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.custom-file-label {
+  display: inline-block;
+  cursor: pointer;
+}
+.custom-file-label img {
+  width: 80px; 
+  height: auto;
+  margin-right: 1rem;
+}
+.custom-file-label:hover img {
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.container-seleziona input[type="file"] {
+  display: none;
+}
+.container-submit{
+    padding: 20px;
+}
+.container-submit button{
+    margin-top: 0rem;
+    border: none;
+    background-color: var(--contrast-color2);
+    color: white;
+    border-radius: 8px;
+    padding: 10px 20px;
+}
+.container-submit button:hover{
+    background-color: var(--contrast-color);
+}
+.container-flex{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: -1.5rem;
+}
+.container-scarica{
+    padding: 20px 0px;
+}
+.container-scarica a{
+    text-decoration: none;
+    color: var(--contrast-color2);
+}
+.container-scarica a:hover{
+    color: var(--contrast-color);
+}
+.container-scarica-pdf{
+    padding: 20px;
+}
+.download-button{
+    margin-top: 0rem;
+    border: none;
+    background-color: var(--contrast-color2);
+    color: white;
+    border-radius: 8px;
+    padding: 10px 20px;
+}
+.download-button:hover{
+    background-color: var(--contrast-color);
+}
+.img-container{
+    padding-top: 15px;
+}
+.img-container button{
+    background-color: var(--contrast-color2);
+    border-radius: 8px;
+    padding: 10px;
+    color: white;
+    border: none;
+    margin-left: 20px;
+}
+.img-container button:hover{
+    background-color: var(--contrast-color);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* STYLE CARD RESULT */
+.card-result{
+    width: 98%;
+    margin: auto;
+    background-color: var(--card-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: 20px;
+}
+.card-result h3{
+    color: var(--contrast-color);
+}
+.card-container-content{
+    margin-top: 1rem;
+    background-color: white;
+    border-radius: 8px;
+    padding: 5px 20px 20px 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+.parent-section summary{
+    font-weight: bold;
+    background-color: var(--contrast-color-shadow);
+    border-radius: 8px;
+    padding: 10px 10px;
+}
+.description{
+    width: 100%;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 0px 0px 8px 8px;
+}
+#sub-summary{
+    background: none!important;
+    margin-left: 20px;
+}
+.grid-container-indici{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 1rem;
+    gap: 20px;
+}
+.indici{
+    padding: 20px;
+    width: 99%;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    background-color: #3b255d15;
+    position: relative;
+}
+.indici-title{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.indici-title h5{
+    font-weight: bold;
+    color: var(--dark1);
+}
+.punteggio{
+    margin-top: 1rem;
+}
+.punteggio span{
+    font-weight: bold;
+}
+.indici-title button{
+    border: none;
+    background: none;
+}
+.indici-title button img{
+    width: 20px;
+    height: 20px;
+}
+.indici-title button img:hover{
+    transform: scale(1.1);
+}
+.description-exam{
+    display: none;
+    position: absolute;
+    top: 4rem;
+    right: 1.5rem;
+    background-color: rgb(255, 255, 255);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 10;
+}
+.indici-title button:hover .description-exam{
+    display: block;
+}
+.carenza{
+    color: var(--negative-color-right);
+}
+.aumento{
+    color: var(--dark2);
+}

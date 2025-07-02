@@ -1,0 +1,21 @@
+/* FONT STYLE */
+* p,
+* input,
+* select{
+    font-family: 'Poppins', sans-serif !important;
+}
+* h3{
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 23px !important;
+    font-weight: 600 !important;
+}
+* span{
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+
+
+.contenitore-tabella{
+    width: 98%;
+    margin: auto;
+}

@@ -1,0 +1,81 @@
+<!-- templates/components/navBarPatient.html -->
+{% load static %}
+<header>
+    <nav class="col-md-12 d-flex justify-content-between align-items-center nav-bar">
+        
+        <!-- Logo Section -->
+        <div class="col-md-2 d-flex nav-bar-logo">
+            <a href="{% url 'HomePage' %}">
+                <img src="{% static 'image/Logo.png' %}" alt="logo_img" title="BioVitalAge®" />
+            </a>
+        </div>
+
+        <!-- Links Section -->
+        <div class="col-md-8 nav-bar-linkage">
+            <a href="{% url 'storico' persona.id %}"
+                class="{% if request.resolver_match.url_name == 'Storico' %}active-link{% endif %}">
+                Storico
+            </a>
+            <a href="{% url 'diagnosi' persona.id %}"
+                class="{% if request.resolver_match.url_name == 'Diagnosi' %}active-link{% endif %}">
+                Diagnosi
+            </a>
+            <a href="{% url 'terapie' persona.id %}"
+                class="{% if request.resolver_match.url_name == 'Terapie' %}active-link{% endif %}">
+                Terapie
+            </a>
+            <a href="{% url 'esami' persona.id %}"
+                class="{% if request.resolver_match.url_name == 'Esami' %}active-link{% endif %}">
+                Esami
+            </a>
+            <a href="{% url 'visite' persona.id %}"
+                class="{% if request.resolver_match.url_name == 'Visite' %}active-link{% endif %}">
+                Visite
+            </a>
+            <a href="{% url 'allegati' persona.id %}"
+                class="{% if request.resolver_match.url_name == 'Allegati' %}active-link{% endif %}">
+                Allegati
+            </a>
+        </div>
+
+        <!-- User Section -->
+        <div class="col-md-2 nav-bar-user" id="userContainer">
+               
+            <h3>
+                {% if dottore.isSecretary %}
+                    Segr. {{ dottore.cognome }}
+                {% elif dottore.user %}
+                    Dottor. {{ dottore.cognome }}
+                {% else %}
+                    Account Demo
+                {% endif %}
+            </h3>
+                        
+            <div class="img-container-user-nav-bar">
+                <img id="userImg" src="{% static 'image/Username_White.png' %}" alt="user">
+            </div>
+            <div class="nav-bar-user-modal" id="userModal">
+                <button id="profileBtn" class="nav-bar-user-modal-btn" onclick="window.location.href='{% url 'profile' %}'">Profilo</button>
+                <button id="nav-bar-user-modal-btn" class="nav-bar-user-modal-btn" onclick="window.location.href='{% url 'logout' %}'">Disconnettiti</button> <!-- @ts-ignore  -->
+            </div>
+        </div>
+        
+    </nav>
+</header>
+
+<!-- js import -->
+<script>
+    /*  -----------------------------------------------------------------------------------------------
+        Modal User
+    --------------------------------------------------------------------------------------------------- */
+    const userContainer = document.getElementById("userContainer");
+    const userModal = document.getElementById("userModal");
+
+    userContainer.addEventListener("mouseenter", () => {
+        userModal.classList.add("show");
+    });
+
+    userContainer.addEventListener("mouseleave", () => {
+        userModal.classList.remove("show");
+    });
+</script>

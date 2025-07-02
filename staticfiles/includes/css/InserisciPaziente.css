@@ -1,0 +1,254 @@
+.form-container {
+    width: 100%;
+    margin: auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.section {
+    margin-bottom: 30px;
+    padding: 40px;
+    background-color: #f8f4fc;
+    border-radius: 8px;
+}
+
+.section h3 {
+    margin-bottom: 20px !important;
+    color: var(--dark2);
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    align-items: flex-end;
+    gap: 20px;
+    width: 100%;
+}
+
+.patient-info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    row-gap: 40px;
+}
+
+.patient-info .form-group label {
+    background-color: var(--contrast-color-shadow);
+    color: var(--dark2);
+    border-radius: 8px 8px 0 0;
+    padding: 15px;
+    margin-bottom: -1rem;
+    font-weight: bold;
+}
+
+.patient-info .form-group input {
+    padding: 15px;
+    font-size: 16px;
+}
+
+.patient-info .form-group select {
+    padding: 15px;
+}
+
+
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group input,
+.form-group select {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 14px;
+}
+
+input[type="range"] {
+    margin-top: 10px;
+    padding: 8px 0 8px 1px;
+}
+
+#back {
+    padding-top: 0 !important;
+}
+
+
+
+
+
+
+
+.container_data {
+    display: flex;
+    flex-direction: column;
+    color: #0c214b;
+    gap: 20px;
+    padding: 45px;
+    font-size: 1.1rem;
+    background: var(--card-color);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 5px;
+    margin-top: 25px;
+}
+
+.container_box {
+    display: flex;
+    justify-content: space-between;
+}
+
+.field {
+    font-weight: bold;
+    color: var(--contrast-color);
+}
+
+
+
+
+.category-title {
+    margin-top: 50px;
+    margin-bottom: 30px;
+}
+
+.table-container-lifestyle {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+    color: var(--light1);
+    margin-bottom: 25px;
+}
+
+.table-title {
+    padding-bottom: 20px;
+    padding-top: 20px;
+    color: var(--dark2);
+    font-weight: bolder;
+}
+
+.lifestyle {
+    background: var(--contrast-color-shadow);
+    color: var(--dark1);
+    padding-left: 20px;
+}
+
+.container-card {
+    padding: 20px;
+}
+
+table {
+    width: 100%;
+    border: none;
+}
+
+th,
+td {
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: var(--contrast-color);
+    color: #fff;
+    font-weight: bold;
+}
+
+th:first-child {
+    border-top-left-radius: 8px;
+}
+
+th:last-child {
+    border-top-right-radius: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+td input {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+}
+
+
+
+.responsive-table {
+    overflow-x: auto;
+    transition: all 0.3s cubic-bezier(.215, .61, .355, 1);
+    border: 1px solid #ddd;
+    border-radius: 8px 8px 0px 0px;
+    height: 130px;
+    margin-top: 20px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+}
+
+#salvaButton {
+    margin-top: 0.7rem;
+    height: 3rem;
+    width: 15rem;
+}
+
+.hidden {
+    visibility: hidden;
+    opacity: 0;
+    height: 0;
+    margin-top: 0;
+}
+
+
+
+
+
+
+
+/* ! Button choose */
+.choose-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.button-style-choose {
+    padding: 3px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.button-style-choose[data-choice="yes"] {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.button-style-choose[data-choice="no"] {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+.button-style-choose:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.button-style-choose:active {
+    transform: scale(1);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+}

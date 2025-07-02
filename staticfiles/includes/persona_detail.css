@@ -1,0 +1,198 @@
+:root {
+  --dark1: #0c042c;
+  --dark2: #0c214b;
+  --light1: #c3ccd4;
+  --neutral-gray: #b0b8c1;
+  --neutral-bg-color: rgba(176, 184, 193, 0.2);
+  --contrast-color: #3a255d;
+  --contrast-color-shadow: #3b255d2c;
+  --contrast-color2: #6a2dcc;
+  --positive-color: #2ac670;
+  --tittle1: whitesmoke;
+  --circle-color-shadow: rgba(42, 196, 221, 0.15);
+}
+
+.container-risultati {
+  width: 98%;
+  margin: 2rem auto;
+}
+.card-personal-info {
+  background-color: var(--tittle1);
+  border-radius: 8px;
+  padding: 10px 20px;
+}
+.card-content-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+.card-personal-info h3,
+.exams-container h3 {
+  color: var(--contrast-color);
+}
+.detail-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+.detail-row p {
+  font-size: 18px;
+}
+span {
+  color: var(--contrast-color2);
+  font-weight: bold;
+  padding-right: 10px;
+}
+.exams-container {
+  margin-top: 1rem;
+  background-color: var(--tittle1);
+  border-radius: 8px;
+  padding: 20px;
+}
+.content-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  padding: 20px 0;
+}
+.description {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+.indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.negativeTesto,
+.extremeNegativeRange {
+  color: red;
+}
+.positiveTesto {
+  color: var(--positive-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 40%;
+}
+.extremePositiveRange {
+  color: var(--positive-color);
+}
+#middleTesto {
+  width: 40%;
+  margin-left: -1rem;
+  color: rgb(255, 191, 71);
+}
+#middleBar {
+  width: 40%;
+  left: 30%;
+  background-color: rgb(255, 191, 71);
+}
+
+.barra-container {
+  background-color: var(--neutral-bg-color);
+  border-radius: 8px;
+  height: 1rem;
+  position: relative;
+  background-color: rgb(255, 98, 98);
+}
+.barra-container-none {
+  background-color: var(--neutral-bg-color);
+  border-radius: 8px;
+  height: 1rem;
+  position: relative;
+}
+
+.barra-pointer {
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 30%;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+  width: 40%;
+  background-color: var(--positive-color);
+  z-index: 1;
+}
+
+.barra-pointer-two {
+  background-color: var(--positive-color);
+  position: absolute;
+  top: 0;
+  left: 60%;
+  width: 40%;
+  height: 100%;
+  border-radius: 8px;
+}
+#barraSpecial {
+  left: 50%;
+  width: 50%;
+}
+
+#indicator {
+  position: absolute;
+  top: -1rem;
+  z-index: 2;
+  height: 2rem;
+  width: 0.5rem;
+  border-radius: 8px;
+}
+
+.generatePDFButton {
+  height: 80%;
+  width: 50%;
+  background-color: transparent;
+  border: 2px solid var(--contrast-color2);
+  box-shadow: 10px 10px 10px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 30px;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--tittle1);
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s;
+  z-index: 1;
+  height: 2rem;
+  width: 10rem;
+}
+
+.generatePDFButton::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  top: 0;
+  position: absolute;
+  left: 0;
+  background-color: var(--contrast-color2);
+  z-index: -1;
+  transition: width 0.4s ease;
+}
+
+.generatePDFButton::after {
+  content: "";
+  width: 0%;
+  height: 100%;
+  top: 0;
+  position: absolute;
+  right: 0;
+  background-color: var(--dark2);
+  z-index: -1;
+  transition: width 0.4s ease;
+}
+
+.generatePDFButton:hover::before {
+  width: 0;
+}
+
+.generatePDFButton:hover::after {
+  width: 100%;
+}
+
+.generatePDFButton:hover {
+  color: var(--tittle1);
+}
+

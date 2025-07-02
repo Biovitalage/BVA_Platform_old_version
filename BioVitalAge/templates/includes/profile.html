@@ -1,0 +1,161 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Meta -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <!-- Title -->
+    <title>BVA - Profilo</title>
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet" />
+
+    <!-- css import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}" />
+
+
+    <!-- Bootstrap import -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+    <!-- GSAP import -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+</head>
+
+<body>
+
+   
+    {% include 'components/loader.html' %}
+    {% include 'components/navBar.html' %}
+
+    <div class="container-profile">
+        <div id="menu-user-profile">
+            <span class="profile-icon">
+                <i class="fas fa-user"></i>
+            </span>
+            <span>Profilo</span>
+        </div>
+
+        <div id="content-user-profile">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_profile">
+                <div>
+                    <div class="form-group">
+                        <label for="name">Modifica Nome</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ dottore.nome }}"
+                            placeholder="Enter name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Modifica Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ dottore.email }}"
+                            placeholder="Enter email">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="form-group">
+                        <label for="surname">Modifica Cognome</label>
+                        <input type="text" class="form-control" id="surname" name="surname" value="{{ dottore.cognome }}"
+                            placeholder="Enter surname">
+                    </div>
+                    <div class="password-container form-group">
+                        <label for="password">Modifica Password</label>
+                        <input type="password" id="password" class="form-control" name="password"
+                            value="Password Criptografata" placeholder="Inserisci la password">
+                        <span class="toggle-password" onclick="togglePasswordVisibility()">
+                            <i class="eye-icon fas fa-eye"></i>
+                            <i class="slash-icon fas fa-eye-slash"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Checkbox Gmail -->
+                <div class="toggle-container">
+                    <label class="label">
+                        <div class="toggle">
+                            <input type="checkbox" class="toggle-state" name="check" value="SI"
+                                {% if gmail_linked %}checked{% endif %}
+                                onchange="this.form.action.value='update_gmail'; this.form.submit();">
+                            <div class="indicator"></div>
+                        </div>
+                    </label>
+                    <div class="d-flex align-items-center">
+                        <img src="{% static 'image/Email_Colorato.png' %}" alt="icon-gmail" width="25" height="25"
+                            class="mr-2">
+                        <span>Collega Gmail</span>
+                    </div>
+                    <input type="hidden" name="action" value="update_gmail" />
+                </div>
+
+                <div class="button-container">
+                    <button type="submit" name="action" value="update_profile" class="button">Invia Modifica</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        function togglePasswordVisibility() {
+            const input = document.getElementById("password");
+            const icon = document.querySelector(".toggle-password");
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.add("active");
+            } else {
+                input.type = "password";
+                icon.classList.remove("active");
+            }
+        }
+    </script>
+    
+</body>
+
+<!-- Custom Alert -->
+{% if messages %}
+  <div id="custom-alert" class="alert alert-success position-fixed shadow rounded" 
+       style="top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: none; opacity: 0;">
+    {% for message in messages %}
+      <span>{{ message }}</span>
+    {% endfor %}
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const alertBox = document.getElementById("custom-alert");
+      if (alertBox) {
+        alertBox.style.display = "block";
+        alertBox.style.opacity = "1";
+
+        setTimeout(() => {
+          alertBox.style.transition = "opacity 0.5s ease-out";
+          alertBox.style.opacity = "0";
+          setTimeout(() => alertBox.remove(), 500);
+        }, 3000);
+      }
+    });
+  </script>
+{% endif %}
+
+</html>

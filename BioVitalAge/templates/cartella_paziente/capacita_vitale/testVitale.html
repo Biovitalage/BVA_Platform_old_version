@@ -1,0 +1,2006 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <!-- Favicon -->
+    <link rel="sortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    <title>Test Età Bio-Vitale</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/capacita_vitale/TestEtaVitale.css' %}">
+
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- JS Import -->
+    {% if card_to_show %}
+    <script>
+      window.cardToShow = "{{ card_to_show|escapejs }}";
+    </script>
+    {% endif %}
+    <script src="{% static 'js/cartella_paziente/capacita_vitale/Quiz.js' %}" defer></script>
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBarPatient.html' %}
+
+
+    {% if successo %}
+            
+        <div class="success_message" id="successMessage">
+            <p>Dati salvati correttamente!</p>
+            <button id="closeSuccess">x</button>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const closeBtn = document.getElementById('closeSuccess');
+                const successDiv = document.getElementById('successMessage');
+                
+                closeBtn.addEventListener('click', function () {
+                    successDiv.style.display = 'none';
+                });
+                
+                    setTimeout(function () {
+                    successDiv.style.display = 'none';
+                }, 4000); 
+            });
+        </script>
+
+    {% endif %}
+
+
+    <main>
+        <!-- MENU TRACE -->
+        <div class="main-title-nav">
+
+            <div class="back-tittle">
+                <a id="back" href="{% url 'etaVitale' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}" alt=""></a>
+                <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                      <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                      </span> | 
+                      <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                        Email: {{ persona.email }}
+                      </span>
+                    {% endif %}
+                </h2>
+            </div>
+
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>
+                <p>»</p>
+                <p>
+                    <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                </p>
+                <p>»</p>
+                <p>Età Bio-Vitale</p>
+                <p>»</p>
+                <p class="breadcrumb">Test Età Bio-Vitale</p>
+            </div>
+
+        </div>
+
+        <!-- MESSAGGIO ERRORE -->
+        {% if errore %}  
+                
+        <div class="errorSystemContainer" id="error">
+            <p>{{ errore }}</p>
+            <div class="progressBarContainer">
+                <div class="progressBar" id="progress"></div>
+            </div>
+        </div>
+
+        <script>
+            const messaggio = document.getElementById('error');
+            const progressBar = document.getElementById('progress');
+            const durationError = 6000; 
+            const intervalError = 50;
+
+            if (messaggio) {
+            let elapsedTimeError = 0; 
+
+            const timerError = setInterval(() => {
+                elapsedTimeError += intervalError;
+                const percentage = ((durationError - elapsedTimeError) / durationError) * 100;
+                progressBar.style.width = `${percentage}%`;
+
+                if (elapsedTimeError >= durationError) {
+                clearInterval(timerError); 
+                messaggio.style.display = 'none'; 
+                }
+            }, intervalError);
+            }
+        </script>
+
+        {% endif %}
+
+        {% if card_to_show %}
+
+            <input type="hidden" id="cardToShow" value="{{ card_to_show }}">
+
+            <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const cardToShow = document.getElementById("cardToShow").value;
+
+                if (cardToShow) {
+                 
+                    document.querySelectorAll(".question.active").forEach(function (el) {
+                        el.classList.remove("active");
+                    });
+
+                    const targetSection = document.getElementById(cardToShow);
+                    if (targetSection) {
+                        targetSection.classList.add("active");
+                    } else {
+                        console.warn("ID non trovato:", cardToShow);
+                    }
+                }
+            });
+            </script>
+
+        {% endif %}
+
+        <!-- CARD QUIZ -->
+        <div class="card-container">
+
+            <form method="POST" action="{% url 'TestetaVitale' persona.id %}"  >
+                {% csrf_token %}
+                <div id="quiz-container">
+
+                    <div id="pagination">
+
+                    </div>
+
+                    <!-- DOMINIO COGNITIVO -->
+                    <div class="question active" data-group="1" id="cognitivo" data-title="dominio cognitivo">
+                        <div class="title-container">
+                            <div class="title-subtitle">
+                                <h3>Dominio Cognitivo</h3>
+                                <p class="sottotitolo">Test MMSE</p>
+                            </div>
+                        </div>
+                        
+
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header-cognitivo">
+                                <p class="subtitle-cognitivo"></p>
+                                <p class="subtitle-cognitivo">0</p>
+                                <p class="subtitle-cognitivo">1</p>
+                                <p class="subtitle-cognitivo">2</p>
+                                <p class="subtitle-cognitivo">3</p>
+                                <p class="subtitle-cognitivo">4</p>
+                                <p class="subtitle-cognitivo">5</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">ORIENTAMENTO: Il paziente sa riferire: giorno del mese, anno, mese, giorno della settimana e stagione.</p>
+                                    <p class="radio-container"><input type="radio" name="doc_1"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_1"  value="1"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_1"  value="2"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_1"  value="3"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_1"  value="4"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_1"  value="5"></p>
+                                </div>
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">ORIENTAMENTO: Il paziente sa riferire: luogo in cui si trova, a quale piano, città, regione, stato.</p>
+                                    <p class="radio-container"><input type="radio" name="doc_2"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_2"  value="1"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_2"  value="2"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_2"  value="3"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_2"  value="4"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_2"  value="5"></p>
+                                </div>
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">
+                                        MEMORIA: L'esaminatore pronuncia ad alta voce tre termini (casa, pane, gatto) e chiede al paziente di ripeterli immediatamente.
+                                        L'esaminatore deve ripeterli fino a quando il paziente non li abbia imparati(max 6 ripetizioni).
+                                    </p>
+                                    <p class="radio-container"><input type="radio" name="doc_3"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_3"  value="1"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_3"  value="2"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_3"  value="3"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                </div>
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">
+                                        ATTENZIONE E CALCOLO: Partendo da 100 far contare sottraendo 7 all'indietro fermandosi dopo le prime cinque risposte.  
+                                        In caso di difficoltà di calcolo far scandire al contrario la parola "mondo" ("odnom").
+                                    </p>
+                                    <p class="radio-container"><input type="radio" name="doc_4"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_4"  value="1"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_4"  value="2"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_4"  value="3"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_4"  value="4"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_4"  value="5"></p>
+                                </div>
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">RICHIAMO DELLE TRE PAROLE(RICHIAMO ALLA MEMORIA): Richiamare i tre termini precedentemente imparati.</p>
+                                    <p class="radio-container"><input type="radio" name="doc_5"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_5"  value="1"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_5"  value="2"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_5"  value="3"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                </div>
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">LINGUAGGIO: Il paziente deve riconoscere due oggetti. Come si chiama questo (matita)? Come si chiama questo (orologio)?</p>
+                                    <p class="radio-container"><input type="radio" name="doc_6"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_6"  value="1"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_6"  value="2"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>   
+                                </div>
+                                
+                                <div class="cognitivo_row">
+                                    <p class="the_question">LINGUAGGIO: Il paziente deve ripetere la frase "TIGRE CONTRO TIGRE"</p>
+                                    <p class="radio-container"><input type="radio" name="doc_7"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_7"  value="1"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                </div>
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">LINGUAGGIO: Il paziente deve eseguire un compito su comando: a) prenda un foglio con la mano destra, b) lo pieghi a metà; c) e lo butti dal tavolo/metta sul pavimento</p>
+                                    <p class="radio-container"><input type="radio" name="doc_8"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_8"  value="1"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_8"  value="2"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_8"  value="3"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                </div>
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">LINGUAGGIO: Far eseguire al paziente il comando scritto "CHIUDA GLI OCCHI"</p>
+                                    <p class="radio-container"><input type="radio" name="doc_9"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_9"  value="1"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                </div>
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">LINGUAGGIO: Far scrivere al paziente una frase di senso compiuto formata almeno da soggetto e verbo. N.B. conservare il materiale</p>
+                                    <p class="radio-container"><input type="radio" name="doc_10"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_10"  value="1"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                </div>
+
+                                <div class="cognitivo_row">
+                                    <p class="the_question">LINGUAGGIO: Far disegnare al paziente un orologio che indichi al paziente un orario preciso con lancetta di minuti e ore.</p>
+                                    <p class="radio-container"><input type="radio" name="doc_11"  value="0"></p>
+                                    <p class="radio-container"><input type="radio" name="doc_11"  value="1"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                    <p class="radio-container"></p>
+                                </div>
+                            </div>
+                        </div>  
+                    </div>
+
+                    <!-- DOMINIO PSICOLOGICO -->
+                    <div class="question" data-group="2" id="psicologico" data-title="dominio psicologico">
+
+                        <div class="title-container">
+                            <div class="title-subtitle">
+                                <h3>Dominio Psicologico</h3>
+                                <p class="sottotitolo">Geriatric Depression Scale (GDS)</p>
+                            </div>
+                        </div>
+                        
+    
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">SI</p>
+                                <p class="subtitle">NO</p>
+                           
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p class="the_question">È fondamentalmente soddisfatto della sua vita?</p>
+                                    <p><input type="radio" name="dop_1" value="0"></p>
+                                    <p><input type="radio" name="dop_1" value="1"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Ha abbandonato molte delle sue attività e dei suoi interessi?</p>
+                                    <p><input type="radio" name="dop_2" value="1"></p>
+                                    <p><input type="radio" name="dop_2" value="0"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Sente che la sua vita è vuota?</p>
+                                    <p><input type="radio" name="dop_3" value="1"></p>
+                                    <p><input type="radio" name="dop_3" value="0"></p>        
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Si annoia spesso?</p>
+                                    <p><input type="radio" name="dop_4" value="1"></p>
+                                    <p><input type="radio" name="dop_4" value="0"></p>
+                                    
+                                </div>
+                                
+                                <div class="tableRow">
+                                    <p class="the_question">È di buon umore la maggior parte del tempo?</p>
+                                    <p><input type="radio" name="dop_5" value="0"></p>
+                                    <p><input type="radio" name="dop_5" value="1"></p>
+                                   
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Ha paura che qualcosa di brutto stia per succedere?</p>
+                                    <p><input type="radio" name="dop_6" value="1"></p>
+                                    <p><input type="radio" name="dop_6" value="0"></p>
+                                   
+                                </div>
+                                
+                                <div class="tableRow">
+                                    <p class="the_question">Si sente più felice la maggior parte del tempo?</p>
+                                    <p><input type="radio" name="dop_7" value="0"></p>
+                                    <p><input type="radio" name="dop_7" value="1"></p>
+                                    
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Si sente spesso impotente?</p>
+                                    <p><input type="radio" name="dop_8" value="1"></p>
+                                    <p><input type="radio" name="dop_8" value="0"></p>
+                                    
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Preferisce restare a casa piuttosto che uscire e fare cose nuove?</p>
+                                    <p><input type="radio" name="dop_9" value="1"></p>
+                                    <p><input type="radio" name="dop_9" value="0"></p>
+                                    
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Ritiene di avere più problemi con la memoria della maggior parte delle persone?</p>
+                                    <p><input type="radio" name="dop_10" value="1"></p>
+                                    <p><input type="radio" name="dop_10" value="0"></p>
+                                    
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Pensa che la vita sia meravigliosa?</p>
+                                    <p><input type="radio" name="dop_11" value="0"></p>
+                                    <p><input type="radio" name="dop_11" value="1"></p>
+                                    
+                                </div>
+                                
+                                <div class="tableRow">
+                                    <p class="the_question">Si sente pittosto inutile così com'è?</p>
+                                    <p><input type="radio" name="dop_12" value="1"></p>
+                                    <p><input type="radio" name="dop_12" value="0"></p>
+                                   
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Si sente pieno di energie?</p>
+                                    <p><input type="radio" name="dop_13" value="0"></p>
+                                    <p><input type="radio" name="dop_13" value="1"></p>
+                                   
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Ha l'impressione che la sua situazione sia disperata?</p>
+                                    <p><input type="radio" name="dop_14" value="1"></p>
+                                    <p><input type="radio" name="dop_14" value="0"></p>
+                                   
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Pensa che la maggior parte delle persone sia migliore di lei?</p>
+                                    <p><input type="radio" name="dop_15" value="1"></p>
+                                    <p><input type="radio" name="dop_15" value="0"></p>
+                                </div>
+                            </div>
+                        </div>  
+                  
+                        <p class="sottotitolo" style="margin-top: 80px;">Locus of Control – Percezione del controllo sulla propria vita (8 items)</p>
+                        <div class="tableAnswer">
+
+                            <div class="tableAnswer-header psicologico">
+                                <p class="subtitle">AFFERMAZIONI</p>
+                                <p class="subtitle">Per niente d'accordo (1)</p>
+                                <p class="subtitle">Poco d'accordo (2)</p>
+                                <p class="subtitle">Né d'accordo né in disaccordo (3)</p>
+                                <p class="subtitle">Abbastanza d'accordo (4)</p>
+                                <p class="subtitle">Completamente d'accordo (5)</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p class="the_question">Credo che il mio futuro dipenda principalmente dalle mie scelte.</p>
+                                    <p><input type="radio" name="loc_1"  value="1"></p>
+                                    <p><input type="radio" name="loc_1"  value="2"></p>
+                                    <p><input type="radio" name="loc_1"  value="3"></p>
+                                    <p><input type="radio" name="loc_1"  value="4"></p>
+                                    <p><input type="radio" name="loc_1"  value="5"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Il successo nella vita non è una questione di fortuna o destino.</p>
+                                    <p><input type="radio" name="loc_2"  value="1"></p>
+                                    <p><input type="radio" name="loc_2"  value="2"></p>
+                                    <p><input type="radio" name="loc_2"  value="3"></p>
+                                    <p><input type="radio" name="loc_2"  value="4"></p>
+                                    <p><input type="radio" name="loc_2"  value="5"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Se mi impegno abbastanza, posso ottenere ciò che voglio.</p>
+                                    <p><input type="radio" name="loc_3"  value="1"></p>
+                                    <p><input type="radio" name="loc_3"  value="2"></p>
+                                    <p><input type="radio" name="loc_3"  value="3"></p>
+                                    <p><input type="radio" name="loc_3"  value="4"></p>
+                                    <p><input type="radio" name="loc_3"  value="5"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Gli eventi importanti della mia vita sono sotto il mio controllo.</p>
+                                    <p><input type="radio" name="loc_4"  value="1"></p>
+                                    <p><input type="radio" name="loc_4"  value="2"></p>
+                                    <p><input type="radio" name="loc_4"  value="3"></p>
+                                    <p><input type="radio" name="loc_4"  value="4"></p>
+                                    <p><input type="radio" name="loc_4"  value="5"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Penso che la mia vita si determinata principalmente dalle mie azioni.</p>
+                                    <p><input type="radio" name="loc_5"  value="1"></p>
+                                    <p><input type="radio" name="loc_5"  value="2"></p>
+                                    <p><input type="radio" name="loc_5"  value="3"></p>
+                                    <p><input type="radio" name="loc_5"  value="4"></p>
+                                    <p><input type="radio" name="loc_5"  value="5"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Non mi sento mai impotente di fronte a ciò che accade nella mia vita.</p>
+                                    <p><input type="radio" name="loc_6"  value="1"></p>
+                                    <p><input type="radio" name="loc_6"  value="2"></p>
+                                    <p><input type="radio" name="loc_6"  value="3"></p>
+                                    <p><input type="radio" name="loc_6"  value="4"></p>
+                                    <p><input type="radio" name="loc_6"  value="5"></p>
+                                </div>
+                                
+                                <div class="tableRow">
+                                    <p class="the_question">Le mie decisioni personali influenzano direttamente il mio futuro.</p>
+                                    <p><input type="radio" name="loc_7"  value="1"></p>
+                                    <p><input type="radio" name="loc_7"  value="2"></p>
+                                    <p><input type="radio" name="loc_7"  value="3"></p>
+                                    <p><input type="radio" name="loc_7"  value="4"></p>
+                                    <p><input type="radio" name="loc_7"  value="5"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p class="the_question">Molti degli eventi della mia vita dipendono solo da me e non dagli altri.</p>
+                                    <p><input type="radio" name="loc_8"  value="1"></p>
+                                    <p><input type="radio" name="loc_8"  value="2"></p>
+                                    <p><input type="radio" name="loc_8"  value="3"></p>
+                                    <p><input type="radio" name="loc_8"  value="4"></p>
+                                    <p><input type="radio" name="loc_8"  value="5"></p>
+                                </div>
+                            </div>
+
+                        </div> 
+                    </div>
+
+                    <!-- DOMINIO SENSORIALE -->
+                    <div class="question" data-group="3" id="sensoriale" data-title="dominio sensoriale">
+
+                        <div class="title-container">
+                            <div class="title-subtitle">
+                                <h3>Dominio Sensoriale</h3>
+                                <p class="sottotitolo">Vista Autopercepita</p>
+                            </div>
+                        </div>
+
+                        <div class="tableAnswer">
+                            
+                            <div class="tableAnswer-header-psicologico">
+                                <p></p>
+                                <p class="subtitle">1</p>
+                                <p class="subtitle">2</p>
+                                <p class="subtitle">3</p>
+                                <p class="subtitle">4</p>
+                                <p class="subtitle">5</p>
+                                <p class="subtitle">6</p>
+                                <p class="subtitle">7</p>
+                            </div>
+                           
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="sensorialeRow">
+                                    <p class="the_question">Come vedi per vedere da lontano (con gli occhiali) e per riconoscere un amico dall'altra parte della strada?</p>
+                                    <p class="radio-container2"><input type="radio" name="dos_1"  value="1"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_1"  value="2"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_1"  value="3"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_1"  value="4"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_1"  value="5"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_1"  value="6"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_1"  value="7"></p>
+                                </div>
+
+                                <div class="sensorialeRow">
+                                    <p class="the_question">Com'è la tua vista per vedere da vicino (con gli occhiali) e per leggere il giornale o per vedere le fotografie su una rivista?</p>
+                                    <p class="radio-container2"><input type="radio" name="dos_2"  value="1"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_2"  value="2"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_2"  value="3"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_2"  value="4"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_2"  value="5"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_2"  value="6"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_2"  value="7"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="sottotitolo" style="margin-top: 20px;">Udito Autopercepito</p>
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header-psicologico">
+                                <p></p>
+                                <p class="subtitle">1</p>
+                                <p class="subtitle">2</p>
+                                <p class="subtitle">3</p>
+                                <p class="subtitle">4</p>
+                                <p class="subtitle">5</p>
+                                <p class="subtitle">6</p>
+                                <p class="subtitle">7</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="sensorialeRow">
+                                    <p class="the_question">Com'è il tuo udito in generale (con l'apparecchio acustico)?</p>
+                                    <p class="radio-container2"><input type="radio" name="dos_3"  value="1"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_3"  value="2"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_3"  value="3"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_3"  value="4"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_3"  value="5"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_3"  value="6"></p>
+                                    <p class="radio-container2"><input type="radio" name="dos_3"  value="7"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DOMINIO DELLA VITALITA' -->
+                    <div class="question" data-group="4" id="vitalità" data-title="dominio vitalità">
+                        <div class="title-container">
+                            <div class="title-subtitle">
+                                <h3>Dominio Vitalità</h3>
+                                <p class="sottotitolo">Forza della presa della mano(Handgrip)</p>
+                            </div>
+                        </div>
+
+                        <div class="tableAnswer" id="esami">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle">Età</p>
+                                {% if persona.gender == "M" %}
+                                <p class="subtitle">Paziente Uomo</p>
+                                <p class="subtitle">Valori di riferimento uomini</p>
+                                {% else %}
+                                <p class="subtitle">Paziente Donna</p>
+                                <p class="subtitle">Valori di riferimento donne</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="tableAnswer-container hgs_script" id="secondTypeTable">
+
+                                <div class="tableRow disabledInput">
+                                    <p>10 - 11</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv"  placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv"  placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 12.6 </span>
+                                        <span>Normal: 12.6-22.4 </span>
+                                        <span>Strong: >22.4 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 11.8 </span>
+                                        <span>Normal: 11.8-21.6 </span>
+                                        <span>Strong: >21.6 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            
+                                <div class="tableRow disabledInput">
+                                    <p>12 - 13</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 19.4 </span>
+                                        <span>Normal: 19.4-31.2 </span>
+                                        <span>Strong: >31.2 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 14.6 </span>
+                                        <span>Normal: 14.6-24.4 </span>
+                                        <span>Strong: >24.4 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>14 - 15</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 28.5 </span>
+                                        <span>Normal: 28.5-44.3 </span>
+                                        <span>Strong: >44.3 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 15.5 </span>
+                                        <span>Normal: 15.5-27.3 </span>
+                                        <span>Strong: >27.3 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>16 - 17</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: <32.6 </span>
+                                        <span>Normal: 32.6-52.4 </span>
+                                        <span>Strong: >52.4 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 17.2 </span>
+                                        <span>Normal: 17.2-29.0 </span>
+                                        <span>Strong: >29.0 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>18 - 19</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 35.7 </span>
+                                        <span>Normal: 35.7-55.5 </span>
+                                        <span>Strong: >55.5 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 19.2 </span>
+                                        <span>Normal: 19.2-31.0 </span>
+                                        <span>Strong: >31.0 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            
+                                <div class="tableRow disabledInput">
+                                    <p>20 - 24</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 36.8 </span>
+                                        <span>Normal: 36.8-56.6 </span>
+                                        <span>Strong: >56.6 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 21.5 </span>
+                                        <span>Normal: 21.5-35.3 </span>
+                                        <span>Strong: >35.3 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>25 - 29</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 37.7 </span>
+                                        <span>Normal: 37.7-57.5 </span>
+                                        <span>Strong: >57.5 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 25.6 </span>
+                                        <span>Normal: 25.6-41.4 </span>
+                                        <span>Strong: >41.4 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>30 - 34</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 36.0 </span>
+                                        <span>Normal: 36.0-55.8 </span>
+                                        <span>Strong: >55.8 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 21.5 </span>
+                                        <span>Normal: 21.5-35.3 </span>
+                                        <span>Strong: >35.3 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>35 - 39</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" " placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 35.8 </span>
+                                        <span>Normal: 35.8-55.6 </span>
+                                        <span>Strong: >55.6 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 20.3 </span>
+                                        <span>Normal: 20.3-34.1 </span>
+                                        <span>Strong: >34.1 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>40 - 44</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" 0" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" 0" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 35.5 </span>
+                                        <span>Normal: 35.5-55.3 </span>
+                                        <span>Strong: >55.3 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 18.9 </span>
+                                        <span>Normal: 18.9-32.7 </span>
+                                        <span>Strong: >32.7 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            
+                                <div class="tableRow disabledInput">
+                                    <p>45 - 49</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" 1" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" 1" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 34.7 </span>
+                                        <span>Normal: 34.7-54.5 </span>
+                                        <span>Strong: >54.5 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 18.6 </span>
+                                        <span>Normal: 18.6-32.4 </span>
+                                        <span>Strong: >32.4 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>50 - 54</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" 2" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" 2" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 32.9 </span>
+                                        <span>Normal: 32.9-54.5 </span>
+                                        <span>Strong: >54.5 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 18.6 </span>
+                                        <span>Normal: 18.6-50.7 </span>
+                                        <span>Strong: >50.7 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>55 - 59</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" 3" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" 3" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 30.7 </span>
+                                        <span>Normal: 30.7-48.5 </span>
+                                        <span>Strong: >48.5 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 17.7 </span>
+                                        <span>Normal: 17.7-31.5 </span>
+                                        <span>Strong: >31.5 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>60 - 64</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" 4" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" 4" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 30.2 </span>
+                                        <span>Normal: 30.2-48.0 </span>
+                                        <span>Strong: >48.0 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 17.2 </span>
+                                        <span>Normal: 17.2-31.0 </span>
+                                        <span>Strong: >31.0 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>65 - 69</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" 5" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" 5" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 28.2 </span>
+                                        <span>Normal: 28.2-44.0 </span>
+                                        <span>Strong: >44.0 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 15.4 </span>
+                                        <span>Normal: 15.4-27.2 </span>
+                                        <span>Strong: >27.2 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tableRow disabledInput">
+                                    <p>70 - 99</p>
+                                    {% if persona.gender == "M" %}
+                                    <p>
+                                        <input type="text" name="dodv" 6" placeholder="Inserisci 'Weak', 'Normal' o 'Strong' ">
+                                    </p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="dodv" 6" placeholder="Inserisci il valore">
+                                    </p>
+                                    {% endif %}
+
+                                    {% if persona.gender == "M" %}
+                                    <p id="long-p">
+                                        <span>Weak: < 21.3 </span>
+                                        <span>Normal: 21.3-35.1 </span>
+                                        <span>Strong: >35.1 </span>
+                                    </p>
+                                    {% else %}
+                                    <p id="long-p">
+                                        <span>Weak: < 14.7 </span>
+                                        <span>Normal: 14.7-24.5 </span>
+                                        <span>Strong: >24.5 </span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <script>
+                                    document.addEventListener("DOMContentLoaded", function () {
+                                    const inputs = document.querySelectorAll('.hgs_script input[type="text"]');
+
+                                    inputs.forEach(input => {
+                                        input.addEventListener("input", function () {
+                                            if (this.value.trim() !== "") {
+                                                disableOtherInputs(this);
+                                            } else {
+                                                enableAllInputs();
+                                            }
+                                        });
+                                    });
+
+                                    function disableOtherInputs(activeInput) {
+                                        inputs.forEach(input => {
+                                            if (input !== activeInput) {
+                                                input.disabled = true;
+                                                input.placeholder = "Disabilitato fino alla cancellazione";
+                                            }
+                                        });
+                                    }
+
+                                    function enableAllInputs() {
+                                        inputs.forEach(input => {
+                                            input.disabled = false;
+                                            input.placeholder = "Inserisci il valore";
+                                        });
+                                    }
+                                });
+                            </script>                        
+                        </div>
+
+                        <p class="sottotitolo" style="margin-top: 40px;">Flusso respiratorio massimo (Peak Flow Test)</p>
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Risultato</p>
+                                <p class="subtitle">Valori di riferimento</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>Flusso Respiratorio Massimo</p>
+                                    <p>
+                                        <input type="number" name="pft-1" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p id="long-p">
+                                        <span>90-100%: funzione polmonare normale.</span>
+                                        <span>50-80%: moderata ostruzione, necessita di trattamento.</span>
+                                        <span><50%: grave ostruzione, possibile emergenza respiratoria.</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="sottotitolo" style="margin-top: 40px;">Questionario Sistema Immunitario</p>                        
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Mai</p>
+                                <p class="subtitle">A volte</p>
+                                <p class="subtitle">Regolarmente</p>
+                                <p class="subtitle">Spesso</p>
+                                <p class="subtitle">Quasi sempre</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>Febbre Alta Improvvisa</p>
+                                    <p><input type="radio" name="SiIm_1"  value="0"></p>
+                                    <p><input type="radio" name="SiIm_1"  value="1"></p>
+                                    <p><input type="radio" name="SiIm_1"  value="2"></p>
+                                    <p><input type="radio" name="SiIm_1"  value="3"></p>
+                                    <p><input type="radio" name="SiIm_1"  value="4"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Diarrea</p>
+                                    <p><input type="radio" name="SiIm_2"  value="0"></p>  
+                                    <p><input type="radio" name="SiIm_2"  value="1"></p>
+                                    <p><input type="radio" name="SiIm_2"  value="2"></p>
+                                    <p><input type="radio" name="SiIm_2"  value="3"></p>
+                                    <p><input type="radio" name="SiIm_2"  value="4"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Mal di Testa</p>
+                                    <p><input type="radio" name="SiIm_3"  value="0"></p>
+                                    <p><input type="radio" name="SiIm_3"  value="1"></p>
+                                    <p><input type="radio" name="SiIm_3"  value="2"></p>
+                                    <p><input type="radio" name="SiIm_3"  value="3"></p>
+                                    <p><input type="radio" name="SiIm_3"  value="4"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Problemi della Pelle</p>
+                                    <p><input type="radio" name="SiIm_4"  value="0"></p>
+                                    <p><input type="radio" name="SiIm_4"  value="1"></p>
+                                    <p><input type="radio" name="SiIm_4"  value="2"></p>
+                                    <p><input type="radio" name="SiIm_4"  value="3"></p>
+                                    <p><input type="radio" name="SiIm_4"  value="4"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Dolori Muscolari e Articolari</p>
+                                    <p><input type="radio" name="SiIm_5"  value="0"></p>
+                                    <p><input type="radio" name="SiIm_5"  value="1"></p>
+                                    <p><input type="radio" name="SiIm_5"  value="2"></p>
+                                    <p><input type="radio" name="SiIm_5"  value="3"></p>
+                                    <p><input type="radio" name="SiIm_5"  value="4"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Raffreddore</p>
+                                    <p><input type="radio" name="SiIm_6"  value="0"></p>
+                                    <p><input type="radio" name="SiIm_6"  value="1"></p>
+                                    <p><input type="radio" name="SiIm_6"  value="2"></p>
+                                    <p><input type="radio" name="SiIm_6"  value="3"></p>
+                                    <p><input type="radio" name="SiIm_6"  value="4"></p>     
+                                </div>
+                                
+                                <div class="tableRow">
+                                    <p>Tosse</p>
+                                    <p><input type="radio" name="SiIm_7"  value="0"></p>
+                                    <p><input type="radio" name="SiIm_7"  value="1"></p>
+                                    <p><input type="radio" name="SiIm_7"  value="2"></p>
+                                    <p><input type="radio" name="SiIm_7"  value="3"></p>
+                                    <p><input type="radio" name="SiIm_7"  value="4"></p>
+                                </div>
+                            </div>
+                        </div>  
+
+                        <p class="sottotitolo" style="margin-top: 40px;">Indice di massa corporea(BMI)</p>
+                        <!-- BMI -->
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Risultato</p>
+                                <p class="subtitle">Valori di riferimento</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>BMI</p>
+                                    <p>
+                                        {% if persona.bmi %}
+                                            <input type="text" name="bmi-1" placeholder="{{ persona.bmi }}" value="{{ persona.bmi }}">
+                                        {% else %}
+                                            <input type="text" name="bmi-1" placeholder="Inserisci il valore">
+                                        {% endif %}
+                                    </p>
+                                    <p id="long-p">
+                                        <span class="small-text">Ottimale (0): Handgrip alto + Peak Flow alto + BMI normale (18.5-25)</span>
+                                        <span class="small-text">Lieve compromissione (1): Uno tra handgrip basso, Peak Flow ridotto o BMI sovrappeso/sottopeso</span>
+                                        <span class="small-text">Grave compromissione (2): Handgrip molto basso + Peak Flow molto ridotto + BMI <18.5 o >30</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Circonferenza polpaccio -->
+                        <p class="sottotitolo" style="margin-top: 40px;">Circonferenza polpaccio</p>
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Risultato</p>
+                                <p class="subtitle">Valori di riferimento</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>Punteggio</p>
+                                    <p>
+                                        <input type="text" name="Cir_Pol" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p>
+                                        <span class="small-text"> Uomo: > 35 Buona, 30 - 35 > Media, < 30 Bassa </span>
+                                        <span class="small-text"> Donna: > 33 Buona, 28 - 33 > Media, < 28 Bassa </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Weist-hip ratio -->
+                        <p class="sottotitolo" style="margin-top: 40px;">Weist-hip ratio</p>
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Risultato</p>
+                                <p class="subtitle">Valore Riferimento</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>Punteggio</p>
+                                    <p>
+                                        <input type="text" name="WHip" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p>
+                                        <span class="small-text"> Uomo: < 0.90 Normale, 0.90 - 1 > Moderato, > 1 Elevato </span>
+                                        <span class="small-text"> Donna: < 0.75 Normale, 0.75 - 0.85 > Moderato, > 0.85 Elevato </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Weist-height ratio -->
+                        <p class="sottotitolo" style="margin-top: 40px;">Weist-height ratio:</p>
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Risultato</p>
+                                <p class="subtitle">Valore Riferimento</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>Punteggio</p>
+                                    <p>
+                                        <input type="text" name="Whei" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p>
+                                        <span class="small-text"> Verde = Basso, Giallo e marrone = Moderato, Rosso = Elevato</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DOMINIO DELLA LOCOMOZIONE -->
+                    <div class="question" data-group="5" id="locomozione" data-title="dominio locomozione">
+
+                        <div class="title-container">
+                            <div class="title-subtitle">
+                                <h3>Dominio Locomozione</h3>
+                                <p class="sottotitolo">Test di alzata da sedia (Chair Stand Test)</p>
+                            </div>
+                        </div>
+
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">N° Ripetizioni</p>
+                                <p class="subtitle">Tempo tot in secondi</p>
+                                <p class="subtitle">Formula del punteggio</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>5STS</p>
+                                    <p>
+                                        <input type="text" name="numero_rip" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p>
+                                        <input type="text" name="tot_secondi" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p id="long-p">
+                                        <span>Punteggio 5STS = </span>
+                                        <span>Numero di ripetizioni (5) <br> <span class="line-divisor d-block"></span> </span>
+                                        <span>Tempo totale in secondi</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="sottotitolo" style="margin-top: 40px;">Test della velocità del cammino (Gait Speed)</p>
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Distanza</p>
+                                <p class="subtitle">Tempo in secondi</p>
+                                <p class="subtitle">Formula del punteggio</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>Gait Speed</p>
+                                    <p>
+                                        <input type="text" name="distanza" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p>
+                                        <input type="text" name="tempo_s" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p id="long-p">
+                                        <span>Velocità di andatura = </span>
+                                        <span>Distanza (3 metri) <br> <span class="line-divisor d-block"></span> </span>
+                                        <span>Tempo in secondi</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="sottotitolo" style="margin-top: 40px;">Pick Pencil Test</p>
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle">Tempo in secondi</p>
+                                <p class="subtitle">Formula del punteggio</p>
+                            </div>
+                
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>
+                                        <input type="text" name="tempo_s_pick" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p id="long-p">
+                                        <span>Punteggio Pick Pencil Test = </span>
+                                        <span>1</span>
+                                        <span><span class="line-divisor d-block"></span> Tempo in secondi</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="sottotitolo" style="margin-top: 40px;">Questionario Sarcopenia</p>
+                        
+                        <div class="tableAnswer">
+
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Domanda</p>
+                                <p class="subtitle">Mai</p>
+                                <p class="subtitle">A volte</p>
+                                <p class="subtitle">Spesso/Con ausili/Inabile</p>
+                            </div>
+
+                            <div class="tableAnswer-container" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>Forza</p>
+                                    <p style="text-align: left;">Fa difficoltà a sollevare/trasportare 4.5kg?</p>
+                                    <p><input type="radio" name="Sarc_1" value="0"></p>
+                                    <p><input type="radio" name="Sarc_1" value="1"></p>
+                                    <p><input type="radio" name="Sarc_1" value="2"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Assistenza alla deambulazione</p>
+                                    <p style="text-align: left;">Fa difficoltà a camminare all'interno di una stanza?</p>
+                                    <p><input type="radio" name="Sarc_2" value="0"></p>
+                                    <p><input type="radio" name="Sarc_2" value="1"></p>
+                                    <p><input type="radio" name="Sarc_2" value="2"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Alzarsi dalla sedia</p>
+                                    <p style="text-align: left;">Fa difficoltà ad alzarsi dal letto/dalla sedia?</p>
+                                    <p><input type="radio" name="Sarc_3" value="0"></p>
+                                    <p><input type="radio" name="Sarc_3" value="1"></p>
+                                    <p><input type="radio" name="Sarc_3" value="2"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Salire le scale</p>
+                                    <p style="text-align: left; margin-left: -25px; margin-right: 25px;">Fa difficoltà a salire 10 scalini?</p>
+                                    <p><input type="radio" name="Sarc_4" value="0"></p>
+                                    <p><input type="radio" name="Sarc_4" value="1"></p>
+                                    <p><input type="radio" name="Sarc_4" value="2"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Cadute</p>
+                                    <p style="text-align: left;">Quante volte è caduto/a nell'ultimo anno?</p>
+                                    <p><input type="radio" name="Sarc_5" value="0"></p>
+                                    <p><input type="radio" name="Sarc_5" value="1"></p>
+                                    <p><input type="radio" name="Sarc_5" value="2"></p>
+                                </div>
+                            </div>
+                        </div>  
+                    </div>
+
+                    <!-- BIOMARCATORI CIRCOLANTI DEL METABOLISMO -->
+                    <div class="question" data-group="6" id="allostatico" data-title="dominio allostatico">
+
+                        <div class="title-container">
+                            <div class="title-subtitle">
+                                <h3>Carico Allostatico</h3>
+                                <p class="sottotitolo">Biomarcatori Circolanti del Metabolismo</p>
+                            </div>
+                        </div>
+
+                    
+                        <div class="tableAnswer" id="esami">
+
+                            <div class="tableAnswer-header">
+                                <p class="subtitle">Descrizione</p>
+                                <p class="subtitle">Esito</p>
+                                <p class="subtitle">Unità di misura</p>
+                                <p class="subtitle" style="margin-right: 40px;">Valori di riferimento</p>
+                            </div>
+
+                            <div class="tableAnswer-container-allostatico" id="secondTypeTable">
+                                <div class="tableRow">
+                                    <p>Glicemia a digiuno </p>
+
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="Glic" placeholder="{{ dati_estesi.glicemy }}" value="{{ dati_estesi.glicemy }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="Glic" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+                                    
+                                    <p>mg/dL  </p>
+                                    <p id="long-p">
+                                        <span>Valori normali: 74-106 mg/dL</span>
+                                        <span>Ipoglicemia: < 74 mg/dL</span>
+                                        <span>Pre-diabete: 107-125 mg/dL </span>
+                                        <span>Diabete: ≥ 126 mg/dL</span>
+                                     </p>
+                                </div>
+                            
+                                <div class="tableRow">
+                                    <p>Emoglobina glicata 
+                                        (HbA1c) </p>
+                                    <p>
+                                        <input type="text" name="Emog" placeholder="Inserisci il valore">
+                                    </p>       
+                                    <p>%  </p>
+                                    <p id="long-p">
+                                        <span>Valori normali: 4-6% </span>
+                                        <span> Pre-diabete: 6,1% - 6,4% </span>
+                                        <span>Diabete: ≥ 6,5%</span>
+                                    </p> 
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Insulina a digiuno </p>
+
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="Insu" placeholder="{{ dati_estesi.insulin }}" value="{{ dati_estesi.insulin }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="Insu" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+
+                                    <p>IU/mL </p>
+                                    <p id="long-p">Valori normali: < 20 IU/mL </p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Peptide C </p>
+
+                                    <p>
+                                        <input type="text" name="Pept_c" placeholder="Inserisci il valore">
+                                    </p>
+                                   
+                                    <p>ng/mL </p>
+                                    <p id="long-p">Valori normali: 0,8–4,2 ng/mL </p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Colesterolo totale </p>
+
+                                    {% if dati_estesi %}
+                                        <p name="Col_tot">{{ dati_estesi.tot_chol }}</p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="Col_tot" placeholder="Inserisci il valore">
+                                    </p>
+                                    {% endif %}
+                                 
+                                    <p>mg/dL</p>
+                                    <p id="long-p">
+                                        <span> Valori desiderabili: 130 - 200 mg/dL</span>
+                                        <span>Borderline (rischio lieve): 200 239 mg/dL </span>
+                                        <span>Valori alti (rischio alto): ≥ 240 mg/dL </span>
+                                    </p>  
+                                </div>
+                            
+                                <div class="tableRow">
+                                    <p>Colesterolo LDL </p>
+
+                                    {% if dati_estesi %}
+                                        <p name="Col_ldl">{{ dati_estesi.ldl_chol }}</p>
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="Col_ldl" placeholder="Inserisci il valore">
+                                    </p>
+                                    {% endif %}
+
+                                    <p>mg/dL </p>
+                                    <p id="long-p">
+                                        <span>Valori ottimali: < 100 mg/dL </span>
+                                        <span>Quasi ottimale: mg/dL</span>
+                                        <span>Alto: 160-189 mg/dL </span>
+                                        <span> Molto alto: ≥ 190 mg/dL</span>
+                                    </p> 
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Colesterolo HDL </p>
+
+                                    {% if dati_estesi %}
+                                        {% if persona.gender == "M" %}
+                                            <p name="Col_hdl">{{ dati_estesi.hdl_chol_m }}</p>
+                                        {% else %}
+                                            <p name="Col_hdl">{{ dati_estesi.hdl_chol_w }}</p>
+                                        {% endif %}
+                                    {% else %}
+                                    <p>
+                                        <input type="text" name="Col_ldl" placeholder="Inserisci il valore">
+                                    </p>
+                                    {% endif %}
+                   
+                                    <p>mg/dL</p>
+                                    <p id="long-p">
+                                        {% if persona.gender == "M" %}
+                                            <span> Nessun rischio: >55 mg/dL <span>
+                                            <span>Rischio moderato: 35-55 mg/dL  </span>
+
+                                        {% else %}
+                                            <span> Nessun rischio: >65 mg/dL </span>
+                                            <span> Rischio moderato: 45-65 mg/dL </span>
+                                            <span> Rischio alto: < 45 mg/dl </span>
+                                        {% endif %}
+                                    </p> 
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Trigliceridi </p>
+
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="Trigl" placeholder="{{ dati_estesi.trigl }}" value="{{ dati_estesi.trigl }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="Trigl" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+
+                                    <p>mg/dL </p>
+                                    <p id="long-p">
+                                        <span>Valori ottimali: < 150 mg/dL</span>
+                                        <span>Al limite (Borderline): 150-199 md/dL </span>
+                                        <span> Alto: >200 mg/dL</span>
+                                    </p> 
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Albumina </p>
+
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="albumina" placeholder="{{ dati_estesi.albumin_dI }}" value="{{ dati_estesi.albumin_dI }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="albumina" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+
+                                    <p>g/dL </p>
+                                    <p id="long-p">Valori ottimali: 3,5 – 5,2 g/dL </p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Clearance urea </p>
+                                    <p><input type="text" name="clearance_urea" placeholder="Inserisci il valore"></p>
+                                    <p>ml/min</p>
+                                    <p id="long-p">Valori ottimali: 60-90 ml/min</p> 
+                                </div>
+                            
+                                <div class="tableRow">
+                                    <p>IGF-1 </p>
+                                    <p>
+                                        <input type="text" name="ifg_1" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p> 
+                                        ng/mL </p>
+                                    <p id="long-p">
+                                        <span>BAMBINI/ ADOLESCENTI Valori ottimali: 100 600 ng/mL</span>
+                                        <span>ADULTI FINO A 50 anni  Valori ottimali: 100 300 ng/mL</span>
+                                        <span>Adulti sopra i 50 anni  Valori ottimali: 200 ng/mL 50</span>
+                                    </p> 
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="sottotitolo" style="margin-top: 40px;">Biomarcatori circolanti dell'infiammazione</p>
+
+                        <div class="tableAnswer" id="esami">
+
+                            <div class="tableAnswer-header">
+                                <p class="subtitle">Descrizione</p>
+                                <p class="subtitle">Esito</p>
+                                <p class="subtitle">Unità di misura</p>
+                                <p class="subtitle">Valori di riferimento</p>
+                            </div>
+
+                            <div class="tableAnswer-container" id="secondTypeTable">
+
+                                <div class="tableRow">
+                                    <p>Lymph</p>
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="Lymph" placeholder="{{ dati_estesi.lymph }}" value="{{ dati_estesi.lymph }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="Lymph" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+                                    <p>%</p>
+                                    <p>15 - 45</p>
+                                </div>
+                            
+                                <div class="tableRow">
+                                    <p>Lymph </p>
+
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="Lymph_el" placeholder="{{ dati_estesi.lymph_ul }}" value="{{ dati_estesi.lymph_ul }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="Lymph_el" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+                                    
+                                    <p>10^3/uL</p>
+                                    <p>1.0 - 3.5 </p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Wbc</p>
+                                    
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="wbc" placeholder=" {{ dati_estesi.wbc }}" value=" {{ dati_estesi.wbc }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="wbc" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+                                    
+                                    <p>10^3/uL</p>
+                                    <p>4.0 - 10.0 </p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Proteina C reattiva</p>
+                                    <p>
+                                        <input type="text" name="Proteins_c" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p>%</p>
+                                    <p>15 - 45</p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Interleuchina 6</p>
+
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="Inter_6" placeholder="{{ dati_estesi.inter_6  }}" value=" {{ dati_estesi.inter_6  }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="Inter_6" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+
+                                   
+                                    <p>pg/mL </p>
+                                    <p>4.4 </p>
+                                </div>
+                            
+                                <div class="tableRow">
+                                    <p>TNF (Tumor Necrosis Factor) alfa </p>
+                                    <p>
+                                        <input type="text" name="Tnf" placeholder="Inserisci il valore">
+                                    </p>
+                                    <p>pg/mL </p>
+                                    <p>4,60 - 12,40</p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Mono </p>
+
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="Mono" placeholder="{{ dati_estesi.mono }}" value="{{ dati_estesi.mono }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="Mono" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+
+                                    <p>%</p>
+                                    <p>0 - 10</p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Mono </p>
+
+                                    {% if dati_estesi %}
+                                        <p>
+                                            <input type="text" name="Mono_el" placeholder="{{ dati_estesi.mono_ul }}" value="{{ dati_estesi.mono_ul }}">
+                                        </p>
+                                    {% else %}
+                                        <p>
+                                            <input type="text" name="Mono_el" placeholder="Inserisci il valore">
+                                        </p>
+                                    {% endif %}
+                                 
+                                    <p>0^3/uL</p>
+                                    <p>0-0.99</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <div class="left-right-btn">
+                    
+                        <button class="button button--submit" id="prev-btn" type="button">
+                            <span class="button__icon-wrapper">
+                              <svg
+                                viewBox="0 0 14 15"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="button__icon-svg"
+                                width="12"
+                              >
+                                <path
+                                  d="M0.624 3.448l.264 10.44 10.44.24-.024-2.28-6.96.048 6.024-6.072-1.488-1.488-9.432 9.432.048-6.912-2.304-.024z"
+                                  fill="currentColor"
+                                ></path>
+                              </svg>
+                          
+                              <svg
+                                viewBox="0 0 14 15"
+                                fill="none"
+                                width="12"
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="button__icon-svg button__icon-svg--copy"
+                              >
+                                <path
+                                  d="M0.624 3.448l.264 10.44 10.44.24-.024-2.28-6.96.048 6.024-6.072-1.488-1.488-9.432 9.432.048-6.912-2.304-.024z"
+                                  fill="currentColor"
+                                ></path>
+                              </svg>
+                            </span>
+                            Precedente
+                        </button>                          
+
+                        <button class="button button--submit" id="next-btn" type="button">
+                            <span class="button__icon-wrapper">
+                                <svg
+                                viewBox="0 0 14 15"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="button__icon-svg"
+                                width="10"
+                                >
+                                <path
+                                    d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                                    fill="currentColor"
+                                ></path>
+                                </svg>
+                
+                                <svg
+                                viewBox="0 0 14 15"
+                                fill="none"
+                                width="10"
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="button__icon-svg button__icon-svg--copy"
+                                >
+                                <path
+                                    d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                                    fill="currentColor"
+                                ></path>
+                                </svg>
+                            </span>
+                            Successivo
+                        </button>
+
+                    </div>
+
+                    <button class="button button--submit" id="submit-btn" type="submit">
+                        <span class="button__icon-wrapper">
+                            <svg
+                            viewBox="0 0 14 15"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="button__icon-svg"
+                            width="10"
+                            >
+                            <path
+                                d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                                fill="currentColor"
+                            ></path>
+                            </svg>
+            
+                            <svg
+                            viewBox="0 0 14 15"
+                            fill="none"
+                            width="10"
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="button__icon-svg button__icon-svg--copy"
+                            >
+                            <path
+                                d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                                fill="currentColor"
+                            ></path>
+                            </svg>
+                        </span>
+                        Invia
+                    </button>
+                </div>
+            </form>
+
+        </div>
+        
+    </main>
+</body>
+</html>
+
+
+
+
+                    <!-- ENERGIA E METABOLISMO -->
+                    <!-- <div class="question" data-group="10">
+                        <h2 class="fw-bolder">Dominio della Locomozione</h2>
+                    
+                        <h4>Questionario sulla stanchezza percepita (Fatigue Severity Scale)</h4>
+                        
+                        <div class="tableAnswer">
+                            <div class="tableAnswer-header">
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Fortemente in disaccordo</p>
+                                <p class="subtitle"></p>
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Nè d'accordo nè in disaccordo</p>
+                                <p class="subtitle"></p>
+                                <p class="subtitle"></p>
+                                <p class="subtitle">Fortemente d'accordo</p>
+                            </div>
+
+                            <div class="tableAnswer-container" id="secondTypeTable">
+
+                                <div class="tableRow" style="margin-top: 10px;">
+                                    <p>Quando sono affaticato, la mia motivazione è bassa</p>
+                                    <p><input type="radio" name="fss_1"  value="1"></p>
+                                    <p><input type="radio" name="fss_1"  value="2"></p>
+                                    <p><input type="radio" name="fss_1"  value="3"></p>
+                                    <p><input type="radio" name="fss_1"  value="4"></p>
+                                    <p><input type="radio" name="fss_1"  value="5"></p>
+                                    <p><input type="radio" name="fss_1"  value="6"></p>
+                                    <p><input type="radio" name="fss_1"  value="7"></p>
+                                </div>
+                                
+                                <div class="tableRow">
+                                    <p>Mi sento affaticato con l'attività fisica</p>
+                                    <p><input type="radio" name="fss_2"  value="1"></p>
+                                    <p><input type="radio" name="fss_2"  value="2"></p>
+                                    <p><input type="radio" name="fss_2"  value="3"></p>
+                                    <p><input type="radio" name="fss_2"  value="4"></p>
+                                    <p><input type="radio" name="fss_2"  value="5"></p>
+                                    <p><input type="radio" name="fss_2"  value="6"></p>
+                                    <p><input type="radio" name="fss_2"  value="7"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>Mi sento affaticato facilmente</p>
+                                    <p><input type="radio" name="fss_3"  value="1"></p>
+                                    <p><input type="radio" name="fss_3"  value="2"></p>
+                                    <p><input type="radio" name="fss_3"  value="3"></p>
+                                    <p><input type="radio" name="fss_3"  value="4"></p>
+                                    <p><input type="radio" name="fss_3"  value="5"></p>
+                                    <p><input type="radio" name="fss_3"  value="6"></p>
+                                    <p><input type="radio" name="fss_3"  value="7"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>La fatica interferisce con le mie funzioni fisiche</p>
+                                    <p><input type="radio" name="fss_4"  value="1"></p>
+                                    <p><input type="radio" name="fss_4"  value="2"></p>
+                                    <p><input type="radio" name="fss_4"  value="3"></p>
+                                    <p><input type="radio" name="fss_4"  value="4"></p>
+                                    <p><input type="radio" name="fss_4"  value="5"></p>
+                                    <p><input type="radio" name="fss_4"  value="6"></p>
+                                    <p><input type="radio" name="fss_4"  value="7"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>La fatica mi causa problemi frequenti</p>
+                                    <p><input type="radio" name="fss_5"  value="1"></p>
+                                    <p><input type="radio" name="fss_5"  value="2"></p>
+                                    <p><input type="radio" name="fss_5"  value="3"></p>
+                                    <p><input type="radio" name="fss_5"  value="4"></p>
+                                    <p><input type="radio" name="fss_5"  value="5"></p>
+                                    <p><input type="radio" name="fss_5"  value="6"></p>
+                                    <p><input type="radio" name="fss_5"  value="7"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>La fatica mi impedisce di svolgere attività fisiche prolungate</p>
+                                    <p><input type="radio" name="fss_6"  value="1"></p>
+                                    <p><input type="radio" name="fss_6"  value="2"></p>
+                                    <p><input type="radio" name="fss_6"  value="3"></p>
+                                    <p><input type="radio" name="fss_6"  value="4"></p>
+                                    <p><input type="radio" name="fss_6"  value="5"></p>
+                                    <p><input type="radio" name="fss_6"  value="6"></p>
+                                    <p><input type="radio" name="fss_6"  value="7"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>La fatica è tra i miei 3 sintomi più invalidanti</p>
+                                    <p><input type="radio" name="fss_7"  value="1"></p>
+                                    <p><input type="radio" name="fss_7"  value="2"></p>
+                                    <p><input type="radio" name="fss_7"  value="3"></p>
+                                    <p><input type="radio" name="fss_7"  value="4"></p>
+                                    <p><input type="radio" name="fss_7"  value="5"></p>
+                                    <p><input type="radio" name="fss_7"  value="6"></p>
+                                    <p><input type="radio" name="fss_7"  value="7"></p>
+                                </div>
+
+                                <div class="tableRow">
+                                    <p>La fatica interferisce con il lavoro, la famiglia e la vita sociale</p>
+                                    <p><input type="radio" name="fss_8"  value="1"></p>
+                                    <p><input type="radio" name="fss_8"  value="2"></p>
+                                    <p><input type="radio" name="fss_8"  value="3"></p>
+                                    <p><input type="radio" name="fss_8"  value="4"></p>
+                                    <p><input type="radio" name="fss_8"  value="5"></p>
+                                    <p><input type="radio" name="fss_8"  value="6"></p>
+                                    <p><input type="radio" name="fss_8"  value="7"></p>
+                                </div>
+
+                            </div>
+                        </div>  
+                    </div> -->
+

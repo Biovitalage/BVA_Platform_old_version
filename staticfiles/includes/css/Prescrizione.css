@@ -1,0 +1,262 @@
+.container-card-prescrizioni{
+    width: 98%;
+    margin: auto;
+    background-color: var(--card-color);
+    height: 700px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+.header-tools{
+    background-color: var(--contrast-color-shadow);
+    padding: 20px;
+    height: 5rem;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+
+/* Stile Modale */
+#backdropModale{
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    display: none;
+}
+#ModaleInserimento{
+    display: none; 
+    background-color: var(--card-color);
+    border-radius: 8px;
+    width: 1400px;
+    height: 750px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}
+.title-header-container{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.close{
+    margin-right: 1rem;
+    height: 2rem;
+    width: 3rem;
+    border-radius: 8px;
+    border: none;
+    background-color: red;
+    color: white;
+    transition: transform 0.3s ease-in-out;
+}
+.close:hover{
+    transform: scale(1.1);
+}
+#ModaleInserimento h3{
+    color: var(--contrast-color);
+    padding: 15px;
+    font-size: 25px;
+    font-weight: bolder;
+}
+#ModaleInserimento .subtitle{
+    padding-left: 15px;
+}
+.ModaleHeader{
+    margin: auto;
+    background-color: var(--contrast-color-shadow);
+    width: 98%;
+    height: 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px;
+}
+.Modale-Result-content{
+    background-color: var(--contrast-color-shadow);
+    max-height: 260px;
+    width: 98%;
+    margin: 1rem auto;
+    border-radius: 8px;
+    overflow-y: auto; 
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; 
+    align-items: center;
+    gap: 5px;
+    padding: 10px;
+}
+.Modale-Result-content .rowModale{
+    width: 100%;
+    background-color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.rowModale p{
+    width: 100%;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+.nomeEsame{
+    font-weight: bold;
+}
+#filtri{
+    height: 2.5rem;
+    border-radius: 8px;
+    outline: none;
+    border: 1px solid #ddd;
+    margin-left: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+#buttonAdd{
+    margin-left: 15px;
+    margin-top: 20px;
+}
+.tendinaPrescrizioni{
+    width: 30%;
+    height: 2.5rem;
+    border-radius: 8px;
+    padding: 5px;
+    outline: none;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+}
+.barra-ricercaModale{
+    width: 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.barra-ricercaModale input{
+    height: 100%;
+    height: 2.5rem;
+    border-radius: 8px 0px 0px 8px;
+    border: 1px solid #ddd;
+    padding-left: 10px;
+    width: 75%;
+    outline-color: var(--contrast-color2);
+}
+.barra-ricercaModale button{
+    width: 25%;
+    height: 2.5rem;
+    border-radius: 0px 8px 8px 0px;
+}
+
+
+/* WEBKIT SCROLL MODALE STYLE */
+::-webkit-scrollbar {
+    width: 8px; 
+}
+::-webkit-scrollbar-track {
+    background: var(--contrast-color-shadow); 
+    border-radius: 8px; 
+}
+::-webkit-scrollbar-thumb  {
+    background: rgba(0, 0, 0, 0.3); 
+    border-radius: 8px; 
+    transition: background 0.3s;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5); 
+}
+
+
+
+
+/* Stile Tabella Result */
+.tabella-prescrizioni{
+    width: 98%;
+    margin: auto;
+    height: 500px;
+}
+.header-table{
+    background-color: var(--contrast-color);
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    height: 4rem;
+    border-radius: 8px 8px 0px 0px;
+}
+.table-content{
+    background-color: white;
+    height: 480px;
+    border: 1px solid #ddd;
+}
+.add-btn,
+.remove-btn{
+    border: none;
+    background: none;
+    transition: transform 0.3s ease-in-out;
+}
+.add-btn:hover,
+.remove-btn:hover{
+    transform: scale(1.1);
+}
+.colModale{
+    width: 10%;
+    text-align: center;
+    padding: 20px;
+    height: 5rem;
+}
+.colModale span{
+    display: block;
+}
+.colModale.nomeEsame{
+    width: 40%;
+}
+.colModale.metodica{
+    width: 20%;
+}
+
+
+
+
+/* Stile tabella coda prescrizioni */
+.conteiner-CodaPrescrizioni{
+    width: 98%;
+    margin: auto;
+    height: 200px;
+    flex-direction: column;
+    background-color: var(--contrast-color-shadow);
+    border-radius: 8px;
+    overflow-y:  auto;
+    padding: 10px;
+    display: flex;
+    gap: 5px;
+}
+.conteiner-CodaPrescrizioni .rowModale{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+}
+.conteiner-CodaPrescrizioni .colModale{
+    width: 10%;
+    text-align: center;
+    padding: 20px;
+    height: 5rem;
+}
+.conteiner-CodaPrescrizioni .colModale span{
+    display: block;
+}
+.conteiner-CodaPrescrizioni .colModale.nomeEsame{
+    width: 40%;
+}
+.conteiner-CodaPrescrizioni .colModale.metodica{
+    width: 20%;
+}
+

@@ -1,0 +1,111 @@
+/* ! TABLE */
+.table-wrapper {
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 10px 17px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ! PAGINATION */
+.pagination_tabella {
+  background-color: white;
+  border-radius: 0px 0px 4px 4px;
+  padding: 20px 0 20px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.previous,
+.next {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-decoration: none;
+  color: black;
+  width: 8rem;
+  text-align: center;
+}
+.previous:hover,
+.next:hover {
+  background-color: #ddd;
+}
+.previous {
+  border-radius: 4px 0px 0px 4px;
+}
+.next {
+  border-radius: 0px 4px 4px 0px;
+}
+/*  PAGINATION  */
+.pagination_tabella a,
+.pagination_tabella span {
+  margin: 0 5px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background-color 0.3s, color 0.3s;
+}
+.pagination_tabella a {
+  color: #333;
+}
+.pagination_tabella a:hover {
+  background-color: #f0f0f0;
+}
+.pagination_tabella .current {
+  background-color: var(--contrast-color);
+  color: #fff;
+  border-color: var(--contrast-color);
+}
+.pagination_tabella .disabled {
+  color: #aaa;
+  border-color: #ccc;
+  cursor: default;
+  pointer-events: none;
+  background-color: #f8f8f8;
+}
+
+
+
+
+
+/* ! BUTTON */
+.btn.delete {
+    background-color: #fdecea;
+    color: #d32f2f;
+}
+
+.btn.delete:hover {
+    background-color: #d32f2f;
+    color: #fdecea;
+}
+
+button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}  
+
+
+
+
+/* ! INPUT */
+.form-control:focus {
+    border-color: var(--contrast-color2) !important;
+    outline: 0;
+    box-shadow: 0 0 0 .25rem #6a2dcc67 !important;
+}

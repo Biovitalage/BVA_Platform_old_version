@@ -1,0 +1,240 @@
+.card-container{
+    background-color: var(--card-color);
+    width: 98%;
+    margin: auto;
+    border-radius: 8px;    
+    margin-top: 30px;
+}
+.button-container{
+    width: 100%;
+    padding: 20px;
+    height: 6rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}   
+.left-right-btn{
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 20%;
+    gap: 20px;
+}
+.question {
+    display: none;
+}
+.question.active {
+    display: block;
+    height: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-direction: column;
+}
+#next-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+}
+.field p:first-of-type {
+    background-color: var(--contrast-color-shadow);
+    border-radius: 8px;
+    padding: 15px;
+    color: var(--dark2);
+    margin-bottom: -1rem;
+    font-weight: bold;
+    padding-bottom: 25px;
+}
+.field p:last-of-type {
+    border-bottom: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 15px;
+    padding-top: 15px;
+    border-radius: 8px;
+    font-size: 18px;
+    color: var(--dark1);
+    background-color: white;
+}
+.info_container{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    height: 300px;
+    gap: 15px;
+    width: 100%;
+    background-color: white;
+    border-radius: 2px;
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+#quiz-container{
+    padding: 20px;
+    height: auto;
+}
+
+.left-right-btn{
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#next-btn,
+#prev-btn{
+    margin-top: 0rem;
+    height: 3rem;
+}
+.tableAnswer{
+    background-color: white;
+    width: 100%;
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.tableAnswer-header{
+    width: 100%;
+    background-color: var(--contrast-color);
+    padding: 20px;
+    height: 5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.subtitle{
+    color: white;
+    font-size: 20px;
+    margin-top: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+.question p{
+    letter-spacing: 1px;
+}
+.question p span{
+    color: var(--dark1);;
+    font-size: 14px;
+}
+.tableAnswer-container{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.tableInput{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 10rem;
+    border-bottom: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+}
+.tableInput input{
+    width: 30px;
+    height: 30px;
+}
+.tableRow{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 6rem;
+}
+.tableRow p{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    border-bottom: 1px solid #ddd ;
+    padding: 20px;
+    border-left: 1px solid #ddd;
+}
+input[type="radio"] {
+    appearance: none; 
+    -webkit-appearance: none; 
+    width: 2rem;
+    height: 2rem;
+    background-color: var(--card-color);
+    border: 2px solid var(--contrast-color-shadow);
+    cursor: pointer;
+}
+input[type="radio"]:checked {
+    background-color: var(--contrast-color2);
+}
+
+.tableRow p:first-of-type{
+    border-left: none;
+}
+#secondTypeTable{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tableRow input:not([type="radio"]) {
+    width: 100%;
+    padding: 0px 20px;
+    border: none;
+    outline: none;
+    text-align: center;
+    height: 100%;
+}
+
+#long-p{
+    flex-direction: column;
+}
+#Long-p #info{
+    color: var(--dark1);
+    font-weight: 100;
+}
+
+
+
+
+#pagination {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+    width: 60%;
+    height: 100%;
+}
+
+.pagination-btn {
+    cursor: pointer;
+    padding: 5px 10px;
+    border: 2px solid var(--contrast-color);
+    border-radius: 100px;
+    width: 38px;
+    background-color: var(--dark2);
+    position: relative;
+    color: white;
+}
+
+
+.pagination-btn.active {
+    background-color: var(--contrast-color);
+    color: white;
+    font-weight: bold;
+}
+
+button:disabled{
+    cursor: not-allowed;
+    background-color: var(--contrast-color);
+}
+button:disabled:hover{
+    pointer-events: none;
+}

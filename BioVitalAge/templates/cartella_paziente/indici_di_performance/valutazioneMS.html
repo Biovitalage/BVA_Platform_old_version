@@ -1,0 +1,748 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="{{ csrf_token }}">
+        <!-- Favicon -->
+        <link rel="sortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+        <title>BVA - VMS</title>
+
+        <!-- Css Import -->
+        <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+        <link rel="stylesheet" href="{% static 'css/cartella_paziente/indici_di_performance/valutazioneMS.css' %}">
+
+
+        <!-- Bootstrap import -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- Font Import  -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+        <!-- JS IMPORT -->
+    </head>
+
+    <body>
+        <!-- Loader -->
+        {% include 'components/loader.html' %}
+
+        <!-- NAVBAR -->
+        {% include 'components/navBar.html' %}
+
+        <main>
+            <!-- MENU TRACE -->
+            <div class="main-title-nav">
+                <div class="back-tittle">
+                    <a id="back" href="{% url 'cartella_paziente' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+                    <h2 class="main-welcome-title">
+                        <span>{{ persona.surname|title }}</span>
+                        <span>{{ persona.name|title }}</span> |
+                        <span>Età: {{ persona.chronological_age }}</span>
+                        {% if persona.phone and persona.email %}
+                        |
+                        <span class="phone_span">
+                            <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                            Telefono: {{ persona.phone }}
+                        </span> |
+                        <span class="email_span">
+                            <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                            Email: {{ persona.email }}
+                        </span>
+                        {% endif %}
+                    </h2>
+                </div>
+            
+                <div class="main-menu-trace">
+                    <a href="{% url 'HomePage' %}">
+                        <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                    </a>
+                    <p>»</p>
+                    <p>
+                        <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                    </p>
+                    <p>»</p>
+                    <p class="breadcrumb">Valutazione Muscolo Scheletrica</p>
+                    
+                </div>
+            
+            </div>
+
+
+
+            <form method="POST" action="{% url 'valutazione_m_s' persona.id %}">
+
+                {% csrf_token %}
+
+                <div class="card-container">
+                        <div class="title-container">
+                            <img src="{% static 'image/Capacita_Fisica.png' %}" alt="">
+                            <h3>Attività fisica:</h3>
+                        </div>
+                            
+                        <div class="table-container">
+                            <div class="table-row">
+                                <p class="question">Quanto spesso svolgi attività fisica?</p>
+
+                                <div class="container-risposte">
+                                    <div class="cella-container">
+                                        <input type="radio" name="frequenza_a_f" id="">
+                                        <label for="">Mai</label>
+                                    </div>
+                                    <div class="cella-container">
+                                        <input type="radio" name="frequenza_a_f" id="">
+                                        <label for="">1 volta a settimana</label>
+                                    </div>
+                                    <div class="cella-container">
+                                        <input type="radio" name="frequenza_a_f" id="">
+                                        <label for="">2-3 volte a settimana</label>
+                                    </div>
+                                    <div class="cella-container">
+                                        <input type="radio" name="frequenza_a_f" id="">
+                                        <label for="">4 o più volte a settimana</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-row">
+                                <p class="question">Che tipo di attività fisica pratichi più frequentemente?</p>
+
+                                <div class="container-risposte">
+                                    <div class="cella-container">
+                                        <input type="radio" name="tipo_a_f" id="">
+                                        <label for="">Nessuna attività fisica</label>
+                                    </div>
+                                    <div class="cella-container">
+                                        <input type="radio" name="tipo_a_f" id="">
+                                        <label for=""> Attività a basso impatto (es. camminata, yoga, stretching)</label>
+                                    </div>
+                                    <div class="cella-container">
+                                        <input type="radio" name="tipo_a_f" id="">
+                                        <label for=""> Attività aerobica (es. corsa, bici, nuoto)</label>
+                                    </div>
+                                    <div class="cella-container">
+                                        <input type="radio" name="tipo_a_f" id="">
+                                        <label for="">Attività di forza o resistenza (es. pesi, corpo libero, crossfit)</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-row">
+                                <p class="question">Quale delle seguenti affermazioni descrive meglio il tuo stile di vita quotidiano?</p>
+
+                                <div class="container-risposte">
+                                    <div class="cella-container">
+                                        <input type="radio" name="stile_vita" id="">
+                                        <label for="">Stile di vita completamente sedentario (lavoro e tempo libero principalmente da seduto)</label>
+                                    </div>
+                                    <div class="cella-container">
+                                        <input type="radio" name="stile_vita" id="">
+                                        <label for="">Stile di vita leggermente attivo (qualche camminata, movimenti durante il giorno)</label>
+                                    </div>
+                                    <div class="cella-container">
+                                        <input type="radio" name="stile_vita" id="">
+                                        <label for=""> Moderatamente attivo (mi muovo regolarmente e faccio esercizio fisico)</label>
+                                    </div>
+                                    <div class="cella-container">
+                                        <input type="radio" name="stile_vita" id="">
+                                        <label for="">Molto attivo (attività fisica quotidiana o lavoro fisicamente impegnativo)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>      
+                </div>
+
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Muscolo_Violet.png' %}" alt="">
+                        <h3>Anamnesi muscolo-scheletrica:</h3>
+                    </div>
+                        
+                    <div class="table-container">
+                        <div class="grid-container">
+                            <div class="cella-grid">
+                                <p>Terapie infiltrative, interventi chirurgici, etc.:</p>
+                                <input type="text" name="terapie_inf" id="" placeholder="inserisci il valore">
+                            </div>
+                            <div class="cella-grid">
+                                <p>Diagnosi (se il paziente l’ha ricevuta):</p>
+                                <input type="text" name="diagnosi_t" id="" placeholder="inserisci il valore">
+                            </div>
+                        </div>
+                        <div class="container-quest-special">
+                            <p>Comorbilità, sintomi più invalidanti, limitazioni funzionali, aspetti clinico-funzionali più che impattano di più sulla vita quotidiana, etc.:</p>
+                            <!-- <input type="text" name="" id="" placeholder="inserisci il valore"> -->
+                             <textarea name="sintomi_t" id="" placeholder="Inserisci il valore..."></textarea>
+                        </div>
+                    </div>      
+                </div>
+
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Anamnesi.png' %}" alt="">
+                        <h3>Esame Generale:</h3>
+                    </div>
+                        
+                    <div class="table-container">
+
+                        <div class="grid-container special">
+                            <div class="cella-grid">
+                                <p>Palpazione:</p>
+                                <input type="text" name="palpazione" id="" placeholder="inserisci il valore">
+                            </div>
+                            <div class="cella-grid">
+                                <p>Osservazione:</p>
+                                <input type="text" name="osservazione" id="" placeholder="inserisci il valore">
+                            </div>
+                        </div>
+
+                        <div class="grid-container special">
+                            <div class="cella-grid">
+                                <p>Mobilità Attiva:</p>
+                                <input type="text" name="m_attiva" id="" placeholder="inserisci il valore">
+                            </div>
+                            <div class="cella-grid">
+                                <p>Mobilità Passiva:</p>
+                                <input type="text" name="m_passiva" id="" placeholder="inserisci il valore">
+                            </div>
+                        </div>
+
+                        <div class="grid-container special">
+                            <div class="cella-grid">
+                                <p>Dolorabilità:</p>
+                                <input type="text" name="dolorabilità" id="" placeholder="inserisci il valore">
+                            </div>
+                            <div class="cella-grid">
+                                <p>Scala Visuo-Analogica del dolore:</p>
+                                <input type="text" name="scala_v_a" id="" placeholder="inserisci il valore">
+                            </div>
+                        </div>
+
+                    </div>      
+                </div>
+
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Muscolo_Scheletrico.png' %}" alt="">
+                        <h3>Esame muscolo-scheletrica:</h3>
+                    </div>
+                        
+                    <div class="table-container">
+
+                        <div class="grid-container special">
+                            <div class="cella-grid">
+                                <p>Movimento attivo (ROM):</p>
+                                <input type="text" name="mo_attivo" id="" placeholder="inserisci il valore">
+                            </div>
+                            <div class="cella-grid">
+                                <p>Limitazioni:</p>
+                                <input type="text" name="mo_a_limitazioni" id="" placeholder="inserisci il valore">
+                            </div>
+                        </div>
+
+                        <div class="grid-container special">
+                            <div class="cella-grid">
+                                <p>Movimento passivo (ROM):</p>
+                                <input type="text" name="mo_passivo" id="" placeholder="inserisci il valore">
+                            </div>
+                            <div class="cella-grid">
+                                <p>Limitazioni:</p>
+                                <input type="text" name="mo_p_limitazioni" id="" placeholder="inserisci il valore">
+                            </div>
+                        </div>
+
+                        <div class="grid-container special">
+                            <div class="cella-grid">
+                                <p>Comparazioni movimento attivo e passivo: :</p>
+                                <textarea name="comparazioni_m" id="textarea-special"></textarea>
+                            </div>
+                            <div class="cella-grid">
+                                <p>Circonferenza polpaccio:</p>
+                                <input type="text" name="circ_polp" id="" placeholder="inserisci il valore">
+                                
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Tono muscolare (rigidità , flaccidità ecc.):</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="tono_m" id="">
+                                    <label for="">Ipertonia</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="tono_m" id="">
+                                    <label for="">Ipotonia</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="tono_m" id="">
+                                    <label for="">Normotonia</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="tono_m" id="">
+                                    <label for="">Rigidità</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row" style="height: 10rem;">
+                            <p class="question">Scala di Ashworth (resistenza di un muscolo sottoposto al movimento passivo):</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="scala_ashworth" id="">
+                                    <label for="" style="font-size: 13px;">Nessuna resistenza muscolare (tono muscolare normale)</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="scala_ashworth" id="">
+                                    <label for="" style="font-size: 13px;">Leggera resistenza al movimento (muscolo leggermente rigido)</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="scala_ashworth" id="">
+                                    <label for="" style="font-size: 13px;">Leggera resistenza con una resistenza aumentata nell’arco di movimento</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="scala_ashworth" id="">
+                                    <label for="" style="font-size: 13px;">Resistenza moderata, ma il movimento è ancora possibile</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="scala_ashworth" id="">
+                                    <label for="" style="font-size: 13px;">Resistenza significativa, ma il movimento passivo è ancora possibile</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="scala_ashworth" id="">
+                                    <label for="" style="font-size: 13px;">Resistenza molto forte, movimento passivo impossibile (muscolo rigidamente contratturato)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> 
+                </div>
+
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Postura.png' %}" alt="" id="img-special">
+                        <h3>Esame posturale:</h3>
+                    </div>
+                        
+                    <div class="table-container">
+
+                        <div class="grid-container special">
+                            <div class="cella-grid">
+                                <p>Visita frontale:</p>
+                                <input type="text" name="v_frontale" id="" placeholder="inserisci il valore">
+                            </div>
+                            <div class="cella-grid">
+                                <p>Visita laterale:</p>
+                                <input type="text" name="v_laterale" id="" placeholder="inserisci il valore">
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Posizione testa:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="p_testa" id="">
+                                    <label for="">Normale</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="p_testa" id="">
+                                    <label for="">Inclinata a dx</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="p_testa" id="">
+                                    <label for="">Inclinata a sx</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="p_testa" id="">
+                                    <label for="">Deviazione laterale a dx</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="p_testa" id="">
+                                    <label for="">Deviazione laterale a sx</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="p_testa" id="">
+                                    <label for="">Altro</label>
+
+                                    <!-- <input type="text"> -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Spalle:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="spalle" id="">
+                                    <label for="">Allineate</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="spalle" id="">
+                                    <label for="">Dislivello (specificare)</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="spalle" id="">
+                                    <label for="">Altro</label>
+
+                                    <!-- <input type="text" name="" id=""> -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Ombelico</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="ombelico" id="">
+                                    <label for="">Centrico</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="ombelico" id="">
+                                    <label for="">Decentrato(specificare)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Arti inferiori:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="a_inferiori" id="">
+                                    <label for="">In asse</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="a_inferiori" id="">
+                                    <label for="">Varismo</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="a_inferiori" id="">
+                                    <label for="">Valgismo</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="a_inferiori" id="">
+                                    <label for="">Altro</label>
+
+                                    <!-- <input type="text"> -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Piedi:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="piedi" id="">
+                                    <label for="">Posizione normale</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="piedi" id="">
+                                    <label for="">Cavismo</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="piedi" id="">
+                                    <label for="">Piattismo</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="piedi" id="">
+                                    <label for="">Altro</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Colonna Vertebrale:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="colonna_v" id="">
+                                    <label for="">Allineata</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="colonna_v" id="">
+                                    <label for="">Deviata a dx</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="colonna_v" id="">
+                                    <label for="">Deviata a sx</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="colonna_v" id="">
+                                    <label for="">Scoliosi (tipo di deviazione)</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="colonna_v" id="">
+                                    <label for="">Altro</label>
+
+                                    <!-- <input type="text" name="" id=""> -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Curvatura cervicale:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_c" id="">
+                                    <label for="">Normale</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_c" id="">
+                                    <label for="">Iperlordosi</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_c" id="">
+                                    <label for="">Appiattimento</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_c" id="">
+                                    <label for="">Altro</label>
+
+                                    <!-- <input type="text"> -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Curvatura dorsale:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_d" id="">
+                                    <label for="">Normale</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_d" id="">
+                                    <label for="">Ipercifosi</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_d" id="">
+                                    <label for="">Appiattimento</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_d" id="">
+                                    <label for="">Altro</label>
+                                    <!-- <input type="text"> -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Curvatura lombare:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_l" id="">
+                                    <label for="">Normale:</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_l" id="">
+                                    <label for="">Iperlordosi:</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_l" id="">
+                                    <label for="">Appiattimento</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="curvatura_l" id="">
+                                    <label for="">Altro</label>
+                                    <!-- <input type="text"> -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Posizione del bacino:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="posizione_b" id="">
+                                    <label for="">Neutra</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="posizione_b" id="">
+                                    <label for="">Anteroversione</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="posizione_b" id="">
+                                    <label for="">Retroversione</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="posizione_b" id="">
+                                    <label for="">Altro</label>
+                                    <!-- <input type="text"> -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Equilibrio statico (in piedi su un piede):</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="equilibrio_s" id="">
+                                    <label for="">Normale</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="equilibrio_s" id="">
+                                    <label for="">Compromesso:</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Equilibrio dinamico (camminando su una linea retta):</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="equilibrio_d" id="">
+                                    <label for="">Normale:</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="equilibrio_d" id="">
+                                    <label for="">Compromesso:</label>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="table-row">
+                            <p class="question">Punti dolenti (palpazione) + livello di dolore (SCALA VAS 0-10):</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="p_dolenti" id="">
+                                    <label for="">punti_d:</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="p_dolenti" id="">
+                                    <label for="">punti_d:</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="p_dolenti" id="">
+                                    <label for="">punti_d: </label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="p_dolenti" id="">
+                                    <label for="">Altro</label>
+                                    <!-- <input type="text"> -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>      
+                </div>
+
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Funzionale.png' %}" alt="" id="img-special">
+                        <h3>Valutazione complessiva funzionale:</h3>
+                    </div>
+                        
+                    <div class="table-container">
+
+                        <div class="table-row">
+                            <p class="question">Gravità della disfunzione posturale:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="frequenza_a_f" id="">
+                                    <label for="">Nessuna</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="frequenza_a_f" id="">
+                                    <label for="">Lieve</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="frequenza_a_f" id="">
+                                    <label for="">Moderata</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="frequenza_a_f" id="">
+                                    <label for="">Grave</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-row">
+                            <p class="question">Rischio di infortuni o malformazioni:</p>
+
+                            <div class="container-risposte">
+                                <div class="cella-container">
+                                    <input type="radio" name="frequenza_a_f" id="">
+                                    <label for="">Basso</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="frequenza_a_f" id="">
+                                    <label for="">Medio</label>
+                                </div>
+                                <div class="cella-container">
+                                    <input type="radio" name="frequenza_a_f" id="">
+                                    <label for="">Alto</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="grid-container special">
+                            <div class="cella-grid">
+                                <p>Suggerimenti specifici (consulenze con altri professionisti, consigli, accorgimenti ecc.):</p>
+                                <input type="text" name="" id="" placeholder="inserisci il valore">
+                            </div>
+                            <div class="cella-grid">
+                                <p>Considerazioni finali: </p>
+                                <input type="text" name="" id="" placeholder="inserisci il valore">
+                            </div>
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+                    </div>      
+                </div>
+
+                <div class="toolkit">
+                    <img src="{% static 'image/Arrow_Back.png' %}" alt="" style="width: 40px; height: 40px;">
+
+                    <button id="calculateButton" type="submit" class="button">
+                        <span class="button__icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg">
+                                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
+                                <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18"
+                                class="button__icon-svg button__icon-svg--copy">
+                                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
+                                <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </span>
+                        Esegui la valutazione
+                    </button>
+                </div>
+
+            </form>
+
+        </main>
+    </body>
+</html>

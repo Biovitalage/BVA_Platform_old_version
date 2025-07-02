@@ -1,0 +1,20 @@
+#statistiche{
+    width: 18rem;
+}
+.chart-container {
+    margin: 1rem auto;
+    width: 98%;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 4px 8px var(--contrast-color-shadow);
+    border-radius: 8px;
+}
+.chart-title {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    color: var(--contrast-color);
+}
+canvas {
+    max-height: 300px;
+}

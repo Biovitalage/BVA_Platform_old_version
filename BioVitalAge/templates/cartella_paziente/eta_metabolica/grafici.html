@@ -1,0 +1,475 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+    
+    <title>Età Metabolica - Grafici</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/eta_metabolica/etaMetabolica.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/eta_metabolica/grafici.css' %}">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+    <!-- CDN import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>  
+    
+</head>
+
+<body>
+    <!-- LOADER -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBarPatient.html' %}
+
+    <main>
+
+        <!-- MAIN MENU TRACE -->
+        <div class="main-title-nav">
+            <div class="back-tittle">
+                <a id="back" href="{% url 'composizione' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+                <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                      <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                      </span> |
+                      <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                        Email: {{ persona.email }}
+                      </span>
+                    {% endif %}
+                </h2>
+            </div>
+           
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>                    
+                <p>»</p>
+                <p>
+                    <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                </p>
+               
+                <p>»</p>
+                <a href="{% url 'composizione' persona.id %}">Età Metabolica</a>
+                <p>»</p>
+                <p class="breadcrumb">Grafici Andamento</p>
+            </div>
+        </div>
+
+        <!-- CONTAINER GRAFICO COMPOSIZIONE CORPOREA-->
+        <div class="card_grafico">
+
+            <h3>Composizione Corporea</h3>
+            
+            <div class="chart-container" style="position: relative; width: 100%; margin: 0 auto;">
+              <canvas id="composizioneChart" style="min-height: 300px;"></canvas>
+
+              <div id="grafico-vuoto-overlay">
+                Non ci sono abbastanza valori per visualizzare l'andamento
+              </div>
+
+            </div>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+            <script>
+
+              // Dati provenienti da Django
+              const bmi = {{ bmi|safe }};
+              const massaMuscolare = {{ massa_muscolare|safe }};
+              const grasso = {{ grasso|safe }};
+          
+              const isEmpty = arr => !arr || arr.every(val => val === null);
+          
+              const ctx = document.getElementById('composizioneChart').getContext('2d');
+              const composizioneChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                  labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giug', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+                  datasets: [
+                    {
+                      label: 'BMI',
+                      data: bmi,
+                      borderColor: '#6a2dcc',
+                      fill: false
+                    },
+                    {
+                      label: 'Massa Muscolare (%)',
+                      data: massaMuscolare,
+                      borderColor: '#9b59b6',
+                      fill: false
+                    },
+                    {
+                      label: 'Grasso (%)',
+                      data: grasso,
+                      borderColor: '#3a255d',
+                      fill: false
+                    }
+                  ]
+                },
+                options: {
+                  responsive: true,
+                  layout: { padding: { bottom: 30 } },
+                  plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Andamento Composizione Corporea' }
+                  },
+                  scales: {
+                    y: {
+                      suggestedMin: 0,
+                      suggestedMax: 100
+                    }
+                  }
+                }
+              });
+          
+              // Mostra o nasconde l’overlay se tutti i dataset sono vuoti
+              const overlay = document.getElementById('grafico-vuoto-overlay');
+              if (isEmpty(bmi) && isEmpty(massaMuscolare) && isEmpty(grasso)) {
+                overlay.style.display = 'flex';
+              } else {
+                overlay.style.display = 'none';
+              }
+
+            </script>
+        </div>
+        
+        <!-- CONTAINER GRAFICO PROFILO GLICEMICO E INSULINICO -->
+        <div class="card_grafico">  
+          <h3>Profilo Glicemico e Insulinico</h3>
+          <!-- Wrapper per canvas e overlay -->
+          <div class="chart-container" style="position: relative; width: 100%; margin: 0 auto;">
+            <canvas id="profiloGlicemicoSemplificato"></canvas>
+            <div id="overlay-glicemico">
+              Non ci sono abbastanza valori per visualizzare l'andamento
+            </div>
+          </div>
+        
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          
+          <script>
+            
+            const glicemia = {{ glicemia|safe }};
+            const hba1c   = {{ hba1c|safe }};
+            const insulina = {{ insulina|safe }};
+          
+            const ctxx = document.getElementById('profiloGlicemicoSemplificato').getContext('2d');
+          
+            const profiloChart = new Chart(ctxx, {
+              type: 'line',
+              data: {
+                labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giug', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'], 
+                datasets: [
+                  {
+                    label: 'Glicemia a digiuno (mg/dl)',
+                    data: glicemia,
+                    borderColor: '#6a2dcc',
+                    backgroundColor: '#6a2dcc',
+                    fill: false
+                  },
+                  {
+                    label: 'HbA1c (%)',
+                    data: hba1c,
+                    borderColor: '#9b59b6',
+                    backgroundColor: '#9b59b6',
+                    fill: false
+                  },
+                  {
+                    label: 'Insulina a digiuno (µU/mL)',
+                    data: insulina,
+                    borderColor: '#3a255d',
+                    backgroundColor: '#3a255d',
+                    fill: false
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                layout: { padding: { bottom: 30 } },
+                plugins: {
+                  legend: { position: 'bottom' },
+                  title: {
+                    display: true,
+                    text: 'Andamento Profilo Glicemico e Insulinico'
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Valori Clinici' }
+                  }
+                }
+              }
+            });
+          
+            const isEmpty2 = arr => !arr || arr.every(val => val === null);
+          
+            const overlay2 = document.getElementById('overlay-glicemico');
+            if ( isEmpty2(glicemia) && isEmpty2(hba1c) && isEmpty2(insulina) ) {
+              overlay2.style.display = 'flex';
+            } else {
+              overlay2.style.display = 'none';
+            }
+          </script>
+
+        </div>
+        
+        <!-- PROFILO LIPIDICO  -->
+        <div class="card_grafico">  
+          <h3>Profilo Lipidico</h3>
+
+          <div class="chart-container" style="position: relative; width: 100%; margin: 0 auto;">
+            <canvas id="profiloLipidicoChart"></canvas>
+            <div id="overlay-lipidico">
+              Non ci sono abbastanza valori per visualizzare l'andamento
+            </div>
+          </div>
+
+          <script>
+
+            const colTot = {{ col_tot|safe }};
+            const hdl    = {{ hdl|safe }};
+            const ldl    = {{ ldl|safe }};
+            const trigliceridi = {{ trigliceridi|safe }};
+
+            const ctxLipidi = document.getElementById('profiloLipidicoChart').getContext('2d');
+            
+            const lipidicoChart = new Chart(ctxLipidi, {
+              type: 'bar',
+              data: {
+                labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giug', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+                datasets: [
+                  {
+                    label: 'Colesterolo Totale',
+                    data: colTot,
+                    backgroundColor: '#3a255d'
+                  },
+                  {
+                    label: 'HDL',
+                    data: hdl,
+                    backgroundColor: '#6a2dcc'
+                  },
+                  {
+                    label: 'LDL',
+                    data: ldl,
+                    backgroundColor: '#9b59b6'
+                  },
+                  {
+                    label: 'Trigliceridi',
+                    data: trigliceridi,
+                    backgroundColor: '#a29bfe'
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                layout: { padding: { bottom: 30 } },
+                plugins: {
+                  legend: { position: 'bottom' },
+                  title: { display: true, text: 'Andamento del Profilo Lipidico' }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'mg/dL' }
+                  }
+                }
+              }
+            });
+
+            const isEmpty3 = arr => !arr || arr.every(val => val === null);
+
+            const overlayLipidico = document.getElementById('overlay-lipidico');
+            if ( isEmpty3(colTot) && isEmpty3(hdl) && isEmpty3(ldl) && isEmpty3(trigliceridi) ) {
+              overlayLipidico.style.display = 'flex';
+            } else {
+              overlayLipidico.style.display = 'none';
+            }
+          </script>
+        </div>
+        
+        <!-- PROFILO METABOLICO EPATICO -->
+        <div class="card_grafico">  
+          <h3>Profilo Metabolico Epatìco</h3>
+          <div class="chart-container" style="position: relative; width: 100%; margin: 0 auto;">
+            <canvas id="profiloEpaticoChart"></canvas>
+            <div id="overlay-epatico">
+              Non ci sono abbastanza valori per visualizzare l'andamento
+            </div>
+          </div>
+          
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          <script>
+            // I dati vengono passati dalla view Django, usando il filtro |safe per evitare l'escaping
+            const ast   = {{ ast|safe }};
+            const alt   = {{ alt|safe }};
+            const ggt   = {{ ggt|safe }};
+            const bili  = {{ bili_t|safe }};
+            
+            // Otteniamo il contesto del canvas
+            const ctxFegato = document.getElementById('profiloEpaticoChart').getContext('2d');
+            
+            // Creazione del grafico con Chart.js utilizzando i dati dinamici
+            const epaticoChart = new Chart(ctxFegato, {
+              type: 'bar',
+              data: {
+                labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giug', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+                datasets: [
+                  {
+                    label: 'AST (U/L)',
+                    data: ast,
+                    backgroundColor: '#6a2dcc'
+                  },
+                  {
+                    label: 'ALT (U/L)',
+                    data: alt,
+                    backgroundColor: '#9b59b6'
+                  },
+                  {
+                    label: 'GGT (U/L)',
+                    data: ggt,
+                    backgroundColor: '#3a255d'
+                  },
+                  {
+                    label: 'Bilirubina Totale (mg/dL)',
+                    data: bili,
+                    backgroundColor: '#a29bfe'
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                layout: { padding: { bottom: 30 } },
+                plugins: {
+                  legend: { position: 'bottom' },
+                  title: { display: true, text: 'Andamento Profilo Metabolico Epatìco' }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Valori Clinici' }
+                  }
+                }
+              }
+            });
+            
+            // Funzione di utilità per verificare se un array è vuoto (cioè contiene solo null)
+            const isEmpty4 = arr => !arr || arr.every(val => val === null);
+            
+            // Controllo: se tutti i dataset (AST, ALT, GGT, Bilirubina) sono vuoti, mostra l'overlay
+            const overlayEpatico = document.getElementById('overlay-epatico');
+            if ( isEmpty4(ast) && isEmpty4(alt) && isEmpty4(ggt) && isEmpty4(bili) ) {
+              overlayEpatico.style.display = 'flex';
+            } else {
+              overlayEpatico.style.display = 'none';
+            }
+          </script>
+        </div>
+      
+        <!-- INFIAMMAZIONE & STRESS -->
+        <div class="card_grafico">  
+          <h3>Infiammazione & Stress</h3>
+          <div class="chart-container" style="position: relative; width: 100%; margin: 0 auto;">
+            <canvas id="infiammazioneStressChart"></canvas>
+            <div id="overlay-infiammazione">
+              Non ci sono abbastanza valori per visualizzare l'andamento
+            </div>
+          </div>
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          <script>
+            // I dati vengono passati dalla view Django (assicurati di usare il filtro |safe)
+            const pcr   = {{ pcr|safe }};
+            const hgs   = {{ hgs|safe }};
+            const sii   = {{ sii|safe }};
+            const cplas = {{ cplas|safe }};
+
+            // Otteniamo il contesto del canvas
+            const ctxInfiammazione = document.getElementById('infiammazioneStressChart').getContext('2d');
+
+            // Creazione del grafico con Chart.js
+            const infiammazioneChart = new Chart(ctxInfiammazione, {
+              type: 'bar',
+              data: {
+                labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giug', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+                datasets: [
+                  {
+                    label: 'PCR (mg/L)',
+                    data: pcr,
+                    backgroundColor: '#6a2dcc'
+                  },
+                  {
+                    label: 'HGS',
+                    data: hgs,
+                    backgroundColor: '#9b59b6'
+                  },
+                  {
+                    label: 'SII',
+                    data: sii,
+                    backgroundColor: '#3a255d'
+                  },
+                  {
+                    label: 'Colesterolo Plasmatico',
+                    data: cplas,
+                    backgroundColor: '#a29bfe'
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                layout: { padding: { bottom: 30 } },
+                plugins: {
+                  legend: { position: 'bottom' },
+                  title: { display: true, text: 'Andamento Infiammazione e Stress' }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Valori Clinici' }
+                  }
+                }
+              }
+            });
+
+            // Funzione di utilità per verificare se un array è vuoto (tutti i valori sono null)
+            const isEmpty5 = arr => !arr || arr.every(val => val === null);
+
+            // Controllo: se tutti i dataset sono vuoti, mostra l'overlay
+            const overlayInfiammazione = document.getElementById('overlay-infiammazione');
+            if ( isEmpty5(pcr) && isEmpty5(hgs) && isEmpty5(sii) && isEmpty5(cplas) ) {
+              overlayInfiammazione.style.display = 'flex';
+            } else {
+              overlayInfiammazione.style.display = 'none';
+            }
+          </script>
+        </div>
+
+    </main>
+
+    <!-- Import CDN js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</body>
+</html>

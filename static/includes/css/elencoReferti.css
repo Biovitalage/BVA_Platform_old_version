@@ -1,0 +1,18 @@
+.first-breadcrumb{
+    justify-content: flex-start !important;
+}
+
+.first-breadcrumb img{
+    width: 30px !important;
+    height: 30px !important;
+}
+
+.first-breadcrumb img:hover{
+    transform: scale(1.1);
+}
+
+.pagination-controls{
+    width: 100%;
+    align-items: center;
+}
+

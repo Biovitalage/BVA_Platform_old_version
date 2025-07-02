@@ -1,0 +1,66 @@
+<!-- templates/components/navBar.html -->
+{% load static %}
+<header>
+    <nav class="col-md-12 d-flex justify-content-between align-items-center nav-bar">
+        <!-- Logo Section -->
+        <div class="col-md-2 d-flex nav-bar-logo">
+            <a href="{% url 'HomePage' %}">
+                <img src="{% static 'image/Logo.png' %}" alt="logo_img" title="BioVitalAge®" />
+                <p>vers. 0.1</p>
+            </a>
+        </div>
+
+
+        <!-- User Section -->
+        <div class="col-md-2 nav-bar-user" id="userContainer">
+            
+            <h3>
+                {% if dottore.isSecretary %}
+                    Segr. {{ dottore.cognome }}
+                {% elif dottore.user %}
+                    Dottor. {{ dottore.cognome }}
+                {% else %}
+                    Account Demo
+                {% endif %}
+            </h3>
+            <div class="img-container-user-nav-bar">
+                <img id="userImg" src="{% static 'image/Username_White.png' %}" alt="user">
+            </div>
+            <div class="nav-bar-user-modal" id="userModal">
+                {% if dottore.user %}
+                    <!-- Utente registrato -->
+                    <button id="profileBtn" class="nav-bar-user-modal-btn"
+                            onclick="window.location.href='{% url 'profile' %}'">
+                        Profilo
+                    </button>
+                    <button id="logoutBtn" class="nav-bar-user-modal-btn"
+                            onclick="window.location.href='{% url 'logout' %}'">
+                        Disconnettiti
+                    </button>
+                {% else %}
+                <!-- Utente calcolatore -->
+                <button class="nav-bar-user-modal-btn" onclick="window.location.href='{% url 'loginPage' %}'">Accedi per altre
+                    funzionalità</button>
+                {% endif %}
+            </div>
+        </div>
+
+    </nav>
+</header>
+
+<!-- js import -->
+<script>
+    /*  -----------------------------------------------------------------------------------------------
+        Modal User
+    --------------------------------------------------------------------------------------------------- */
+    const userContainer = document.getElementById("userContainer");
+    const userModal = document.getElementById("userModal");
+
+    userContainer.addEventListener("mouseenter", () => {
+        userModal.classList.add("show");
+    });
+
+    userContainer.addEventListener("mouseleave", () => {
+        userModal.classList.remove("show");
+    });
+</script>

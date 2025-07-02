@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+    
+    <title>BVA - Elenco Referti</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/eta_biologica/risultati.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/eta_biologica/elencoReferti.css' %}">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+    <!-- CDN Import  -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <!-- JS Import -->
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="{% static 'js/cartella_paziente/eta_biologica/elencoReferti.js' %}"></script>    
+    <script src="{% static 'js/generatePdfFunction.js' %}" defer></script>
+
+</head>
+<body>
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBarPatient.html' %}
+
+    <main>
+
+        <div class="main-title-nav">
+            <div class="main-menu-trace first-breadcrumb">
+                <a href="{% url 'eta_biologica' persona.id %}">
+                    <img src="{% static 'image/Arrow_Back.png' %}" alt="">
+                </a>
+                <h2 class="main-welcome-title">Elenco di tutti i referti di {{ persona.name|title }} {{ persona.surname|title }}</h2>
+            </div>
+            <div class="main-menu-trace">
+            <a href="{% url 'HomePage' %}">
+                <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+            </a>
+            <p>»</p>
+            <p>
+                <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+            </p>
+            <p>»</p>
+            <p>
+                <a href="{% url 'eta_biologica' persona.id %}">Eta Biologica</a>
+            </p>
+            <p>»</p>
+            <p class="breadcrumb">Elenco Referti</p>
+            </div>
+        </div>
+
+        <!-- TABELLA REFERTI -->
+        <div class="contenitore-tabella" style="margin-top: 20px;">
+            <div class="recent-patients" id="card-style">
+                <div class="table-container">
+                    
+                    <div class="table-header">
+                        <p>Età Cronologica</p>
+                        <p>Età Biologica</p>
+                        <p>Valore Referto</p>
+                        <p>Data Referto</p>
+                        <p>Mostra Referto</p>
+                        <p>Scarica Referto</p>
+                    </div>
+
+                    <input type="hidden" name="" id="name" value="{{ persona.name }}">
+                    <input type="hidden" name="" id="surname" value="{{ persona.surname }}">
+                    <input type="hidden" name="" id="codice_fiscale" value="{{ persona.codice_fiscale }}">
+                    <input type="hidden" name="" id="place_birth" value="{{ persona.place_of_birth }}">
+                    <input type="hidden" name="" id="dob" value="{{ persona.dob }}">
+
+                    <div class="table-content">
+                        {% for referto in referti_recenti %}
+                        <div class="riga-container">
+                            <p id="chronological_age" data-value="{{ persona.chronological_age }}">{{ persona.chronological_age }}</p>
+                            {% for dato in dati_estesi %}
+                            {% if dato.referto.id == referto.id %}
+                            <p id="biological_age" data-value="{{ datiEstesi.biological_age|default:'NaN' }}">{{ dato.biological_age }}</p>
+                            {% endif %}
+                            {% endfor %}
+                            <p>{{ referto.descrizione|default:"N/A" }}</p>
+                            <p>{{ referto.data_referto|date:"d/m/Y" }}</p>
+                            <p>
+                                <a href="{% url 'persona_detail' persona.id %}?referto_id={{ referto.id }}"
+                                    data-referto-id="{{ referto.id }}"
+                                    data-referto-date="{{ referto.data_referto|date:'Y-m-d' }}">
+                                    <img src="{% static 'image/Referto.png' %}" alt="" />
+                                </a>
+                            </p>
+                            <p>
+                                <button class="generatePDFButton" id="screenshotBtn" data-referto-id="{{ referto.id }}" data-referto-date="{{ referto.data_referto|date:'Y-m-d' }}">
+                                    <img src="{% static 'image/Referto_Scarica.png' %}" alt="" />
+                                </button>
+                            </p>
+                        </div>
+                        {% empty %}
+                        <p class="text-center mb-2 mt-2">Nessun referto recente trovato.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SPINNER -->
+        <div id="spinnerBackdrop">
+                <div id="snipperStampa">
+                    <div class="slide"><i></i></div>
+                    <div class="paper"></div>
+                    <div class="keyboard"></div>
+                </div>
+        </div>
+
+  </main>
+</body>
+</html>

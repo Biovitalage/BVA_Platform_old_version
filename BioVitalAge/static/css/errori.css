@@ -1,0 +1,113 @@
+/*********** ! RESET CSS ************/
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+* h3 {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 23px !important;
+  font-weight: 600 !important;
+}
+* span{
+  font-family: 'Montserrat', sans-serif !important;
+}
+/* ! ROOT */
+:root {
+    --dark1: #0c042c;
+    --dark2: #0c214b;
+    --light1: #c3ccd4;
+  
+    --neutral-gray: #b0b8c1;
+    --neutral-bg-color: rgba(176, 184, 193, 0.2);
+    --neutral-bg-color-contrast: rgba(124, 81, 149, 0.2);
+  
+    --contrast-color: #3a255d;
+    --contrast-color-shadow: #3b255d2c;
+    --contrast-color2: #6a2dcc;
+    --positive-color: #2ac670;
+  
+    --tittle1: whitesmoke;
+    --tittle2: #2ac4dd;
+  
+    --circle-color-shadow: rgba(42, 196, 221, 0.15);
+    --circle-color-shadow-two: rgba(42, 196, 221, 0.05);
+    --card-color: #f8f4fc;
+  
+    /* Range color */
+    --negative-color-left: #8b1e3f;
+    --negative-color-right: #c74b5b;
+    --positive-color: #2ac670;
+    --neutral-range-color: #d4a33e;
+}
+
+
+html, body{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+
+.bg-wrapper {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+}
+.background-container {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url("/static/image/ErroreImage.png") center/cover no-repeat;
+    transform: scale(1.1);
+    transform-origin: center;
+}
+.card-errore {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 550px;
+    padding: 2rem;
+    border-radius: 4px;
+    box-shadow: 1px 1px 8px 2px rgba(0,0,0,0.5);
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+    z-index: 1; 
+}
+#title{
+    font-size: 8rem !important;
+    color: white;
+    margin-bottom: -1.5rem;
+}  
+.card-errore img {
+    width: 70px;
+    height: 70px;
+}
+.card-errore h3{
+    color: var(--contrast-color2);
+}
+.card-errore h3:first-of-type{
+    font-size: 25px !important;
+}
+.card-errore p{
+    color: var(--light1);
+    text-align: center;
+    width: 80%;
+    margin-bottom: -1rem;
+}
+.card-errore p:last-of-type{
+    width: 60%;
+}
+

@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    <title>VitalAge - Calcolatore Login</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+    <main>
+        <div class="background">
+            <div class="backdrop"></div>
+
+            <div class="col-md-3 p-5 login-container">
+                <div class="col-md-12 img-container-logo">
+                    <img src="{% static 'image/Logo.png' %}" alt="logo_img" title="BioVitalAge®">
+                </div>
+                <h3>Calcolatore Login</h3>  
+
+                {% if error %}
+                <div class="alert alert-danger text-center" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'loginPageCalcolatore' %}"> 
+                    {% csrf_token %} 
+                    <div class="col-md-12 d-flex-column justify-content-center align-items-center user-container">
+                        <p>Email</p>
+                        <div class="col-md-12 d-flex input-container">
+                            <img class="col-md-3" src="{% static 'image/Username_white.png' %}" alt="Email Icon">
+                            <input name="email" class="col-md-9" type="email" placeholder="Scrivi la tua Email" required>
+                        </div>
+                    </div>
+                
+                    <div class="col-md-12 d-flex-column justify-content-center align-items-center user-container" style="margin-top: 1rem;">
+                        <p>Password</p>
+                        <div class="col-md-12 d-flex input-container">
+                            <img class="col-md-3" src="{% static 'image/Lucchetto.png' %}" alt="Password Icon">
+                            <input name="password" class="col-md-9" type="password" placeholder="Scrivi la tua password" required>
+                        </div>
+                    </div>
+                
+                    <a class="forgot-password" href="">Hai dimenticato la password?</a>
+                
+                    <div class="col-md-12 d-flex justify-content-center align-items-center button-container" style="margin-top: 4rem; margin-bottom: 1rem;">
+                        <button class="button-login" >Accedi direttamente al Calcolatore</button>
+                    </div>
+
+                    
+                </form>
+                
+                <div class="col-md-12 d-flex justify-content-center align-items-center button-container">
+                    <button type="submit" onclick="window.location.href='{% url 'loginPage' %}'" class="button-login" style=" background-color: #0c214b; border: 1px solid #6a2dcc;">Login Piattaforma</button>
+                </div>
+            </div>
+        </div>
+    </main> 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

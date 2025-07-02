@@ -1,0 +1,336 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <!-- Favicon -->
+    <link rel="sortcut icon" href="{% static 'image/Favicon.png' %}" type="image/x-icon">
+    <!-- Title -->
+    <title>BVA - Visite</title>
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/sezioni_storico/visite.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Import -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+    <!-- JS import -->
+    <script src="{% static 'js/cartella_paziente/sezioni_storico/visite.js' %}" type="module"></script>
+</head>
+
+<body>
+    <!-- Components -->
+    {% include 'components/loader.html' %}
+    {% include 'components/navBarStorico.html' %}   
+    
+    <!-- Main -->
+     <main>
+        <div class="main-title-nav">
+            <div class="back-tittle">
+                <a id="back" href="{% url 'cartella_paziente' persona.id %}">
+                    <img src="{% static 'image/Arrow_Back.png' %}">
+                </a>
+                <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                    <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                    </span> |
+                    <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                        Email: {{ persona.email }}
+                    </span>
+                    {% endif %}
+                </h2>
+            </div>
+
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>
+                <p>»</p>
+                <p>
+                    <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                </p>
+                <p>»</p>
+                <p class="breadcrumb">Visite</p>
+            </div>
+        </div>       
+        
+        <div class="card-container" style="margin-top: 2rem;">
+            <div class="button-container">
+                <h3>Visite Fissate e Passate</h3>
+                <button class="button" id="openModal" data-current-patient="{{ persona.name|lower }} {{ persona.surname|lower }}|{{ persona.id }}">
+                  <span class="button__icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg" width="14"
+                        height="14">
+                        <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    </svg>
+                
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        class="button__icon-svg button__icon-svg--copy" width="14" height="14">
+                        <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                  Aggiungi una nuova Visita
+                </button>
+
+                <!-- Modale nuova visita -->
+                <div id="appointmentModal" class="modal-appointments modal-overlay">
+                    <div class="modal-content-appointments" id="appointmentContent" style="height: max-content !important;">
+
+                        <header class="header-modal-appointments">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-container-appointment">
+                                    <img src="{% static 'image/Calendario_Colorato.png' %}" alt="Icona Calendario">
+                                </div>
+                                <h3>Nuova Visita</h3>
+                            </div>
+                            <span id="closeModal" class="close">&times;</span>
+                        </header>
+
+                        <div class="modal-section">
+                            <form action="POST" id="date-appointment-form" class="form-appointment" data-id="{{ appuntamenti.id }}">
+                                    {% csrf_token %}
+                                    <a id="edit-date-btn" class="Btn-modify" title="Modifica">
+                                        <svg class="svg" viewBox="0 0 512 512">
+                                            <path
+                                                d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z">
+                                            </path>
+                                        </svg>
+                                    </a>
+                            
+                                    <!-- Span visibili inizialmente -->
+                                    <div id="date-display-group" class="d-flex align-items-center gap-2">
+                                        <span id="day-appointment">Giorno,</span>
+                                        <span id="date-appointment">Data,</span>
+                                        <span id="time-appointment">Orario</span>
+                                    </div>
+                            
+                                    <!-- Input nascosti inizialmente -->
+                                    <div id="edit-date-container" class="d-none d-flex align-items-center gap-2">
+                                        <input type="date" id="editDate">
+                                        <input type="time" id="editTime">
+                                        <button type="button" id="save-date-btn" class="button mt-2" style="display:none; width: 100%;">Salva</button>
+                                    </div>
+                                </div>
+                            </form>                            
+
+                            <form action="POST" id="patient-appointment">
+                                {% csrf_token %}
+
+                                {% if is_secretary %}
+                                  <label for="dottore-select" class="mb-3">
+                                    <p class="mb-0">Dottore Associato*</p>
+                                    <select id="dottore-select" name="dottore_id" class="form-select-appointment w-100">
+                                      <option value="">Seleziona Dottore</option>
+                                      {% for doc in dottori %}
+                                        <option value="{{ doc.id }}" 
+                                            {% if persona.dottore and persona.dottore.id == doc.id %}selected{% endif %}>
+                                          {{ doc.nome|title }} {{ doc.cognome|title }}
+                                        </option>
+                                      {% endfor %}
+                                    </select>
+                                  </label>
+                                {% endif %}
+                                <label for="tipologia" class="input-typology">
+                                    <div class="d-flex flex-column w-100">
+                                        <p class="mb-0">Tipologia*</p>
+                                        <select name="tipologia_visita" id="tipologia_visita" class="form-select-appointment w-100">
+                                            <option>Seleziona tipologia</option>
+                                            {% for tipologia in tipologia_appuntamenti %}
+                                                <option value="{{ tipologia }}">{{ tipologia }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0">Paziente*</p>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <select name="paziente-select" id="paziente-select" class="w-100 form-select-appointment">
+                                                <option>Seleziona Paziente</option>
+                                                {% for paziente in persone %}
+                                                    <option value="{{ paziente.name|lower }} {{ paziente.surname|lower }}|{{ paziente.id }}">
+                                                        {{ paziente.name|title }} {{ paziente.surname|title }} 
+                                                    </option>                                               
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </label>
+                            
+                                <label id="input-time" class="mt-4">
+                                    <div>
+                                        <p class="mb-0">Voce Prezzario*</p>
+                                        <select name="voce-prezzario" id="voce-prezzario" class="w-100">
+                                            <option>Seleziona una Voce</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0">Durata*</p>
+                                        <select name="time" id="time">
+                                            <option>Seleziona una Durata</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0">N° Studio*</p>
+                                        <select name="studio" id="studio">
+                                            <option>Seleziona uno Studio</option>
+                                            {% for studio in numero_studio %}
+                                                <option value="{{ studio }}">{{ studio }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </label>
+
+                                <label for="note" class="mt-4 w-100">
+                                    <p class="mb-0">Note</p>
+                                    <textarea name="note" id="note" class="form-select-appointment form-textarea"></textarea>
+                                </label>
+                            </form>
+                            <div class="button-modal-appointments">
+                                <button type="submit" class="button btn-primary" id="saveAppointmentBtn">Salva</button>
+                                <button type="button" class="button" id="googleCalendarBtn">Aggiungi a Google Calendar</button>
+                                <button type="button" class="button btn-secondary" id="closeModalBtn">Chiudi</button>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                
+                <!-- Modale per aggiungere un paziente -->
+                <!-- Seconda modale (sopramodale) -->
+                <div id="addUserModal" class="modal-overlay-user hidden-user-modal">
+                    <div class="modal-content-user">
+                        <header class="header-modal-appointments mb-5">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-container-appointment">
+                                    <img src="{% static 'image/Aggiungi_Paziente.png' %}" alt="Aggiungi Paziente">
+                                </div>
+                                <h3>Aggiungi Paziente</h3>
+                            </div>
+                            <span id="closeAddUserModal" class="close">&times;</span>
+                        </header>
+                        <form id="addUserForm">
+                            {% csrf_token %}
+                            <div class="d-grid" id="first-input-user">
+                                <div class="input-container">
+                                    <p class="m-0 floating-label">Nome</p>
+                                    <input type="text" id="newName" required>
+                                </div>
+                
+                                <div class="input-container">
+                                    <p class="m-0 floating-label">Cognome</p>
+                                    <input type="text" id="newSurname" required>
+                                </div>
+                            </div>
+                
+                            <div class="d-grid" id="second-input-user">
+                                <div class="input-container">
+                                    <p class="m-0 floating-label">Email</p>
+                                    <input type="text" id="newEmail">
+                                </div>
+                                <div>
+                                    <p class="m-0">Prefisso</p>
+                                    <div class="custom-select">
+                                        <div class="selected-option">
+                                            <img src="{% static 'image/Bandiera-italia.png' %}" alt="bandiera-italiana"
+                                                class="flag-icon">
+                                            <span id="selected-prefix">+39</span>
+                                        </div>
+                                        <ul class="options-list">
+                                            <!-- Qui verranno inserite le opzioni dinamicamente -->
+                                        </ul>
+                                    </div>
+                
+                                    <!-- Campo nascosto per inviare il prefisso selezionato al backend -->
+                                    <input type="hidden" name="prefisso" id="hidden-prefisso" value="+39">
+                                </div>
+                                <div class="input-container">
+                                    <p class="mb-0 floating-label">Cellulare</p>
+                                    <input type="text" id="newCell">
+                                </div>
+                            </div>
+                
+                            <button type="submit" id="savePatientBtn" class="button float-end">Salva Paziente</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tabella -->
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Prestazione</th>
+                                <th>Opetarore</th>
+                                <th>Data</th>
+                                <th>Note</th>
+                                <th>Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if visite %}
+                                {% for visita in visite %}
+                                    <tr data-id="{{ visita.id }}">
+                                        <td>
+                                            <span>
+                                                {{ visita.voce_prezzario|title }}
+                                            </span>
+                                        </td>
+                                        <td>{{ visita.dottore.nome | title }} {{ visita.dottore.cognome | title}}</td>
+                                        <td>{{ visita.data|date:"d/m/Y" }}</td>
+                                        <td>{{ visita.note|default:"Nessuna nota aggiuntiva." }}</td>
+                                        <td class="td-azioni">
+                                            <button class="btn edit" id="ediBtnVisit" data-id="{{ visita.id }}">✎</button>
+                                            <button class="btn delete" data-id="{{ visita.id }}">✖</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">Nessuna visita disponibile.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                
+                    <!-- Sezione paginazione -->
+                    <div class="pagination_tabella mb-3">
+                        {% if visite.has_previous %}
+                            <a class="previous" href="?page={{ visite.previous_page_number }}">Previous</a>
+                        {% else %}
+                            <span class="previous disabled">Previous</span>
+                        {% endif %}
+                
+                        {% for num in visite.paginator.page_range %}
+                            {% if visite.number == num %}
+                                <span class="current">{{ num }}</span>
+                            {% else %}
+                                <a href="?page={{ num }}">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+                
+                        {% if visite.has_next %}
+                            <a class="next" href="?page={{ visite.next_page_number }}">Next</a>
+                        {% else %}
+                            <span class="next disabled">Next</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+     </main>
+</body>
+</html>

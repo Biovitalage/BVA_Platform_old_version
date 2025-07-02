@@ -1,0 +1,674 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% csrf_token %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'image/Favicon.png' %}" type="image/x-icon" />
+    
+    <title>BVA - Dati Base & Stile di Vita</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartella_paziente/dati_base/dati_base.css' %}" />
+
+    <!-- Bootstrap import -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"/>
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet"/>
+    
+
+    <!-- GSAP Import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- JS import -->
+    <script src="{% static 'js/ModifyInput.js' %}" defer></script>
+    <script src="{% static 'js/cartella_paziente/dati_base/datiBase.js' %}" type="module" defer></script>
+
+  </head>
+  <body>
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBarPatient.html' %}
+
+    <main>
+      <div class="main-title-nav">
+
+        <div class="back-tittle">
+          <a id="back" href="{% url 'cartella_paziente' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}" alt="back_ico" title="Back to folder"></a>
+          <h2 class="main-welcome-title">
+            <span>{{ persona.surname|title }}</span>
+            <span>{{ persona.name|title }}</span> |
+            <span>Età: {{ persona.chronological_age }}</span>
+            {% if persona.phone and persona.email %}
+            |
+              <span class="phone_span">
+                <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                Telefono: {{ persona.phone }}
+              </span> |
+              <span class="email_span">
+                <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                Email: {{ persona.email }}
+              </span>
+            {% endif %}
+        </h2>
+        </div>
+
+        <div class="main-menu-trace">
+          <a href="{% url 'HomePage' %}">
+            <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page"/>
+          </a>
+          <p>»</p>
+          <p>
+            <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+          </p>
+          <p>»</p>
+          <p class="breadcrumb">Dati Base & Stile di Vita</p>
+        </div>
+
+      </div>
+
+      <!-- MESSAGGIO DI SUCCESSO -->
+      {% if success %}
+      <div class="successMessage" id="success">
+
+        <p>{{ success }}</p>
+        <div class="progressBarContainerSuccess">
+          <div class="progressBar" id="progressSuccess"></div>
+        </div>
+
+        <script>
+          const messaggios = document.getElementById('success');
+          const progressBars = document.getElementById('progressSuccess');
+          const durationSuccess = 6000; 
+          const intervalSuccess = 50; 
+
+          if (messaggios) {
+            let elapsedTimeSuccess = 0; 
+
+            const timerSuccess = setInterval(() => {
+              elapsedTimeSuccess += intervalSuccess;
+              const percentage = ((durationSuccess - elapsedTimeSuccess) / durationSuccess) * 100;
+              progressBars.style.width = `${percentage}%`;
+
+              if (elapsedTimeSuccess >= durationSuccess) {
+                clearInterval(timerSuccess); 
+                messaggios.style.display = 'No'; 
+              }
+            }, intervalSuccess);
+          }
+        </script>
+
+      </div>
+      {% else %}
+      {% if errore %}
+      <div class="errorSystemContainer" id="error">
+        <p>{{ errore }}</p>
+        <div class="progressBarContainer">
+          <div class="progressBar" id="progress"></div>
+        </div>
+
+        <script>
+          const messaggio = document.getElementById('error');
+          const progressBar = document.getElementById('progress');
+          const durationError = 6000; 
+          const intervalError = 50;
+
+          if (messaggio) {
+            let elapsedTimeError = 0; 
+
+            const timerError = setInterval(() => {
+              elapsedTimeError += intervalError;
+              const percentage = ((durationError - elapsedTimeError) / durationError) * 100;
+              progressBar.style.width = `${percentage}%`;
+
+              if (elapsedTimeError >= durationError) {
+                clearInterval(timerError); 
+                messaggio.style.display = 'none'; 
+              }
+            }, intervalError);
+          }
+        </script>
+
+      </div>
+      {% endif %}
+      {% endif %}
+
+
+      <form method="POST" action="{% url 'dati_base' persona.id %}">
+        {% csrf_token %}
+      
+        <!-- INFORMAZIONI PERSONALI -->
+        <div class="container-informazioni-personali">
+          <div class="header-container">
+            <div class="title-card">
+              <img src="{% static 'image/Professione.png' %}" alt="">
+              <h3>Informazioni occupazione</h3>
+            </div>
+            <div class="button-card">
+              <a class="button" id="btn_note_commenti" data-paziente-id="{{ persona.id }}">
+                <span class="button__icon-wrapper">
+                  <svg
+                    viewBox="0 0 14 15"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="button__icon-svg"
+                    width="14"
+                  >
+                    <path
+                      d="M7 1V4M7 11V14M1 7H4M10 7H13M3.5 3.5L5 5M9 9L10.5 10.5M3.5 10.5L5 9M9 5L10.5 3.5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                
+                  <svg
+                    viewBox="0 0 14 15"
+                    fill="none"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="button__icon-svg button__icon-svg--copy"
+                  >
+                    <path
+                      d="M7 1V4M7 11V14M1 7H4M10 7H13M3.5 3.5L5 5M9 9L10.5 10.5M3.5 10.5L5 9M9 5L10.5 3.5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                Aggiungi Note/Commenti
+              </a>
+            </div>
+          </div>
+          <div class="flex-container container-general">
+            <div class="container-celle-design">
+              <p class="subtitle">Professione: </p>
+              <input class="input-disabled" type="text" name="professione" value="{{ persona.professione }}" disabled>
+            </div>
+            <div class="container-celle-design">
+              <p class="subtitle">Pensionato:</p>
+              <input class="input-disabled" type="text" name="pensionato" value="{{ persona.pensionato }}" disabled>
+            </div>
+          </div>
+        </div>  
+
+        <!-- SEZIONE PER LE DONNE -->
+        {% if persona.gender == 'F' %}
+
+        <div class="container-female">
+
+            <div class="header-container">
+
+              <div class="title-card">
+
+                <img src="{% static 'image/Donna.png' %}" alt="">
+                <h3>Informazioni ciclo</h3>
+              
+              </div>
+            </div>
+
+            <div class="container-content-donna" style="margin-top: 10px;">
+
+              <div class="sub-container-card">
+      
+                <div class="grid-layout">
+
+                  <div class="field">
+                    <p class="field-title">Età del menarca in anni:</p>
+                    <input class="input-disabled" type="text" name="menarca" value="{{ persona.esordio }}" disabled>
+                  </div>
+
+                  <div class="field">
+                    <p class="field-title">Ciclo:</p>
+                    <input class="input-disabled" type="text" name="ciclo" value="{{ persona.ciclo }}" disabled>
+                  </div>
+ 
+                </div>
+              </div>
+
+              <div class="sub-container-card">
+
+                <p class="table-title" style="width: 15rem; margin-bottom: 30px; margin-top: 0px;">Menopausa:</p>
+      
+                <div class="grid-layout">
+
+                  <div class="field">
+                    <p class="field-title">Manifestazioni e sintomi:</p>
+                    <input class="input-disabled" type="text" name="sintomi" value="{{ persona.sintomi }}" disabled>
+                  </div>
+
+                  <div class="field">
+                    <p class="field-title">Età dell'esordio:</p>
+                    <input class="input-disabled" type="text" name="esordio" value="{{ persona.esordio }}" disabled>
+                  </div>
+ 
+                </div>
+              </div>
+
+              <div class="sub-container-card">
+
+                <p class="table-title" style="width: 15rem; margin-bottom: 30px; margin-top: 0px;">Gravidanze:</p>
+      
+                <div class="grid-layout">
+
+                  <div class="field">
+                    <p class="field-title">Tipo di parto:</p>
+                    <input class="input-disabled" type="text" name="parto" value="{{ persona.parto }}" disabled>
+                  </div>
+
+                  <div class="field">
+                    <p class="field-title">Post parto:</p>
+                    <input class="input-disabled" type="text" name="post_parto" value="{{ persona.post_parto }}" disabled>
+                  </div>
+
+                  <div class="field">
+                    <p class="field-title">Aborto:</p>
+                    <input class="input-disabled" type="text" name="aborto" value="{{ persona.aborto }}" disabled>
+                  </div>  
+                </div>
+              </div>
+            </div>
+        </div>
+
+        {% endif %}
+
+        <!-- STILE DI VITA -->
+        <section class="container_data table_data">
+
+          <div class="header-container">
+            <div class="title-card">
+              <img src="{% static 'image/Piantina.png' %}" alt="">
+              <h3>Stile di vita</h3>
+            </div>
+          </div>
+
+          <div id="datiBaseForm1" style="margin-top: -10px;">
+            <p class="table-title">Alcol</p>
+            <div class="table-container">
+              <div class="table-header">
+                <p>Quantità di cc al giorno</p>
+                <p>Assunzione di alcol</p>
+                <p>Data</p>
+                <p>Note</p>
+              </div>
+              <div class="table-content">
+                <div class="riga-container">
+                  <p> <input class="input-disabled" name="alcol" type="text" value="{{ persona.alcol }}" placeholder="inserisci valore" disabled> </p>
+                  <p> <input class="input-disabled" name="alcol_type" type="text" value="{{ persona.alcol_type }}" placeholder="inserisci valore" disabled> </p>
+                  <p> <input class="input-disabled" name="data_alcol" type="date" value="{{ persona.data_alcol|date:'Y-m-d' }}" placeholder="inserisci la data" disabled> </p>
+                  <p> <input class="input-disabled" name="alcol_frequency" type="text" value="{{ persona.alcol_frequency }}" placeholder="inserisci valore" disabled></p>
+                  <input type="hidden" name="form_id_1" value="datiBaseForm1">
+                </div>
+              </div>
+            </div>
+          </div>
+      
+          <div id="datiBaseForm2">
+            <p class="table-title">Fumo</p>
+            <div class="table-container">
+              <div class="table-header">
+                <p>Quantità giornaliera</p>
+                <p>Giorni</p>
+                <p>Note</p>
+              </div>
+              <div class="table-content">
+                <div class="riga-container">
+                  <p> <input class="input-disabled" name="smoke" type="text" value="{{ persona.smoke }}" placeholder="inserisci valore" disabled> </p>
+                  <p> <input class="input-disabled" name="smoke_frequency" type="text" value="{{ persona.smoke_frequency }}" placeholder="inserisci valore" disabled> </p>
+                  <p> <input class="input-disabled" name="reduced_intake" type="text" value="{{ persona.reduced_intake }}" placeholder="inserisci valore" disabled> </p>
+                  <input class="input-disabled" type="hidden" name="form_id_2" value="datiBaseForm2">
+                </div>
+              </div>
+            </div>
+          </div>
+      
+          <div id="datiBaseForm3">
+            <p class="table-title">Sport</p>
+            <div class="table-container">
+              <div class="table-header">
+                <p>Attività Fisica</p>
+                <p>Livello</p>
+                <p>Frequenza</p>
+              </div>
+              <div class="table-content">
+                <div class="riga-container">
+                  <p> <input class="input-disabled" name="sport" type="text" value="{{ persona.sport }}" placeholder="inserisci valore" disabled> </p>
+                  <p> <input class="input-disabled" name="sport_livello" type="text" value="{{ persona.sport_livello }}" placeholder="inserisci valore" disabled> </p>
+                  <p> <input class="input-disabled" name="sport_frequency" type="text" value="{{ persona.sport_frequency }}" placeholder="inserisci valore" disabled> </p>
+                  <input class="input-disabled" type="hidden" name="form_id_3" value="datiBaseForm3">
+                </div>
+              </div>
+            </div>
+          </div>
+      
+          <div id="datiBaseForm4">
+            <p class="table-title">Sedentarietà</p>
+            <div class="table-container">
+              <div class="table-header">
+                <p>Attività Sedentaria</p>
+                <p>Livello</p>
+                <p>Note</p>
+              </div>
+              <div class="table-content">
+                <div class="riga-container">
+                  <p> <input class="input-disabled" name="attivita_sedentaria" type="text" value="{{ persona.attivita_sedentaria }}" placeholder="inserisci valore" disabled> </p>
+                  <p> <input class="input-disabled" name="livello_sedentarieta" type="text" value="{{ persona.livello_sedentarieta }}" placeholder="inserisci valore" disabled> </p>
+                  <p> <input class="input-disabled" name="sedentarieta_nota" type="text" value="{{ persona.sedentarieta_nota }}" placeholder="inserisci valore" disabled> </p>
+                  <input class="input-disabled" type="hidden" name="form_id_4" value="datiBaseForm4">
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ANAMNESI  -->
+        <div class="container-informazioni-personali">
+
+          <div class="header-container">
+            <div class="title-card">
+              <img src="{% static 'image/Anamnesi.png' %}" alt="">
+              <h3>Anamnesi</h3>
+            </div>
+          </div>
+
+          <div class="container-content" style="margin-top: 20px;">
+
+            <div class="sub-container-card">
+              <p class="table-title" style="width: 15rem; margin-bottom: 30px; margin-top: 0px;">Anamnesi Familiare:</p>
+              <div class="grid-layout">
+                <div class="field">
+                  <p class="field-title">Malattie cardiache:</p>
+                  <input class="input-disabled" type="text" name="m_cardiache_fam" value="{{ persona.m_cardiache }}"  placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Diabete mellito:</p>
+                  <input class="input-disabled" type="text" name="diabete_m" value="{{ persona.diabete_m }}"  placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Ipertensione:</p>
+                  <input class="input-disabled" type="text" name="ipertensione" value="{{ persona.ipertensione }}" placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Obesità:</p>
+                  <input class="input-disabled" type="text" name="obesita" value="{{ persona.obesita }}"  placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Epilessia:</p>
+                  <input class="input-disabled" type="text" name="epilessia" value="{{ persona.epilessia }}" placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Malattie tiroidee:</p>
+                  <input class="input-disabled" type="text" name="m_tiroidee" value="{{ persona.m_tiroidee }}" placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Malattie polmonari:</p>
+                  <input class="input-disabled" type="text" name="m_polmonari" value="{{ persona.m_polmonari }}" placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Tumori:</p>
+                  <input class="input-disabled" type="text" name="tumori" value="{{ persona.tumori }}" placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Asma/allergie:</p>
+                  <input class="input-disabled" type="text" name="allergie" value="{{ persona.allergie }}" placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Malattie psichiatriche:</p>
+                  <input class="input-disabled" type="text" name="m_psichiatriche" value="{{ persona.m_psichiatriche }}" placeholder="inserisci valore" disabled>
+                </div>
+              </div>
+            </div>
+        
+            <div class="sub-container-card" style="margin-top: 20px;">
+              <div class="flex-container">
+
+                <div class="container-celle-design">
+                  <p class="subtitle" style="width: 18rem;">Anamnesi patologica prossima: </p>
+                  <select name="patologie">
+                    <option value="">Nessuna</option>
+                    <option value="">Malattie infettive</option>
+                    <option value="">Neoplasie (tumori)</option>
+                    <option value="">Malattie del sangue e degli organi ematopoietici</option>
+                    <option value="">Disturbi del sistema immunitario</option>
+                    <option value="">Malattie endocrine, nutrizionali e metaboliche</option>
+                    <option value="">Disturbi mentali, comportamentali e del neurosviluppo</option>
+                    <option value="">Malattie del sistema nervoso</option>
+                    <option value="">Malattie dell'occhio e degli annessi oculari</option>
+                    <option value="">Malattie dell'orecchio e del sistema uditivo</option>
+                    <option value="">Malattie del sistema circolatorio</option>
+                    <option value="">Malattie del sistema respiratorio</option>
+                    <option value="">Malattie dell'apparato digerente</option>
+                    <option value="">Malattie della pelle</option>
+                    <option value="">Malattie del sistema muscoloscheletrico</option>
+                    <option value="">Malattie del sistema genito-urinario</option>
+                    <option value="">Gravidanza, parto e puerperio</option>
+                    <option value="">Alcune condizioni perinatali</option>
+                    <option value="">Malformazioni congenite, deformità e anomalie cromosomiche</option>
+                    <option value="">Sintomi, segni e risultati clinici anormali</option>
+                    <option value="">Lesioni, avvelenamenti e altre conseguenze di cause esterne</option>
+                  </select>
+                </div>
+
+                <div class="container-celle-design">
+                  <p class="subtitle">Altro:</p>
+                  <input class="input-disabled" name="p_p_altro" type="text" value="{{ persona.p_p_altro }}" placeholder="inserisci valore" disabled>
+                </div>
+
+              </div>
+            </div>
+        
+            <div class="sub-container-card" style="margin-top: 20px;">
+              <p class="table-title" style="font-weight: bold; margin-top: 0px; margin-bottom: 30px;">Eventuali terapie in corso:</p>
+              <div class="grid-layout">
+                <div class="field">
+                  <p class="field-title">Farmaco:</p>
+                  <input class="input-disabled" name="t_farmaco" type="text" value="{{ persona.t_farmaco }}" placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Dosaggio:</p>
+                  <input class="input-disabled" name="t_dosaggio" type="text" value="{{ persona.t_dosaggio }}" placeholder="inserisci valore" disabled>
+                </div>
+                <div class="field">
+                  <p class="field-title">Durata della terapia:</p>
+                  <input class="input-disabled" name="t_durata" type="text" value="{{ persona.t_durata }}" placeholder="inserisci valore" disabled>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ESAME OBIETTIVO -->
+        <div class="container-informazioni-personali" style="margin-top: 1rem; margin-bottom: 20px;">
+          <div class="header-container">
+            <div class="title-card">
+              <img src="{% static 'image/Visite.png' %}" alt="">
+              <h3>Esame Obiettivo</h3>
+            </div>
+          </div>
+          <div class="sub-container-card" style="margin-top: 10px;">
+            <div class="grid-layout">
+              <div class="field">
+                <p class="field-title">Aspetto generale:</p>
+                <input class="input-disabled" type="text" name="a_generale" value="{{ persona.a_genarale }}" placeholder="inserisci valore" disabled>
+              </div>
+              <div class="field">
+                <p class="field-title">Psiche:</p>
+                <input class="input-disabled" type="text" name="psiche" value="{{ persona.psiche }}" placeholder="inserisci valore" disabled>
+              </div>
+              <div class="field">
+                <p class="field-title">Relazione con l’ambiente:</p>
+                <input class="input-disabled" type="text" name="r_ambiente" value="{{ persona.r_ambiente }}" placeholder="inserisci valore" disabled>
+              </div>
+              <div class="field">
+                <p class="field-title">Stato emotivo:</p>
+                <input class="input-disabled" type="text" name="s_emotivo" value="{{ persona.s_emotivo }}" placeholder="inserisci valore" disabled>
+              </div>
+              <div class="field">
+                <p class="field-title">Costituzione:</p>
+                <input class="input-disabled" type="text" name="costituzione" value="{{ persona.costituzione }}" placeholder="inserisci valore" disabled>
+              </div>
+              <div class="field">
+                <p class="field-title">Statura:</p>
+                <input class="input-disabled" type="text" name="statura" value="{{ persona.statura }}" placeholder="inserisci valore" disabled>
+              </div>
+              <div class="field">
+                <p class="field-title">Stato nutrizionale:</p>
+                <input class="input-disabled" type="text" name="s_nutrizionale" value="{{ persona.s_nutrizionale }}" placeholder="inserisci valore" disabled>
+              </div>
+              <div class="field">
+                <p class="field-title">Eloquio:</p>
+                <input class="input-disabled" type="text" name="eloquio" value="{{ persona.eloquio }}" placeholder="inserisci valore" disabled>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INFORMAZIONI DEL SANGUE -->
+        <div class="container-informazioni-personali" style="margin-top: 1rem; margin-bottom: 20px;">
+          <div class="header-container">
+            <div class="title-card">
+              <img src="{% static 'image/Blood.png' %}" alt="">
+              <h3>Informazioni del sangue</h3>
+            </div>
+          </div>
+          <div class="sub-container-card" style="margin-top: 10px;">
+            <div class="grid-layout">
+              <div class="celle-blood">
+                <p class="celle-blod-title">Pressione Arteriosa:</p>
+                <div class="container-pressure d-flex">
+                  <div class="val-min">
+                    <span>min</span>
+                    <input class="input-disabled w-100" name="pressure_min" type="text" placeholder="Inserisci valori minimi" id="pressure_min" value="{{ persona.pressure_min }}" placeholder="inserisci valore" disabled />
+                  </div>
+                  <div class="val-max">
+                    <span>max</span>
+                    <input class="input-disabled w-100" name="pressure_max" type="text" placeholder="Inserisci valori massimi" id="pressure_max" value="{{ persona.pressure_max }}" placeholder="inserisci valore" disabled />
+                  </div>
+                </div>
+              </div>
+              <div class="celle-blood">
+                <p class="celle-blod-title">Frequenza Cardiaca:</p>
+                <input class="input-disabled" type="text" name="heart_rate" placeholder="Inserisci valori" id="heart_rate" value="{{ persona.heart_rate }}" placeholder="inserisci valore" disabled />
+              </div>
+              <div class="celle-blood">
+                <p class="celle-blod-title">Gruppo Sanguigno:</p>
+                <input class="input-disabled" type="text" name="blood_group" placeholder="Inserisci valori" id="blood_group" value="{{ persona.blood_group }}" placeholder="inserisci valore" disabled />
+              </div>
+              <div class="celle-blood">
+                <p class="celle-blod-title">Fattore rh:</p>
+                <input class="input-disabled" type="text" name="rh_factor" placeholder="Inserisci valori" id="rh" value="{{ persona.rh_factor }}" placeholder="inserisci valore" disabled />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolkit">
+          <img src="{% static 'image/Arrow_Back.png' %}" alt="" style="width: 40px; height: 40px;">
+
+          <a class="button" id="btn_blood_group">
+            <span class="button__icon-wrapper">
+              <svg
+                viewBox="0 0 14 15"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                class="button__icon-svg"
+                width="14"
+              >
+                <path
+                  d="M7 1V4M7 11V14M1 7H4M10 7H13M3.5 3.5L5 5M9 9L10.5 10.5M3.5 10.5L5 9M9 5L10.5 3.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            
+              <svg
+                viewBox="0 0 14 15"
+                fill="none"
+                width="14"
+                xmlns="http://www.w3.org/2000/svg"
+                class="button__icon-svg button__icon-svg--copy"
+              >
+                <path
+                  d="M7 1V4M7 11V14M1 7H4M10 7H13M3.5 3.5L5 5M9 9L10.5 10.5M3.5 10.5L5 9M9 5L10.5 3.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            Modifica Dati
+          </a>
+
+          <a class="button" id="btn_save_changes" style="display: none;">
+            <span class="button__icon-wrapper">
+              💾
+            </span>
+            Salva Modifiche
+          </a>
+        </div>
+      </form>
+    
+
+
+      <!-- Modale Note -->
+      <div id="notes-modal" class="modal-notes hidden">
+        <div class="modal-content">
+          <button class="modal-close">&times;</button>
+          <div class="notes-header">
+            <div class="input-container">
+              <input type="text" id="note-title" required />
+              <label class="floating-label" for="note-title">Titolo Nota*</label>
+            </div>
+            <div class="input-container">
+              <textarea id="note-content" rows="3" required></textarea>
+              <label class="floating-label" for="note-content">Scrivi la nota...*</label>
+            </div>
+            <button id="save-note-btn">Aggiungi Nota</button>
+          </div>
+          <div id="notes-list" class="notes-list"></div>
+        </div>
+      </div>
+
+      <!-- Modale per visualizzare i dettagli della nota -->
+      <div id="view-note-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="modal-content bg-white rounded-lg p-6 relative max-w-sm w-full">
+          <button class="modal-close absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
+          <h2 id="view-note-title" class="text-xl font-semibold mb-4"></h2>
+          <p id="view-note-content" class="text-gray-700"></p>
+        </div>
+      </div>
+
+
+    </main>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

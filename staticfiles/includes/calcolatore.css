@@ -1,0 +1,508 @@
+:root {
+  --dark1: #0c042c;
+  --dark2: #0c214b;
+  --light1: #c3ccd4;
+
+  --neutral-gray: #b0b8c1;
+  --neutral-bg-color: rgba(176, 184, 193, 0.2);
+  --neutral-bg-color-contrast: rgba(124, 81, 149, 0.2);
+
+  --contrast-color: #3a255d;
+  --contrast-color-shadow: #3b255d2c;
+  --contrast-color2: #6a2dcc;
+  --positive-color: #2ac670;
+
+  --tittle1: whitesmoke;
+  --tittle2: #2ac4dd;
+
+  --circle-color-shadow: rgba(42, 196, 221, 0.15);
+  --circle-color-shadow-two: rgba(42, 196, 221, 0.05);
+  --card-color: #f8f4fc;
+}
+
+label {
+  font-weight: bold;
+  background-color: var(--contrast-color-shadow);
+  color: var(--dark1);
+  padding: 15px;
+  padding-bottom: 25px;
+  margin-bottom: -1.5rem;
+  border-radius: 8px;
+}
+.form-container {
+  width: 100%;
+  margin: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+.section {
+  margin-bottom: 30px;
+  padding: 50px 40px;
+  background-color: var(--card-color);
+  border-radius: 2px;
+}
+.section h3 {
+  margin-bottom: 30px;
+  color: var(--dark2);
+}
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, auto); 
+  gap: 10px; 
+  width: 100%;
+  row-gap: 50px;
+}
+#flex-adjust .form-group{
+  width: 100%;
+}
+#flexed-section{
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+.flex-container{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.patient-info {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, auto); 
+  gap: 10px; 
+  row-gap: 50px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+.form-group input,
+.form-group select {
+  margin-top: 10px;
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  outline: none;
+  font-size: 16px;
+}
+input[type="range"] {
+  margin-top: 10px;
+  padding: 8px 0 8px 1px;
+}
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  gap: 15px;
+}
+.button-container button{
+  font-size: 16px;
+  width: 18rem;
+  height: 3rem;
+}
+.button-container a {
+  text-decoration: none;
+  width: 15rem;
+  height: 3rem;
+  text-align: center;
+  padding-top: 10px;
+}
+
+/* Stile per il track */
+input[type="range"] {
+  -webkit-appearance: none; 
+  width: 100%; 
+  height: 10px; 
+  background: #e0e0e0; 
+  border-radius: 15px;
+  outline: none; 
+  overflow: hidden; 
+}
+
+/* Traccia riempita per Chrome, Edge e Safari */
+input[type="range"]::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--contrast-color2) 0%,
+    var(--contrast-color2) var(--value),
+    #e0e0e0 var(--value),
+    #e0e0e0 100%
+  );
+  border-radius: 10px;
+}
+
+/* Thumb personalizzato */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Rimuove lo stile di default */
+  background-color: var(--contrast-color); /* Colore desiderato */
+  border: 2px solid var(--contrast-color2); /* Bordo del thumb */
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Traccia riempita per Firefox */
+input[type="range"]::-moz-range-progress {
+  background-color: var(--contrast-color2); /* Colore della parte riempita */
+  height: 10px;
+  border-radius: 5px;
+}
+
+/* Thumb personalizzato per Firefox */
+input[type="range"]::-moz-range-thumb {
+  background-color: var(--contrast-color);
+  border: 2px solid var(--contrast-color2);
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Traccia riempita per IE */
+input[type="range"]::-ms-fill-lower {
+  background: var(--contrast-color2); /* Colore della parte riempita */
+  border-radius: 5px;
+}
+
+/* Thumb personalizzato per IE */
+input[type="range"]::-ms-thumb {
+  background-color: var(--contrast-color);
+  border: 2px solid var(--contrast-color2);
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* 
+form{
+    margin: auto;
+    height: 900px;
+}
+.containerInfoPatient{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+.PatientInfoContainer{
+    border-radius: 8px;
+    background-color: whitesmoke;
+}
+.PatientInfoContainer h3{
+    color: var(--contrast-color);
+    padding-left: 40px;
+    padding-top: 20px;
+    padding-bottom: 0px;
+    margin-bottom: 0rem;
+}
+.containerInput{
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+.form-group{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.form-group label{
+    color: var(--dark1);
+    padding: 8px;
+}
+.form-group input{
+    width: 100%;
+    border-radius: 8px;
+    border: none;
+    border-bottom: 2px solid var(--contrast-color2);
+    height: 2.5rem;
+    outline-color: var(--contrast-color-shadow);
+    padding: 15px;
+    box-shadow: 1px 1px 10px 3px rgba(0,0,0,0.1);
+}
+.form-group select{
+    width: 100%;
+    border-radius: 8px;
+    border: none;
+    border-bottom: 2px solid var(--contrast-color2);
+    height: 2.5rem;
+    outline-color: var(--contrast-color-shadow);
+    padding: 5px;
+    box-shadow: 1px 1px 10px 3px rgba(0,0,0,0.1);
+}   
+
+#bloodTest{
+    margin-top: 1rem;
+}
+#other{
+    border-radius: 8px;
+    background-color: whitesmoke;
+
+    padding: 10px;
+    max-width: 99%;
+}
+#other h3{
+    color: var(--contrast-color);
+    padding-top: 20px;
+}
+#other .containerInput{
+    justify-content: center;
+    align-items: center;
+}
+#other .form-group{
+    padding: 17px;
+}
+#other .form-group input{
+    width: 14rem;
+}
+
+.button-container{
+    gap: 20px;
+}
+.button-container button{
+    width: 15rem;
+    height: 2.5rem;
+    font-size: 18px;
+    color: var(--tittle1);
+    background-color: var(--contrast-color2);
+    border-radius: 8px;
+    border: none;
+}
+.button-container a{
+    border-radius: 8px;
+    border: 2px solid var(--contrast-color2);
+    color: var(--tittle1);
+    height: 2.5rem;
+    padding: 5px;
+    text-decoration: none;
+    width: 12rem;
+    text-align: center;
+    font-size: 18px;
+}
+ */
+
+.visible {
+  overflow: hidden;
+}
+
+.visible .modal-calculator {
+  display: flex;
+  position: fixed;
+  visibility: visible;
+  z-index: 9999999;
+  height: 100vh;
+  opacity: 1;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
+  transition: all 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.hidden {
+  visibility: hidden;
+  height: 0;
+  opacity: 0;
+}
+
+.modal-container {
+  background-color: whitesmoke;
+  padding: 20px;
+  border-radius: 8px;
+  width: 800px;
+  height: 600px;
+  overflow: auto;
+  scrollbar-width: none; /* Per Firefox */
+  -ms-overflow-style: none; /* Per Internet Explorer e Edge */
+}
+
+.modal-container ::-webkit-scrollbar {
+  display: none; /* Per Webkit (Chrome, Safari) */
+}
+.modal-container h3 {
+  color: var(--contrast-color);
+}
+.modal-container p {
+  font-size: 18px;
+}
+.modal-container p span {
+  color: var(--contrast-color2);
+  font-weight: bold;
+}
+
+.button-container-modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button-container-modal button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 2.5rem;
+  width: 12rem;
+  font-size: 18px;
+  border-radius: 8px;
+  background-color: var(--contrast-color2);
+  border: none;
+  color: var(--tittle1);
+  text-transform: uppercase;
+  transition: all 0.2s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.button-container-modal button:hover {
+  background-color: var(--dark2);
+  color: var(--tittle1);
+}
+.Subtitle {
+  font-weight: bold;
+}
+.valoriInseritiContainer {
+  max-height: 360px;
+  overflow: auto;
+}
+
+.indicator-container {
+  padding: 20px;
+  background-color: var(--contrast-color-shadow);
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+}
+.description {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+.indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.negativeTesto,
+.extremeNegativeRange {
+  color: red;
+}
+.positiveTesto {
+  color: var(--positive-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 40%;
+}
+.extremePositiveRange {
+  color: var(--positive-color);
+}
+#middleTesto {
+  width: 40%;
+  margin-left: -1rem;
+  color: rgb(255, 191, 71);
+}
+#middleBar {
+  width: 40%;
+  left: 30%;
+  background-color: rgb(255, 191, 71);
+}
+
+.barra-container {
+  background-color: var(--neutral-bg-color);
+  border-radius: 8px;
+  height: 1rem;
+  position: relative;
+  background-color: rgb(255, 98, 98);
+}
+.barra-container-none {
+  background-color: var(--neutral-bg-color);
+  border-radius: 8px;
+  height: 1rem;
+  position: relative;
+}
+
+.barra-pointer {
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 30%;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+  width: 40%;
+  background-color: var(--positive-color);
+  z-index: 1;
+}
+
+.barra-pointer-two {
+  background-color: var(--positive-color);
+  position: absolute;
+  top: 0;
+  left: 60%;
+  width: 40%;
+  height: 100%;
+  border-radius: 8px;
+}
+#barraSpecial {
+  left: 50%;
+  width: 50%;
+}
+
+#indicator {
+  position: absolute;
+  top: -1rem;
+  z-index: 2;
+  height: 2rem;
+  width: 0.5rem;
+  border-radius: 8px;
+}
+
+/*  -----------------------------------------------------------------------------------------------
+  MODAL FORM CSS
+--------------------------------------------------------------------------------------------------- */
+.is-invalid {
+  border: 2px solid red;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  display: none; /* Nascondi inizialmente */
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none; /* Inizia nascosta */
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5); /* Sfondo traslucido */
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.modal-container button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+

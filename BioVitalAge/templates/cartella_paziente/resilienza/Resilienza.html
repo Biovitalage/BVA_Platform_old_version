@@ -1,0 +1,221 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="{{ csrf_token }}">
+        <!-- Favicon -->
+        <link rel="sortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+        <title>BVA - Resilienza</title>
+
+        <!-- Css Import -->
+        <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+        <link rel="stylesheet" href="{% static 'css/cartella_paziente/resilienza/Resilienza.css' %}">
+        <link rel="stylesheet" href="{% static 'css/homePage.css' %}">
+
+        <!-- Bootstrap import -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- Font Import  -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    </head>
+
+
+    <body>
+        <!-- Loader -->
+        {% include 'components/loader.html' %}
+
+        <!-- NAVBAR -->
+        {% include 'components/navBarPatient.html' %}
+
+        <main>
+            <!-- MENU TRACE -->
+            <div class="main-title-nav">
+                    <div class="back-tittle">
+                        <a id="back" href="{% url 'cartella_paziente' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+                        <h2 class="main-welcome-title">
+                            <span>{{ persona.surname|title }}</span>
+                            <span>{{ persona.name|title }}</span> |
+                            <span>Età: {{ persona.chronological_age }}</span>
+                            {% if persona.phone and persona.email %}
+                            |
+                            <span class="phone_span">
+                                <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                                Telefono: {{ persona.phone }}
+                            </span> |
+                            <span class="email_span">
+                                <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                                Email: {{ persona.email }}
+                            </span>
+                            {% endif %}
+                        </h2>
+                    </div>
+                
+                    <div class="main-menu-trace">
+                        <a href="{% url 'HomePage' %}">
+                            <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                        </a>
+                        <p>»</p>
+                        <p>
+                            <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                        </p>
+                        <p>»</p>
+                        <p class="breadcrumb">Resilienza</p>
+                    </div>
+                
+            </div>  
+
+            {% if successo %}
+            
+                <div class="success_message" id="successMessage">
+                    <p>Dati salvati correttamente!</p>
+                    <button id="closeSuccess">x</button>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const closeBtn = document.getElementById('closeSuccess');
+                        const successDiv = document.getElementById('successMessage');
+                
+                        closeBtn.addEventListener('click', function () {
+                            successDiv.style.display = 'none';
+                        });
+                
+                        setTimeout(function () {
+                            successDiv.style.display = 'none';
+                        }, 4000); 
+                    });
+                </script>
+
+            {% endif %}
+
+            <form method="POST" action="{% url 'resilienza' persona.id %}">
+
+                {% csrf_token %}
+
+                <div class="card-container">
+                        <div class="title-container">
+                            <img src="{% static 'image/Stress.png' %}" alt="">
+                            <h3>Stress e Recupero</h3>
+                        </div>
+                        
+                        <div class="grid-container">
+                            <div class="form-group">
+                                <label for="name">HRV (Variabilità Cardiaca)</label>
+                                <input type="text" id="hrv" name="hrv" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">Cortisolo (Stress Cronico)</label>
+                                <input type="text" id="cortisolo" name="cortisolo" required placeholder="Inserisci il valore">
+                            </div>
+                        </div>
+                </div>
+                    
+                <div class="card-container">
+                        <div class="title-container">
+                            <img src="{% static 'image/Stress_Ossidativo.png' %}" alt="">
+                            <h3>Bilancio Redox e Stress Ossidativo</h3>
+                        </div>
+                        
+                        <div class="grid-container2">
+                            <div class="form-group">
+                                <label for="name">ROS (Specie Reattive dell'Ossigeno)</label>
+                                <input type="text" id="ros" name="ros" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">OSI Index (Oxidative Stress Index)</label>
+                                <input type="text" id="osi" name="osi" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">dROMS (Danni da Radicali Liberi)</label>
+                                <input type="text" id="dRoms" name="dRoms" required placeholder="Inserisci il valore">
+                            </div>
+                        </div>
+                </div>
+                    
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Risposta_Immunitaria.png' %}" alt="">
+                        <h3>Infiammazione e Risposta Immunitaria</h3>
+                    </div>
+                        
+                    <div class="grid-container">
+                            <div class="form-group">
+                                <label for="name">Proteina C-reattiva (PCR)</label>
+                                <input type="text" id="pcr" name="pcr" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">Rapporto Neutrofili/Linfociti (NLR)</label>
+                                <input type="text" id="pcr" name="pcr" required placeholder="Inserisci il valore">
+                            </div>
+                    </div>
+                </div>
+                
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Profilo_Metabolico.png' %}" alt="">
+                        <h3>Metabolismo e Nutrizione</h3>
+                    </div>
+                        
+                    <div class="grid-container2">
+                            <div class="form-group">
+                                <label for="name">HOMA Test (Sensibilità Insulinica)</label>
+                                <input type="text" id="homa_t" name="homa_t" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">IR Test (Resistenza Insulinica)</label>
+                                <input type="text" id="ir_t" name="ir_t" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">Indice Omega-3 (EPA/DHA)</label>
+                                <input type="text" id="omega_3" name="omega_3" required placeholder="Inserisci il valore">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Capacita_Fisica.png' %}" alt="">
+                        <h3>Capacita Fisica e Resilienza Strumentale</h3>
+                    </div>
+                        
+                    <div class="grid-container">
+                            <div class="form-group">
+                                <label for="name">VO2 Max (Capacità Aerobica)</label>
+                                <input type="text" id="vo2" name="vo2" required placeholder="Inserisci il valore">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="toolkit">
+                        <img src="{% static 'image/Arrow_Back.png' %}" alt="" style="width: 40px; height: 40px;">
+
+                        <button id="calculateButton" type="submit" class="button">
+                            <span class="button__icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg">
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                    
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18"
+                                    class="button__icon-svg button__icon-svg--copy">
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                            Calcola Resilienza
+                        </button>
+                </div>
+
+            </form>
+
+        </main>
+    </body>
+</html>

@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    <title>BioVitalAge - Login</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+    <!-- CDN import -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.0/gsap.min.js"></script>
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+    <main>
+        <div class="background">
+            <div class="backdrop"></div>
+
+            <div class="col-md-3 p-5 login-container">
+                <div class="col-md-12 img-container-logo">
+                    <img src="{% static 'image/Logo.png' %}" alt="logo_img" title="BioVitalAge®">
+                </div>
+                <h3>Login</h3>  
+
+                {% if error %}
+                <div class="alert alert-danger text-center" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'loginPage' %}"> 
+                    {% csrf_token %} 
+                    <div class="col-md-12 d-flex-column justify-content-center align-items-center user-container">
+                        <p>Email</p>
+                        <div class="col-md-12 d-flex input-container">
+                            <img class="col-md-3" src="{% static 'image/Username_white.png' %}" alt="Email Icon">
+                            <input name="email" class="col-md-9" type="email" placeholder="Scrivi la tua Email" required>
+                        </div>
+                    </div>
+                
+                    <!-- LOGIN PASSWORD FIELD -->
+                    <div class="col-md-12 d-flex-column justify-content-center align-items-center user-container" style="margin-top: 1rem;">
+                        <p>Password</p>
+                        <div class="col-md-12 d-flex input-container">
+                          <img class="col-md-3" src="{% static 'image/Lucchetto.png' %}" alt="Password Icon">
+                          <div class="password-container">
+                            <input 
+                              id="login-password" 
+                              name="password" 
+                              type="password" 
+                              placeholder="Scrivi la tua password" 
+                              required 
+                            />
+                            <span class="toggle-password" onclick="toggleLoginPassword(this)">
+                              <i class="eye-icon fas fa-eye"></i>
+                              <i class="slash-icon fas fa-eye-slash"></i>
+                            </span>
+                          </div>
+                        </div>
+                    </div>                      
+  
+                    <a class="forgot-password" href="">Password dimenticata?</a>
+                
+                    
+
+                    <div class="col-md-12 d-flex justify-content-center align-items-center button-container"  style="margin-top: 2rem;">
+                        <button type="submit" class="button-login">Login Piattaforma</button>
+                        <!-- <button type="submit" class="button-login" id="google-login-button"></button> -->
+                    </div>
+                </form>
+
+                <div class="col-md-12 d-flex justify-content-center align-items-center button-container" style="margin-top: 1.5rem;">
+                    <button onclick="window.location.href='{% url 'loginPageCalcolatore' %}'" class="button-login" style=" background-color: #0c214b; border: 1px solid #6a2dcc;">Accedi direttamente al Calcolatore</button>
+                </div>
+            </div>
+        </div>
+    </main> 
+    
+    <!-- JS TO TOGGLE PASSWORD -->
+    <script>
+        function toggleLoginPassword(toggleElem) {
+          // 1. Prendi input e icone relative
+          const container = toggleElem.closest('.password-container');
+          const input     = container.querySelector('input');
+          const eyeIcon   = toggleElem.querySelector('.eye-icon');
+          const slashIcon = toggleElem.querySelector('.slash-icon');
+      
+          // 2. Determina se mostrare o nascondere
+          const willShow = input.type === 'password';
+      
+          // 3. Cambia il tipo di input
+          input.type = willShow ? 'text' : 'password';
+      
+          // 4. Toggle classe per CSS
+          toggleElem.classList.toggle('active', willShow);
+      
+          // 5. Rimuovi eventuali inline styles precedenti
+          gsap.set([eyeIcon, slashIcon], { clearProps: 'all' });
+      
+          // 6. Anima l’opacità coerentemente con la classe
+          gsap.to(eyeIcon,   { opacity: willShow ? 0 : 1, duration: 0.2 });
+          gsap.to(slashIcon, { opacity: willShow ? 1 : 0, duration: 0.2 });
+      
+          // 7. “Pop” animation sulla nuova icona visibile
+          const target = willShow ? slashIcon : eyeIcon;
+          gsap.from(target, { scale: 0.5, duration: 0.4, ease: 'bounce.out' });
+        }
+    </script>    
+</body>
+</html>

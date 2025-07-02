@@ -1,0 +1,308 @@
+:root {
+  --dark1: #0c042c;
+  --dark2: #0c214b;
+  --light1: #c3ccd4;
+
+  --neutral-gray: #b0b8c1;
+  --neutral-bg-color: rgba(176, 184, 193, 0.2);
+  --neutral-bg-color-contrast: rgba(124, 81, 149, 0.2);
+
+  --contrast-color: #3a255d;
+  --contrast-color-shadow: #3b255d2c;
+  --contrast-color2: #6a2dcc;
+  --positive-color: #2ac670;
+
+  --tittle1: whitesmoke;
+  --tittle2: #2ac4dd;
+
+  --circle-color-shadow: rgba(42, 196, 221, 0.15);
+  --circle-color-shadow-two: rgba(42, 196, 221, 0.05);
+  --card-color: #f8f4fc;
+}
+
+.container_data {
+  display: flex;
+  flex-direction: column;
+  color: #0c214b;
+  gap: 20px;
+  padding: 45px;
+  font-size: 1.1rem;
+  background: var(--card-color);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  margin: 0 23px;
+  margin-top: 25px;
+}
+
+.anagraphic_data h3 {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.container_box {
+  display: flex;
+  justify-content: space-between;
+}
+
+.field {
+  font-weight: bold;
+  color: var(--contrast-color);
+}
+
+/* ! Blood Data */
+.blood_data {
+  display: flex;
+  justify-content: space-between !important;
+  flex-direction: row !important;
+  margin-top: 25px;
+}
+
+.blood_data h3 {
+  font-size: 1.3rem;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.container_input {
+  display: flex;
+  gap: 20px;
+  color: #0c214b;
+  font-size: 1.1rem;
+}
+
+.blood_data.editing input {
+  background: #ffffff; /* ad esempio, sfondo bianco quando modificabile */
+  cursor: text;
+}
+
+.blood_data.editing {
+  outline: 2px dashed #6a2dcc;
+}
+
+.container_input input {
+  border: none;
+  background: #d3d3d3;
+  border-radius: 4px;
+  padding: 5px 10px;
+  width: 250px;
+  color: #0c214b;
+  margin-top: 10px;
+  cursor: not-allowed;
+}
+
+/* ! Blood Group */
+.blood_group_container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ! Rh */
+.rh_container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ! Button */
+.btn_blood_group_container {
+  display: flex;
+  align-items: center;
+}
+
+.btn_blood_group_container button {
+  background-color: transparent;
+  border: 2px solid #6a2dcc;
+  border-radius: 30px;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #f3f3f3;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s;
+  z-index: 1;
+  height: 2rem;
+  width: 10rem;
+}
+
+.btn_blood_group_container button::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  top: 0;
+  position: absolute;
+  left: 0;
+  background-color: var(--contrast-color2);
+  z-index: -1;
+  transition: width 0.4s ease;
+}
+.btn_blood_group_container button::after {
+  content: "";
+  width: 0%;
+  height: 100%;
+  top: 0;
+  position: absolute;
+  right: 0;
+  background-color: var(--dark2);
+  z-index: -1;
+  transition: width 0.4s ease;
+}
+.btn_blood_group_container button:hover::before {
+  width: 0%;
+}
+.btn_blood_group_container button:hover::after {
+  width: 100%;
+}
+.btn_blood_group_container button:hover {
+  color: #d3d3d3;
+}
+
+/* ! Tabelle */
+
+/* ! Category title */
+.category-title {
+  margin-top: 25px;
+}
+
+.table_data {
+  margin-top: 25px;
+}
+.table-container {
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.table-title {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #6a2dcc;
+}
+
+.table-title:nth-child(1) {
+  margin-top: 25px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #6a2dcc;
+  color: #fff;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* ! edit button */
+.btn-edit-table-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 15px;
+}
+
+/* ! edit button */
+.add-row-btn {
+  margin: 0 10px;
+}
+
+.add-row-btn,
+.cancel-btn {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.add-row-btn.show,
+.cancel-btn.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.edit-save-btn {
+  background-color: transparent;
+  border: 2px solid #6a2dcc;
+  border-radius: 30px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #f3f3f3;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s;
+  z-index: 1;
+  height: 2rem;
+  width: 8rem;
+}
+
+.edit-save-btn::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  top: 0;
+  position: absolute;
+  left: 0;
+  background-color: var(--contrast-color2);
+  z-index: -1;
+  transition: width 0.4s ease;
+}
+.edit-save-btn::after {
+  content: "";
+  width: 0%;
+  height: 100%;
+  top: 0;
+  position: absolute;
+  right: 0;
+  background-color: var(--dark2);
+  z-index: -1;
+  transition: width 0.4s ease;
+}
+.edit-save-btn:hover::before {
+  width: 0%;
+}
+.edit-save-btn:hover::after {
+  width: 100%;
+}
+.edit-save-btn:hover {
+  color: #d3d3d3;
+}
+
+.responsive-table {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+}
+
+@media (max-width: 768px) {
+  table {
+    font-size: 14px;
+  }
+
+  th,
+  td {
+    padding: 8px;
+  }
+}

@@ -1,0 +1,261 @@
+/* FONT STYLE */
+* p,
+* input,
+* select{
+    font-family: 'Poppins', sans-serif !important;
+}
+* h3{
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 23px !important;
+    font-weight: 600 !important;
+}
+* span{
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+
+
+/* STYLE CARD */
+.card-container{
+    background-color: var(--card-color);
+    width: 98%;
+    margin: auto;
+    border-radius: 8px;
+    padding: 40px 20px;
+    margin-top: 1rem;
+}
+.title-container{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+}
+.title-container h3{
+    color: var(--contrast-color);
+}
+.title-container img{
+    width: 30px;
+    height: 30px;
+    margin-top: -1rem;
+}
+#img-special{
+    width: 50px;
+    height: 50px;
+}
+
+
+.grid-container {
+    padding-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    row-gap: 40px;
+}
+.grid-container2 {
+    padding-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    row-gap: 40px;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+.form-group input,
+.form-group select {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 14px;
+}
+.form-group label {
+    background-color: var(--contrast-color-shadow);
+    color: var(--dark2);
+    border-radius: 8px 8px 0 0;
+    padding: 15px;
+    margin-bottom: -1rem;
+    font-weight: bold;
+}
+.form-group input {
+    padding: 15px;
+    font-size: 16px;
+}
+.form-group select {
+    padding: 15px;
+}
+
+
+
+/* TOOLKIT STYLE */
+.toolkit {
+    position: fixed;
+    bottom: 0.5rem;
+    right: 0rem;
+    background-color: var(--card-color);
+    width: 3rem;
+    height: 4rem;
+    border-radius: 8px 0px 0px 8px;
+    box-shadow: 1px 1px 8px 1px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    gap: 10px;
+    opacity: 0.8;
+    transform: translateX(10px);
+    transition: width 0.4s ease-in-out, opacity 0.3s ease-in-out, transform 0.4s ease-in-out;
+}
+.toolkit img{
+    margin-right: -4rem;
+}
+.toolkit:hover {
+    width: 20rem;
+    opacity: 1;
+    transform: translateX(0); 
+}
+#calculateButton,
+#vediButton {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.toolkit:hover #calculateButton,
+.toolkit:hover #vediButton {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+  
+
+
+
+/* TABLE QUESTION STYLE  */
+.table-container{
+    margin-top: 1rem;
+    border: 1px solid #ddd;
+    background-color: white;
+    border-radius: 8px;
+}
+.table-row{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 8rem;
+    gap: 5px;
+    border-bottom: 1px solid #ddd;
+}
+.question{
+    width: 25%;
+    margin-top: 12px;
+    padding: 20px;
+    border-right: 1px solid #ddd;
+    font-weight: bold;
+    color: var(--dark2);
+}
+.container-risposte{
+    width: 75%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.cella-container{
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+    gap: 20px;
+}
+
+
+
+.grid-container{
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 10px;
+    padding: 20px 0px;
+    border-bottom: 1px solid #ddd;
+}
+.cella-grid{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+}
+.cella-grid:first-of-type{
+    border-right: 1px solid #ddd;
+}
+.cella-grid input{
+    width: 55%;
+    height: 3rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding-left: 20px;
+    background-color: var(--card-color);
+    outline-color: var(--contrast-color);
+}
+.cella-grid p{
+    margin-top: 14px;
+    width: 45%;
+    background-color: var(--contrast-color-shadow);
+    border-radius: 8px;
+    font-weight: bold;
+    padding: 10px;
+    color: var(--dark2);
+}
+
+
+
+.container-quest-special{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+.container-quest-special p{
+    width: 46%;
+    font-weight: bold;
+    color: var(--dark2);
+    text-align: justify;
+    background-color: var(--contrast-color-shadow);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 14px;
+}
+.container-quest-special textarea,
+#textarea-special{
+    width: 75%;
+    height: 5rem;
+    border: 1px solid #ddd;
+    background-color: var(--card-color);
+    padding: 10px;
+    border-radius: 8px;
+    outline-color: var(--contrast-color);
+}
+.special .cella-grid{
+    padding: 0px 20px;
+}
+.special p{
+    width: 25%;
+    text-align: center;
+}
+.special input{
+    width: 75%;
+}
+
+
+/* ESAME MUSCOLO SCHELETRICO */
+#comparazione-special{
+    width: 30%;
+    text-align: center;
+}
+#comparazione{
+    width: 70%;
+}

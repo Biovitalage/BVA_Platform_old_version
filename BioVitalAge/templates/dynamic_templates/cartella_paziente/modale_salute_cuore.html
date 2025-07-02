@@ -1,0 +1,189 @@
+{% load static %}
+
+<div class="modale-indici" id="Cuore">
+
+    <div class="container-header">
+        <div class="title-container">
+            <img id="dynamicImage" src="{% static 'image/Heart_Colorato.png' %}" alt="">
+            <h3 id="dynamicTitle">Salute del Cuore</h3>
+        </div>
+        <button id="closeModale">x</button>
+    </div>       
+
+    <div class="content-container-modale-indici" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px;">
+       
+        <div class="celle-indici">
+            <p>Colesterolo Totale (mg/dI):</p>
+            <p class="arrow down">{{ Salute_del_cuore.tot_chol }}</p>
+        </div>
+
+        <div class="celle-indici">
+            <p>Colesterolo LDL (mg/dL):</p>
+            <p class="arrow upper">{{ Salute_del_cuore.ldl_chol }}</p>
+        </div>
+
+         <div class="celle-indici">
+            <p>Colesterolo HDL (mg/dL):</p>
+
+            {% if persona.gender == "M" %}
+                <p class="arrow down">{{ Salute_del_cuore.hdl_chol_m }}</p>
+            {% else %}
+                <p class="arrow upper">{{ Salute_del_cuore.hdl_chol_w }}</p>
+            {% endif %}
+        </div>
+
+        <div class="celle-indici">
+            <p>Trigliceridi (mg/dL):</p>
+            <p class="arrow down">{{ Salute_del_cuore.trigl }}</p>
+        </div>
+        
+        <div class="celle-indici">
+            <p>Trigliceridi (mg/dL):</p>
+            <p class="arrow upper">{{ Salute_del_cuore.pai_1 }}</p>
+        </div>
+
+        <div class="celle-indici">
+            <p>Inibitore dell'attivatore del plasminogeno-1:</p>
+            <p class="arrow down">{{ Salute_del_cuore.d_dimero }}</p>
+        </div>
+
+        <div class="celle-indici">
+            <p>D-Dimero(ng/ml):</p>
+            <p class="arrow upper">{{ Salute_del_cuore.ves }}</p>
+        </div>
+
+    </div>
+
+    <div class="content-container-modale-indici">
+        <h3>Oxidative Stress</h3>
+
+        <div class="grid-container-indici">
+            <div class="celle-indici">
+                <p>d_roms:</p>
+                <p class="arrow down">{{ Salute_del_cuore.d_roms }}</p>
+            </div>
+
+            <div class="celle-indici">
+                <p>osi:</p>
+                <p class="arrow upper">{{ Salute_del_cuore.osi }}</p>
+            </div>
+
+            <div class="celle-indici">
+                <p>pat:</p>
+                <p class="arrow down">{{ Salute_del_cuore.pat }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-container-modale-indici">
+        <h3>Stress Ossidativo</h3>
+        <h5>Acidi Grassi Saturi</h5>
+
+        <div class="grid-container-indici">
+            <div class="celle-indici">
+                <p>Acido Miristico:</p>
+                <p class="arrow down">{{ Salute_del_cuore.my_acid }}</p>
+            </div>
+
+            <div class="celle-indici">
+                <p>Acido Palmitico:</p>
+                <p class="arrow upper">{{ Salute_del_cuore.p_acid }}</p>
+            </div>
+
+            <div class="celle-indici">
+                <p>Acido Stearico:</p>
+                <p class="arrow upper">{{ Salute_del_cuore.st_acid }}</p>
+            </div>
+
+            <div class="celle-indici">
+                <p>Acido Arachidico:</p>
+                <p class="arrow down">{{ Salute_del_cuore.st_acid }}</p>
+            </div>
+
+            <div class="celle-indici">
+                <p>Acido Beenico:</p>
+                <p class="arrow down">{{ Salute_del_cuore.st_acid }}</p>
+            </div>
+        </div>
+
+        <h5>Acidi Grassi Insaturi</h5>
+        <p class="sub-sub-title">Omega 7</p>
+
+        <div class="grid-container-indici">
+            <div class="celle-indici">
+                <p>Acido Palmitoleico:</p>
+                <p class="arrow upper">{{ Salute_del_cuore.pal_acid }}</p>
+            </div>
+        </div>
+
+        <p class="sub-sub-title">Omega 9</p>
+        <div class="grid-container-indici">
+            <div class="celle-indici">
+                <p>Acido Oleico:</p>
+                <p class="arrow down">{{ Salute_del_cuore.ol_acid }}</p>
+            </div>
+            <div class="celle-indici">
+                <p>Acido Nervonico:</p>
+                <p class="arrow down">{{ Salute_del_cuore.ner_acid }}</p>
+            </div>
+        </div>
+
+        <p class="sub-sub-title">Omega 3</p>
+        <div class="grid-container-indici">
+            <div class="celle-indici">
+                <p>Acido Linoleico Alpha:</p>
+                <p class="arrow upper">{{ Salute_del_cuore.a_linoleic_acid }}</p>
+            </div>
+            <div class="celle-indici">
+                <p>Acido(EPA) Eicosapentaenoico:</p>
+                <p class="arrow down">{{ Salute_del_cuore.eico_acid }}</p>
+            </div>
+            <div class="celle-indici">
+                <p>Acido(DHA) Docosaesaenoico:</p>
+                <p class="arrow upper">{{ Salute_del_cuore.doco_acid }}</p>
+            </div>
+        </div>
+
+        <p class="sub-sub-title">Omega 6</p>
+        <div class="grid-container-indici">
+            <div class="celle-indici">
+                <p>Acido Linoleico Alpha:</p>
+                <p class="arrow down">{{ Salute_del_cuore.lin_acid }}</p>
+            </div>
+            <div class="celle-indici">
+                <p>Acido(EPA) Eicosapentaenoico:</p>
+                <p class="arrow down">{{ Salute_del_cuore.gamma_lin_acid }}</p>
+            </div>
+            <div class="celle-indici">
+                <p>Acido(DHA) Docosaesaenoico:</p>
+                <p class="arrow upper">{{ Salute_del_cuore.dih_gamma_lin_acid }}</p>
+            </div>
+            <div class="celle-indici">
+                <p>Acido Arachidonico:</p>
+                <p class="arrow upper">{{ Salute_del_cuore.arachidonic_acid }}</p>
+            </div>
+        </div>
+
+        <div class="grid-container-indici">
+            <div class="celle-indici">
+                <p>Acido Linoleico Alpha:</p>
+                <p class="arrow down">{{ Salute_del_cuore.sa_un_fatty_acid }}</p>
+            </div>
+            <div class="celle-indici">
+                <p>Acido(EPA) Eicosapentaenoico:</p>
+                <p class="arrow upper">{{ Salute_del_cuore.o3o6_fatty_acid_quotient }}</p>
+            </div>
+            <div class="celle-indici">
+                <p>Acido(DHA) Docosaesaenoico:</p>
+                <p class="arrow down">{{ Salute_del_cuore.aa_epa }}</p>
+            </div>
+            <div class="celle-indici">
+                <p>Acido Arachidonico:</p>
+                <p class="arrow down">{{ Salute_del_cuore.o3_index }}</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+

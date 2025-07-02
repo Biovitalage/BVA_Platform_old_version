@@ -1,0 +1,76 @@
+/* FONT STYLE */
+* p,
+* input,
+* select{
+    font-family: 'Poppins', sans-serif !important;
+}
+* h3{
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 23px !important;
+    font-weight: 600 !important;
+}
+* span{
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+
+
+.contenitore-tabella{
+    width: 98%;
+    margin: auto;
+    box-shadow: 1px 1px 8px 1px rgba(0,0,0,0.5);
+}
+.pagination_tabella{
+    background-color: white;
+    border-radius: 0px 0px 4px 4px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.previous,
+.next{
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-decoration: none;
+    color: black;
+    width: 8rem;
+    text-align: center;
+}
+.previous:hover,
+.next:hover{
+    background-color: #ddd;
+}
+.previous{
+    border-radius: 4px 0px 0px 4px;
+}
+.next{
+    border-radius: 0px 4px 4px 0px;
+}
+.pagination_tabella a,
+.pagination_tabella span {
+    margin: 0 5px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.3s, color 0.3s;
+}
+.pagination_tabella a {
+    color: #333;
+}
+.pagination_tabella a:hover {
+    background-color: #f0f0f0;
+}
+.pagination_tabella .current {
+    background-color: var(--contrast-color);
+    color: #fff;
+    border-color: var(--contrast-color);
+}
+.pagination_tabella .disabled {
+    color: #aaa;
+    border-color: #ccc;
+    cursor: default;
+    pointer-events: none;
+    background-color: #f8f8f8;
+}

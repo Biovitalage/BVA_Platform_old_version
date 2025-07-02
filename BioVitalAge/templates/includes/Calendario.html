@@ -1,0 +1,735 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <title>BVA - Calendario</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/appuntamenti.css' %}">
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- CDN Import  -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- JS Import -->
+    <script src="{% static 'js/home_page/Appuntamenti.js' %}" type="module" defer></script>
+</head>
+<body>
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBar.html' %}
+
+    <main>
+      <div class="main-title-nav">
+        <div class="back-tittle">
+            <a id="back" href="{% url 'HomePage' %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+        </div>
+        <div class="main-menu-trace">
+          <a href="{% url 'HomePage' %}">
+            <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+          </a>
+          <p>»</p>
+          <p class="breadcrumb">Calendario</p>
+        </div>
+      </div>
+
+
+      <div class="Calendario-container">
+
+        <div class="Calendario-Header">
+
+            <div class="filtri-container">
+                <div class="selettori-container">
+
+                    <button class="prev">
+                        <svg class="arrow" width="30" height="30" viewBox="0 0 24 24">
+                        <polyline points="15 6 9 12 15 18" stroke="#3a255d" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+
+                    <button class="next">
+                        <svg class="arrow" width="30" height="30" viewBox="0 0 24 24">
+                        <polyline points="9 6 15 12 9 18" stroke="#3a255d" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+
+                    <button id="currentBtn">Oggi</button>
+
+                    <input type="date" id="date" name="date">
+                </div>
+
+            </div>
+
+            <p id="currentData"></p> <!-- Abilitare dinamicamente -->
+            
+            <div class="tools-container">
+                
+
+                <div class="layout-option">
+                    <button class="active" id="monthLayout">Mese</button>
+                    <button id="weekLayout">Settimana</button>
+                    <button id="dayLayout">Giorno</button>
+                </div>
+
+                <!-- Button search -->
+                <button type="button" id="button-tools" class="button button-view-all search-button">
+                    <span class="button__icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg">
+                            <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle>
+                            <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                        </svg>
+                        
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg button__icon-svg--copy">
+                            <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle>
+                            <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
+                        </svg>
+                    </span>
+                </button>
+
+                <!-- Modale di ricerca nascosta (inserisci questo blocco nella pagina, ad esempio in fondo al body) -->
+                <div id="searchModal" class="search-modal hidden-modal-search">
+                    <div class="search-modal-content">
+                        <input type="text" id="searchInput" placeholder="Cerca appuntamenti...">
+                        <div id="searchResults" class="search-results"></div>
+                    </div>
+                </div>
+  
+    
+
+                <!-- Modale per aggiungere un paziente -->
+                 <!-- Seconda modale (sopramodale) -->
+                <div id="addUserModal" class="modal-overlay-user hidden-user-modal">
+                    <div class="modal-content-user">
+                        <header class="header-modal-appointments mb-5">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-container-appointment">
+                                    <img src="{% static 'image/Aggiungi_Paziente.png' %}" alt="Aggiungi Paziente">
+                                </div>
+                                <h3>Aggiungi Paziente</h3>
+                            </div>
+                            <span id="closeAddUserModal" class="close">&times;</span>
+                        </header>
+                        <form id="addUserForm">
+                            {% csrf_token %}
+                            <div class="d-grid" id="first-input-user">
+                                <div class="input-container">
+                                    <p class="m-0 floating-label">Nome</p>
+                                    <input type="text" id="newName" required>
+                                </div>
+                                
+                                <div class="input-container">
+                                    <p class="m-0 floating-label">Cognome</p>
+                                    <input type="text" id="newSurname" required>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid" id="second-input-user">
+                                <div class="input-container">
+                                    <p class="m-0 floating-label">Email</p>
+                                    <input type="text" id="newEmail">
+                                </div>
+                                <div>
+                                    <p class="m-0">Prefisso</p>
+                                    <div class="custom-select">
+                                        <div class="selected-option">
+                                            <img src="{% static 'image/Bandiera-italia.png' %}" alt="bandiera-italiana" class="flag-icon">
+                                            <span id="selected-prefix">+39</span>
+                                        </div>
+                                        <ul class="options-list">
+                                            <!-- Qui verranno inserite le opzioni dinamicamente -->
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- Campo nascosto per inviare il prefisso selezionato al backend -->
+                                    <input type="hidden" name="prefisso" id="hidden-prefisso" value="+39">                                    
+                                </div>
+                                <div class="input-container">
+                                    <p class="mb-0 floating-label">Cellulare</p>
+                                    <input type="text" id="newCell">
+                                </div>
+                            </div>
+
+                            <button type="submit" id="savePatientBtn" class="button float-end">Salva Paziente</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modale per appuntamenti -->
+                <div id="appointmentModal" class="modal-appointments">
+                    <div class="modal-content-appointments">
+
+                        <header class="header-modal-appointments">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-container-appointment">
+                                    <img src="{% static 'image/Calendario_Colorato.png' %}" alt="Icona Calendario">
+                                </div>
+                                <h3>Nuovo Appuntamento</h3>
+                            </div>
+                            <span id="closeModal" class="close">&times;</span>
+                        </header>
+
+                        <div class="modal-section">
+
+                            <form action="POST" id="date-appointment-form" class="form-appointment" data-id="{{ appuntamenti.id }}">
+                                {% csrf_token %}
+                                <a id="edit-date-btn" class="Btn-modify" title="Modifica">
+                                    Edita
+                                    <svg class="svg" viewBox="0 0 512 512">
+                                        <path
+                                            d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z">
+                                        </path>
+                                    </svg>
+                                </a>
+                                <div>
+                                    <span id="day-appointment"></span>
+                                    <span id="date-appointment"></span>
+                                    <span id="time-appointment"></span>
+                                </div>
+                            </form>
+
+
+                            <!-- Contenitore nascosto con input date/time -->
+                            <div id="edit-date-container" style="display:none;">
+                                <input type="date" id="editDate" style="display:none;">
+                                <input type="time" id="editTime" style="display:none;">
+                            </div>
+
+
+                            <form action="POST" id="patient-appointment">
+                                {% csrf_token %}
+                                {# includes/Calendario.html #}
+                                {% if is_secretary %}
+                                  <label for="dottore-select" class="mb-3">
+                                    <p class="mb-0">Dottore Associato*</p>
+                                    <select id="dottore-select" name="dottore_id" class="form-select-appointment w-100">
+                                      <option value="">Seleziona Dottore</option>
+                                      {% for doc in dottori %}
+                                        <option value="{{ doc.id }}">
+                                          {{ doc.nome|title }} {{ doc.cognome|title }}
+                                        </option>
+                                      {% endfor %}
+                                    </select>
+                                  </label>
+                                {% endif %}                                
+                                <label for="tipologia" class="input-typology">
+                                    <div class="d-flex flex-column w-100">
+                                        <p class="mb-0">Tipologia*</p>
+                                        <select name="tipologia_visita" id="tipologia_visita" class="form-select-appointment w-100">
+                                            <option>Seleziona tipologia</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0">Paziente*</p>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="icon_add_paient">
+                                                <img src="{% static 'image/username_Aggiungi.png' %}" alt="add-user" title="add-user">
+                                            </div>
+                                            <select name="paziente-select" id="paziente-select" class="w-100 form-select-appointment">
+                                                <option>Seleziona Paziente</option>
+                                                {% for paziente in persone %}
+                                                    <option value="{{ paziente.name|lower }} {{ paziente.surname|lower }}|{{ paziente.id }}">
+                                                        {{ paziente.name|title }} {{ paziente.surname|title }} 
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </label>
+                            
+                                <label id="input-time" class="mt-4">
+                                    <div>
+                                        <p class="mb-0">Visita*</p>
+                                        <select name="visita" id="visita" class="w-100">
+                                            <option>Seleziona una Visita</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0">Prezzo*</p>
+                                        <div class="d-flex align-items-center">
+                                          <span id="currency-symbol">€</span>
+                                          <input type="number" min="0" name="prezzo" id="prezzo" class="form-select-appointment" placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0">Durata*</p>
+                                        <select name="time" id="time">
+                                            <option>Seleziona una Durata</option>
+                                            <option value="5">5 minuti</option>
+                                            <option value="10">10 minuti</option>
+                                            <option value="15">15 minuti</option>
+                                            <option value="20">20 minuti</option>
+                                            <option value="25">25 minuti</option>
+                                            <option value="30">30 minuti</option>
+                                            <option value="35">35 minuti</option>
+                                            <option value="40">40 minuti</option>
+                                            <option value="45">45 minuti</option>
+                                            <option value="50">50 minuti</option>
+                                            <option value="55">55 minuti</option>
+                                            <option value="60">60 minuti</option>
+                                            <option value="65">65 minuti</option>
+                                            <option value="70">70 minuti</option>
+                                            <option value="75">75 minuti</option>
+                                            <option value="80">80 minuti</option>
+                                            <option value="85">85 minuti</option>
+                                            <option value="90">90 minuti</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0">N° Studio*</p>
+                                        <select name="studio" id="studio">
+                                            <option>Seleziona uno Studio</option>
+                                            {% for studio in numero_studio %}
+                                                <option value="{{ studio }}">{{ studio }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </label>
+
+                                <label for="note" class="mt-4 w-100">
+                                    <p class="mb-0">Note</p>
+                                    <textarea name="note" id="note" class="form-select-appointment form-textarea"></textarea>
+                                </label>
+                            </form>
+
+                        </div>
+
+                        <div class="button-modal-appointments">
+                            <button type="submit" class="button btn-primary">Salva</button>
+                            <button type="button" class="button" id="googleCalendarBtn">Aggiungi a Google Calendar</button>
+                            <button type="button" class="button btn-secondary" id="closeModalBtn">Chiudi</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="openModal" title="Add Patient" class="button">
+
+                    <span class="button__icon-wrapper">
+        
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg" width="14"
+                        height="14">
+                        <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round" />
+                      </svg>
+                  
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        class="button__icon-svg button__icon-svg--copy" width="14" height="14">
+                        <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round" />
+                      </svg>
+                  
+                    </span>
+                    Appuntamento
+                </button>
+            </div>    
+        </div>
+
+
+        <!-- CALENDARIO MONTH LAYOUT -->
+        <div class="header-rowTrace" id="month-head">
+                <p>Lunedi</p>
+                <p>Martedi</p>
+                <p>Mercoledi</p>
+                <p>Giovedi</p>
+                <p>Venerdi</p>
+                <p>Sabato</p>
+                <p>Domenica</p>
+        </div>
+
+        <div class="container-content-table" id="month-layout">
+            <!-- Qui le celle verranno create dinamicamente da JS -->
+        </div>
+
+
+        <!-- CALENDARIO SETTIMANALE LAYOUT -->
+        <div class="header-week" id="week-head">
+            
+            <div class="header-rowTrace">
+                <p class="placeholder-week"></p>
+                <p>Lunedi</p>
+                <p>Martedi</p>
+                <p>Mercoledi</p>
+                <p>Giovedi</p>
+                <p>Venerdi</p>
+                <p>Sabato</p>
+                <p>Domenica</p>
+            </div>
+        </div>
+        
+        <!-- Layout settimanale -->
+        <div class="week-layout-content" id="week-layout">
+            <div class="row-week">
+        
+                <div class="row-for-ora">
+                    <p>09:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+        
+                <div class="row-for-ora">
+                    <p>10:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+        
+                <div class="row-for-ora">
+                    <p>11:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+        
+                <div class="row-for-ora">
+                    <p>12:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+        
+                <div class="row-for-ora">
+                    <p>13:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+
+                <div class="row-for-ora">
+                    <p>14:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+
+                <div class="row-for-ora">
+                    <p>15:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+
+                <div class="row-for-ora">
+                    <p>16:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+
+                <div class="row-for-ora">
+                    <p>17:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+
+                <div class="row-for-ora">
+                    <p>18:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+                
+                <div class="row-for-ora">
+                    <p>19:00</p>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                    <div class="cellaWeek"></div>
+                </div>
+        
+            </div>
+        </div>
+
+        <!-- Giorno -->
+        <div class="header-day" id="day-head">
+            
+            <div class="header-rowTrace">
+                <p>09:00</p>
+                <p>10:00</p>
+                <p>11:00</p>
+                <p>12:00</p>
+                <p>13:00</p>
+                <p>14:00</p>
+                <p>15:00</p>
+                <p>16:00</p>
+                <p>17:00</p>
+                <p>18:00</p>
+                <p>19:00</p>
+            </div>
+        </div>
+
+        <div class="day-layout-content" id="day-layout">
+
+            <div class="row-day">
+        
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+        
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+        
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+        
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+        
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+
+                <div class="row-for-ora-day">
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                    <div class="cellaDay"></div>
+                </div>
+        
+            </div>
+        </div>
+
+        
+       
+
+
+      </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </main>
+    <!-- POPUP APPOINTMENTS -->
+
+    <!-- Modale Visualizza Dettagli -->
+    <div id="detailsModal" class="custom-modal-overlay hidden-details">
+        <div class="custom-modal-content">
+        <span id="closeDetailsModal" class="custom-close">&times;</span>
+        <h3>📋 Dettagli Appuntamento</h3>
+        <div id="appointmentDetails" class="custom-details-content">
+            <!-- I dati verranno iniettati qui -->
+        </div>
+        </div>
+    </div>
+  
+    <!-- Bottone per aprire il popup -->
+    <div id="appointment-actions-popup" class="popup-actions hidden-popup">
+        <button class="btn-view" title="Visualizza dettagli">👁️</button>
+        <button class="btn-edit" title="Modifica appuntamento">✏️</button>
+    </div>
+
+    <script>
+        isSecretary = {{ is_secretary|lower }};
+    </script>
+</body>
+</html>

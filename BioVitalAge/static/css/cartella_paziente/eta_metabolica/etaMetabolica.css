@@ -1,0 +1,538 @@
+/* FONT STYLE */
+* p,
+* input,
+* select{
+    font-family: 'Poppins', sans-serif !important;
+}
+* h3{
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 23px !important;
+    font-weight: 600 !important;
+}
+* span{
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+
+/* STYLE BUTTON HEADER */
+.container-button-header{
+  width: 98%;
+  height: 5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: auto;
+  gap: 5px;
+  margin-top: 2rem;
+  margin-bottom: -0.2rem;
+}
+.container-button {
+  background-color: var(--dark1);
+  border-radius: 8px;
+  width: 50%;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 40px;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.container-button::before {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23ffffff' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-size: contain;
+  background-repeat: no-repeat;
+  transition: right 0.3s ease;
+}
+.container-button:hover {
+  background-color: #0c042caa;
+}
+.container-button:hover::before {
+  right: 1.5rem;
+}
+.container-button img{
+  width: 40px;
+  height: 40px;
+}
+.container-button a{
+  text-decoration: none;
+  color: #ddd;
+  font-size: px;
+}
+
+
+/* STYLE CARD*/
+.card-container{
+  width: 98%;
+  margin: auto;
+  border-radius: 8px;
+  background-color: var(--card-color);
+  margin-top: 1.5rem;
+  padding: 40px 20px;
+}
+.title-container{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 15px;
+}
+.title-container img{
+  width: 40px;
+  height: 40px;
+  margin-top: -0.5rem;
+}
+.title-container h3{
+  color: var(--contrast-color);
+}
+.title{
+  color: var(--dark2);
+  padding-bottom: 20px;
+  text-align: center;
+}
+.grid-container{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+.grid-container-special{
+  display: grid;
+  grid-template-columns: 60% 39.2%;
+  width: 100%;
+  gap: 15px;
+}
+.grid-container-special .card-container{
+  width: 100%;
+}
+.infiammazione{
+  grid-template-columns: repeat(3,1fr);
+}
+
+
+/* STILE FIELD */
+.container_data {
+  width: 98%;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  color: #0c214b;
+  gap: 20px;
+  padding: 20px 20px;
+  font-size: 1.1rem;
+  background: var(--card-color);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+}
+.riga-container p:first-of-type{
+  border-left: none;
+}
+.field-title {
+  background-color: var(--contrast-color-shadow);
+  border-radius: 8px;
+  padding: 15px;
+  color: var(--dark2);
+  margin-bottom: -1rem;
+  font-weight: bold;
+  padding-bottom: 25px;
+}
+.field input{
+  border-bottom: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  border-top: none;
+  padding: 15px;
+  padding-top: 15px;
+  border-radius: 8px;
+  font-size: 18px;
+  color: var(--dark1);
+  background-color: white;
+}
+.input-disabled:disabled {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 1px solid #ccc;
+  opacity: 1;
+  cursor: not-allowed;
+}
+.input-disabled.editing {
+  background-color: #fff;
+  border: 1px solid var(--contrast-color);
+  color: #000;
+  cursor: text;
+}
+.input-disabled{
+  background-color: white;
+  cursor: not-allowed;
+  outline: none;
+}
+
+
+/* INFORMAZIONI GENERALI COMPOSIZIONE */
+.datiMassaCorporea-container {
+  width: 98%;
+  margin: auto;
+  background-color: var(--card-color);
+  border-radius: 8px;
+  margin-top: 20px;
+  padding: 20px;
+}
+.datiMassaCorporea-container h3 {
+  color: var(--dark2);
+  font-weight: bold;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.info_container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 15px;
+  row-gap: 20px;
+  width: 100%;
+}
+ 
+
+/* TOOLKIT STYLE */
+.toolkit {
+  position: fixed;
+  bottom: 0.5rem;
+  right: 0rem;
+  background-color: var(--card-color);
+  width: 3rem;
+  height: 4rem;
+  border-radius: 8px 0px 0px 8px;
+  box-shadow: 1px 1px 8px 1px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+  gap: 10px;
+  opacity: 0.8;
+  transform: translateX(10px);
+  transition: width 0.4s ease-in-out, opacity 0.3s ease-in-out, transform 0.4s ease-in-out;
+}
+.toolkit img{
+  margin-right: -5.5rem;
+}
+.toolkit:hover {
+  width: 30rem;
+  opacity: 1;
+  transform: translateX(0); 
+}
+#btn_blood_group {
+  height: 3rem;
+  opacity: 0;
+  border-radius: 4px !important;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.toolkit:hover #btn_blood_group {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+#btn_save_changes{
+  border-radius: 4px !important;
+  height: 3rem;
+}
+
+/* STYLE FIX BUTTON MODIFICA DATI */
+#modifica,
+#indietro-modifica {
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+
+
+
+
+/* CARD GRAFICI CONTAINER */
+.card_grafico{
+  background-color: var(--card-color);
+  width: 98%;
+  margin: auto;
+  border-radius: 8px;
+  margin-top: 1rem;
+  padding: 20px;
+}
+.card_grafico h3{
+  color: var(--contrast-color);
+}
+
+
+
+
+/* MESSAGGIO STYLE */
+
+/* Success Message */
+.success_message{
+  position: fixed;
+  width: 450px;
+  height: 150px;
+  background-color: white;
+  box-shadow: 1px 1px 8px 1px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  border-bottom: 5px solid #2ac670;
+  padding: 20px;
+}
+.header_message{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.title_message{
+  color: var(--positive-color);
+  font-size: 18px;
+}
+.contianer-title{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 15px;
+}
+.contianer-title img{
+  width: 30px;
+  height: 30px;
+  margin-top: -1rem;
+}
+.close{
+  border-radius: 50%;
+  padding: 5px 12px;
+  border: none;
+  margin-top: -1rem;
+  color: var(--dark1);
+}
+.close:hover{
+  transform: scale(1.1);
+}
+
+
+/* Error Message */
+.erorre_message{
+  position: fixed;
+  width: 450px;
+  height: 150px;
+  background-color: white;
+  box-shadow: 1px 1px 8px 1px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  border-bottom: 5px solid #c74b5b;
+  padding: 20px;
+}
+.title_message_errore{
+  color: var(--negative-color-right);
+  font-size: 18px;
+}
+
+
+
+
+
+
+/* ! MODAL CUSTOM */
+/* .custom-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.custom-modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+.custom-close-modal {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+}
+.hidden-modal-custom {
+  display: none;
+}
+.custom-button {
+  background: #3a255d;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 6px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+.custom-button:hover {
+  background: #6a2dcc;
+} */
+
+
+/* #punteggio_fisico_container {
+
+  padding: 6.5px 20px;
+}
+
+#altezza,
+#peso,
+#girth_value,
+#grasso,
+#acqua,
+#massa_ossea,
+#massa_muscolare {
+  position: relative;
+}
+
+#altezza::after,
+#girth_value::after {
+  content: "cm";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background-color: var(--card-color);
+  padding: 0px 10px;
+}
+
+#peso::after,
+#massa_ossea::after {
+  content: "kg";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background-color: var(--card-color);
+  padding: 0px 10px;
+}
+
+#grasso::after,
+#acqua::after,
+#massa_muscolare::after {
+  content: "%";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background-color: var(--card-color);
+  padding: 0px 10px;
+}
+
+.vignetta-container {
+  position: absolute;
+  left: 26%;
+  top: 10%;
+  z-index: 100;
+  width: 400px;
+  display: none;
+  border-radius: 10px;
+  opacity: 0;
+  box-shadow: -5px 5px 20px #51515129, 5px -5px 17px #6767674d;
+}
+
+.vignetta-container::after {
+  content: "";
+  width: 25px;
+  height: 25px;
+  background-color: var(--card-color);
+  transform: rotate(45deg);
+  position: absolute;
+  bottom: 48px;
+  left: -12px;
+}
+
+.vignetta {
+  padding: 20px;
+  display: inline-block;
+  min-width: 200px;
+  min-height: 100px;
+  font-size: 1.2em;
+  border-radius: 10px;
+  background-color: var(--card-color);
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  color: red;
+}
+
+.container-btn {
+  background-color: var(--card-color);
+  width: 98%;
+  margin: auto;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.container-btn .button-style {
+  width: 15rem;
+  height: 3rem;
+}
+
+select {
+  border: 1px solid #0000001f;
+  border-radius: 7px;
+  padding: 10px;
+  outline: none;
+}
+
+select option:first-child {
+  text-align: center;
+}
+
+select option {
+  text-align: left;
+}
+
+
+
+
+ */
+
+
