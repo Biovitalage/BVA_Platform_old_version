@@ -8,33 +8,25 @@
         <meta name="csrf-token" content="{{ csrf_token }}">
         <!-- Favicon -->
         <link rel="sortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
-
         <title>BVA - Diario Clinico</title>
 
         <!-- Css Import -->
         <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
         <link rel="stylesheet" href="{% static 'css/homePage.css' %}">
-        <link rel="stylesheet" href="{% static 'css/cartella_paziente/diario_clinico/DiarioClinico.css' %}">
+        <link rel="stylesheet" href="{% static 'css/cartella_paziente/diario_clinico/diarioClinico.css' %}">
        
-
         <!-- Bootstrap import -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 
         <!-- JS Import -->  
-        <script src="{% static 'js/cartella_paziente/sezioni_storico/visite.js' %}" type="module"></script>
     
-
         <!-- Font Import  -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
 
         <!-- CDN Import -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-        <script src="https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+
     </head>
 
     <body>
@@ -45,7 +37,7 @@
         {% include 'components/navBar.html' %}
 
         <main>
-        <!-- MENU TRACE -->
+            <!-- MENU TRACE -->
             <div class="main-title-nav">
 
                 <div class="back-tittle">
@@ -81,381 +73,169 @@
                         <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
                     </p>
                     <p>»</p>
-                    <p class="breadcrumb">Storico</p>
+                    <p class="breadcrumb">Diario Clinico</p>
                 </div>
-            
             </div>  
 
-            <!-- STORICO VISITE -->
-            <div class="card-container" style="margin-top: 2rem;">
-
-                <div class="sub-card">
-                    <div class="button-container">
-                        <h3>Storico Visite</h3>
-                    </div>
-
-                    <!-- Modale per aggiungere un paziente -->
-                    <!-- Seconda modale (sopramodale) -->
-                    <div id="addUserModal" class="modal-overlay-user hidden-user-modal">
-                        <div class="modal-content-user">
-                                <header class="header-modal-appointments mb-5">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="icon-container-appointment">
-                                            <img src="{% static 'image/Aggiungi_Paziente.png' %}" alt="Aggiungi Paziente">
-                                        </div>
-                                        <h3>Aggiungi Paziente</h3>
-                                    </div>
-                                    <span id="closeAddUserModal" class="close">&times;</span>
-                                </header>
-                                
-                                <form id="addUserForm">
-                                    {% csrf_token %}
-                                    <div class="d-grid" id="first-input-user">
-                                        <div class="input-container">
-                                            <p class="m-0 floating-label">Nome</p>
-                                            <input type="text" id="newName" required>
-                                        </div>
-                        
-                                        <div class="input-container">
-                                            <p class="m-0 floating-label">Cognome</p>
-                                            <input type="text" id="newSurname" required>
-                                        </div>
-                                    </div>
-                        
-                                    <div class="d-grid" id="second-input-user">
-                                        <div class="input-container">
-                                            <p class="m-0 floating-label">Email</p>
-                                            <input type="text" id="newEmail">
-                                        </div>
-                                        <div>
-                                            <p class="m-0">Prefisso</p>
-                                            <div class="custom-select">
-                                                <div class="selected-option">
-                                                    <img src="{% static 'image/Bandiera-italia.png' %}" alt="bandiera-italiana"
-                                                        class="flag-icon">
-                                                    <span id="selected-prefix">+39</span>
-                                                </div>
-                                                <ul class="options-list">
-                                                    <!-- Qui verranno inserite le opzioni dinamicamente -->
-                                                </ul>
-                                            </div>
-                        
-                                            <!-- Campo nascosto per inviare il prefisso selezionato al backend -->
-                                            <input type="hidden" name="prefisso" id="hidden-prefisso" value="+39">
-                                        </div>
-                                        <div class="input-container">
-                                            <p class="mb-0 floating-label">Cellulare</p>
-                                            <input type="text" id="newCell">
-                                        </div>
-                                    </div>
-                        
-                                    <button type="submit" id="savePatientBtn" class="button float-end">Salva Paziente</button>
-                                </form>
+            <div class="container-tabella">
+                <div class="header-container">
+                    <button class="button active">Diario</button>
+                    <button class="button">Farmaci</button>
+                    <button class="button">Accertamenti</button>
+                    <button class="button">Certificati</button>
+                </div>
+              
+                <div class="container-content">
+                    <div class="header-table">
+                        <div class="header-cella">
+                            <p>Data</p>
+                        </div>
+                        <div class="header-cella">
+                            <p>Descrizione</p>
+                        </div>
+                        <div class="header-cella">
+                            <p>Diagnosi</p>
+                        </div>
+                        <div class="header-cella">
+                            <p>Nota</p>
                         </div>
                     </div>
 
-                    <!-- Tabella -->
-                    <div class="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Prestazione</th>
-                                        <th>Opetarore</th>
-                                        <th>Data</th>
-                                        <th>Note</th>
-                                        <th>Azione</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% if visite %}
-                                        {% for visita in visite %}
-                                            <tr data-id="{{ visita.id }}">
-                                                <td>
-                                                    <span>
-                                                        {{ visita.voce_prezzario|title }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ visita.dottore.nome | title }} {{ visita.dottore.cognome | title}}</td>
-                                                <td>{{ visita.data|date:"d/m/Y" }}</td>
-                                                <td>{{ visita.note|default:"Nessuna nota aggiuntiva." }}</td>
-                                                <td class="td-azioni">
-                                                    <button class="btn edit" id="ediBtnVisit" data-id="{{ visita.id }}">✎</button>
-                                                    <button class="btn delete" data-id="{{ visita.id }}">✖</button>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="7" class="text-center">Nessuna visita disponibile.</td>
-                                    </tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        
-                            <!-- Sezione paginazione -->
-                            <div class="pagination_tabella mb-3">
-                                {% if visite.has_previous %}
-                                    <a class="previous" href="?page={{ visite.previous_page_number }}">Previous</a>
-                                {% else %}
-                                    <span class="previous disabled">Previous</span>
-                                {% endif %}
-                        
-                                {% for num in visite.paginator.page_range %}
-                                    {% if visite.number == num %}
-                                        <span class="current">{{ num }}</span>
-                                    {% else %}
-                                        <a href="?page={{ num }}">{{ num }}</a>
-                                    {% endif %}
-                                {% endfor %}
-                        
-                                {% if visite.has_next %}
-                                    <a class="next" href="?page={{ visite.next_page_number }}">Next</a>
-                                {% else %}
-                                    <span class="next disabled">Next</span>
-                                {% endif %}
+                    <div class="container-table">
+
+                        <div class="row-table">
+                            <div class="row-cella">
+                                <p>02/07/2025</p>
                             </div>
-                    </div>
-                </div>
-            </div>
+                            <div class="row-cella">
+                                <p>Xanax</p>
+                            </div>
+                            <div class="row-cella">
+                                <p>depressione</p>
+                            </div>
+                            <div class="row-cella">
+                                <p>nota testuale</p>
+                            </div>
+                        </div>
 
-            <!-- STORICO DIAGNOSI  -->
-            <div class="card-container" style="margin-top: 2rem;">
+                        <div class="row-table">
+                            <div class="row-cella">
+                                <p>emocromo e urino cultura</p>
+                            </div>
+                            <div class="row-cella">
+                                <p>diagnosi sospetta</p>
+                            </div>
+                            <div class="row-cella">
+                                <p>infezione</p>
+                            </div>
+                            <div class="row-cella">
+                                <p>nota testuale</p>
+                            </div>
+                        </div>
 
-                <div class="sub-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0">Storico Diagnosi</h3>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Descrizione</th>
-                                    <th>Gravità</th>
-                                    <th>Data</th>
-                                    <th>Stato</th>
-                                    <th>Risolta</th>
-                                    <th>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody id="diagnosiTableBody">
-                                {% for diagnosi in storico_diagnosi %}
-                                    <tr data-id="{{ diagnosi.id }}">
-                                        <td class="td-id">{{ diagnosi.id }}</td>
-                                        <td class="td-descrizione">{{ diagnosi.descrizione }}</td>
-                                        <td class="td-gravita">
-                                            <span
-                                                class="badge {% if diagnosi.gravita == 1 %}lieve{% elif diagnosi.gravita == 2 %}moderata{% else %}grave{% endif %}">
-                                                {% if diagnosi.gravita == 1 %}Lieve{% elif diagnosi.gravita == 2 %}Moderata{% else %}Grave{% endif %}
-                                            </span>
-                                        </td>
-                                        <td class="td-data">{{ diagnosi.data_diagnosi|date:"d/m/Y" }}</td>
-                                        <td class="td-stato">{{ diagnosi.stato }}</td>
-                                        <td class="td-risolta">
-                                            {% if diagnosi.risolta %}
-                                                <span class="badge badge-success">✔</span>
-                                            {% else %}
-                                                <span class="badge badge-secondary">—</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="td-azioni">
-                                            <button onclick="compilaDiagnosi({{ diagnosi.id }})" class="btn edit">✎</button>
-                                            <button class="btn delete" data-id="{{ diagnosi.id }}">✖</button>
-                                        </td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="text-center">Nessuna diagnosi registrata.</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        <!-- Sezione paginazione -->
-                        <div class="pagination_tabella mb-3">
-                            {% if storico_diagnosi.has_previous %}
-                                <a class="previous" href="?page={{ storico_diagnosi.previous_page_number }}">Previous</a>
-                            {% else %}
-                                <span class="previous disabled">Previous</span>
-                            {% endif %}
-                    
-                            {% for num in storico_diagnosi.paginator.page_range %}
-                                {% if storico_diagnosi.number == num %}
-                                    <span class="current">{{ num }}</span>
-                                {% else %}
-                                    <a href="?page={{ num }}">{{ num }}</a>
-                                {% endif %}
-                            {% endfor %}
-                    
-                            {% if storico_diagnosi.has_next %}
-                                <a class="next" href="?page={{ storico_diagnosi.next_page_number }}">Next</a>
-                            {% else %}
-                                <span class="next disabled">Next</span>
-                            {% endif %}
+                        <div class="row-table">
+                            <div class="row-cella">
+                                <p>certificati</p>
+                            </div>
+                            <div class="row-cella">
+                                <p>buona salute</p>
+                            </div>
+                            <div class="row-cella">
+                                <p>costituzione</p>
+                            </div>
+                            <div class="row-cella">
+                                <p>nota testuale</p>
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
+                            <div class="row-cella">
+                                <p></p>
+                            </div>
                         </div>
                     </div>
-
                 </div>
+                
+                <div class="pagination_tabella">
+                      
+                    {% if storico_page.has_previous %}
+                    <a class="previous" href="?page={{ storico_page.previous_page_number }}">Previous</a>
+                    {% else %}
+                    <span class="previous disabled">Previous</span>
+                    {% endif %}
+            
+                    {% for num in storico_page.paginator.page_range %}
+                    {% if storico_page.number == num %}
+                    <span class="current">{{ num }}</span>
+                    {% else %}
+                    <a href="?page={{ num }}">{{ num }}</a>
+                    {% endif %}
+                    {% endfor %}
+            
+                    {% if storico_page.has_next %}
+                    <a class="next" href="?page={{ storico_page.next_page_number }}">Next</a>
+                    {% else %}
+                    <span class="next disabled">Next</span>
+                    {% endif %}
+            
+                </div>
+                
             </div>
 
-            <!-- STORICO TERAPIE -->
-            <div class="card-container" style="margin-top: 2rem;">
-
-                <div class="sub-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0">Storico Terapie</h3>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Descrizione</th>
-                                    <th>Gravità</th>
-                                    <th>Data</th>
-                                    <th>Stato</th>
-                                    <th>Risolta</th>
-                                    <th>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody id="diagnosiTableBody">
-                                {% for diagnosi in storico_diagnosi %}
-                                    <tr data-id="{{ diagnosi.id }}">
-                                        <td class="td-id">{{ diagnosi.id }}</td>
-                                        <td class="td-descrizione">{{ diagnosi.descrizione }}</td>
-                                        <td class="td-gravita">
-                                            <span
-                                                class="badge {% if diagnosi.gravita == 1 %}lieve{% elif diagnosi.gravita == 2 %}moderata{% else %}grave{% endif %}">
-                                                {% if diagnosi.gravita == 1 %}Lieve{% elif diagnosi.gravita == 2 %}Moderata{% else %}Grave{% endif %}
-                                            </span>
-                                        </td>
-                                        <td class="td-data">{{ diagnosi.data_diagnosi|date:"d/m/Y" }}</td>
-                                        <td class="td-stato">{{ diagnosi.stato }}</td>
-                                        <td class="td-risolta">
-                                            {% if diagnosi.risolta %}
-                                                <span class="badge badge-success">✔</span>
-                                            {% else %}
-                                                <span class="badge badge-secondary">—</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="td-azioni">
-                                            <button onclick="compilaDiagnosi({{ diagnosi.id }})" class="btn edit">✎</button>
-                                            <button class="btn delete" data-id="{{ diagnosi.id }}">✖</button>
-                                        </td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="text-center">Nessuna terapia registrata.</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        <!-- Sezione paginazione -->
-                        <div class="pagination_tabella mb-3">
-                            {% if storico_diagnosi.has_previous %}
-                                <a class="previous" href="?page={{ storico_diagnosi.previous_page_number }}">Previous</a>
-                            {% else %}
-                                <span class="previous disabled">Previous</span>
-                            {% endif %}
-                    
-                            {% for num in storico_diagnosi.paginator.page_range %}
-                                {% if storico_diagnosi.number == num %}
-                                    <span class="current">{{ num }}</span>
-                                {% else %}
-                                    <a href="?page={{ num }}">{{ num }}</a>
-                                {% endif %}
-                            {% endfor %}
-                    
-                            {% if storico_diagnosi.has_next %}
-                                <a class="next" href="?page={{ storico_diagnosi.next_page_number }}">Next</a>
-                            {% else %}
-                                <span class="next disabled">Next</span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- STORICO TERAPIE -->
-            <div class="card-container" style="margin-top: 2rem;">
-
-                <div class="sub-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0">Storico Patologia</h3>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Descrizione</th>
-                                    <th>Gravità</th>
-                                    <th>Data</th>
-                                    <th>Stato</th>
-                                    <th>Risolta</th>
-                                    <th>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody id="diagnosiTableBody">
-                                {% for diagnosi in storico_diagnosi %}
-                                    <tr data-id="{{ diagnosi.id }}">
-                                        <td class="td-id">{{ diagnosi.id }}</td>
-                                        <td class="td-descrizione">{{ diagnosi.descrizione }}</td>
-                                        <td class="td-gravita">
-                                            <span
-                                                class="badge {% if diagnosi.gravita == 1 %}lieve{% elif diagnosi.gravita == 2 %}moderata{% else %}grave{% endif %}">
-                                                {% if diagnosi.gravita == 1 %}Lieve{% elif diagnosi.gravita == 2 %}Moderata{% else %}Grave{% endif %}
-                                            </span>
-                                        </td>
-                                        <td class="td-data">{{ diagnosi.data_diagnosi|date:"d/m/Y" }}</td>
-                                        <td class="td-stato">{{ diagnosi.stato }}</td>
-                                        <td class="td-risolta">
-                                            {% if diagnosi.risolta %}
-                                                <span class="badge badge-success">✔</span>
-                                            {% else %}
-                                                <span class="badge badge-secondary">—</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="td-azioni">
-                                            <button onclick="compilaDiagnosi({{ diagnosi.id }})" class="btn edit">✎</button>
-                                            <button class="btn delete" data-id="{{ diagnosi.id }}">✖</button>
-                                        </td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="text-center">Nessuna terapia registrata.</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        <!-- Sezione paginazione -->
-                        <div class="pagination_tabella mb-3">
-                            {% if storico_diagnosi.has_previous %}
-                                <a class="previous" href="?page={{ storico_diagnosi.previous_page_number }}">Previous</a>
-                            {% else %}
-                                <span class="previous disabled">Previous</span>
-                            {% endif %}
-                    
-                            {% for num in storico_diagnosi.paginator.page_range %}
-                                {% if storico_diagnosi.number == num %}
-                                    <span class="current">{{ num }}</span>
-                                {% else %}
-                                    <a href="?page={{ num }}">{{ num }}</a>
-                                {% endif %}
-                            {% endfor %}
-                    
-                            {% if storico_diagnosi.has_next %}
-                                <a class="next" href="?page={{ storico_diagnosi.next_page_number }}">Next</a>
-                            {% else %}
-                                <span class="next disabled">Next</span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                </div>
-            </div>
         </main>
-
-
     </body>
 </html>

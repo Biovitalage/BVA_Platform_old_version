@@ -18,3 +18,82 @@
 canvas {
     max-height: 300px;
 }
+
+
+
+
+/*  CARD BP, SUGAR, HEART, CHOLESTEROL */
+.dashboard {
+  margin-top: -1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: -1rem;
+}
+.card-graphic {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: 420px;
+  overflow: hidden;
+}
+.card-graphic .icon img {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 10px;
+}
+.card-graphic h3 {
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+  color: var(--contrast-color);
+}
+.card-graphic p {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+.container_chart_dashboard {
+  width: 100%;
+  height: 150px;
+}
+.card-graphic canvas {
+  width: 100%;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+.card-graphic .data {
+  width: 100%;
+}
+.card-graphic .data table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+}
+.card-graphic .data table tr {
+  display: flex;
+  justify-content: space-between;
+}
+.card-graphic .data table td {
+  text-align: left;
+  padding: 5px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

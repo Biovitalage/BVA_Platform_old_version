@@ -119,6 +119,120 @@
       </div>
     </div>
 
+    <!-- CARD BP, SUGAR, HEART, CHOLESTEROL -->
+    <div class="dashboard">
+
+                <div class="card-graphic" id="card-style">
+                    <div class="icon">
+                        <img src="{% static 'image/BP.png' %}" alt="BP Levels Icon">
+                    </div>
+                    <h3>Insulina</h3>
+                    <p>Ultime 3 visite</p>
+                    <div class="container_chart_dashboard">
+                        <canvas id="chart1"></canvas>
+                    </div>
+
+                    <div class="data">
+                        <table>
+                            <tr>
+                                <td>24/04/2024</td>
+                                <td>2</td>
+                            </tr>
+                            <tr>
+                                <td>16/04/2024</td>
+                                <td>4</td>
+                            </tr>
+                            <tr>
+                                <td>10/04/2024</td>
+                                <td>6</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-graphic" id="card-style">
+                    <div class="icon">
+                        <img src="{% static 'image/Sugar.png' %}" alt="Sugar Levels Icon">
+                    </div>
+                    <h3>Glicemia</h3>
+                    <p>Ultime 3 visite</p>
+                    <div class="container_chart_dashboard">
+                        <canvas id="chart2"></canvas>
+                    </div>
+                    <div class="data">
+                        <table>
+                            <tr>
+                                <td>24/04/2024</td>
+                                <td>110</td>
+                            </tr>
+                            <tr>
+                                <td>16/04/2024</td>
+                                <td>95</td>
+                            </tr>
+                            <tr>
+                                <td>10/04/2024</td>
+                                <td>140</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-graphic" id="card-style">
+                    <div class="icon">
+                        <img src="{% static 'image/Heart.png' %}" alt="Heart Rate Icon">
+                    </div>
+                    <h3>Emoglobina</h3>
+                    <p>Ultime 3 visite</p>
+                    <div class="container_chart_dashboard">
+                        <canvas id="chart3"></canvas>
+                    </div>
+                    <div class="data">
+                        <table>
+                            <tr>
+                                <td>24/04/2024</td>
+                                <td>22</td>
+                            </tr>
+                            <tr>
+                                <td>16/04/2024</td>
+                                <td>26</td>
+                            </tr>
+                            <tr>
+                                <td>10/04/2024</td>
+                                <td>28</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-graphic" id="card-style">
+                    <div class="icon">
+                        <img src="{% static 'image/Provetta.png' %}" alt="Cholesterol Icon">
+                    </div>
+                    <h3>Colesterolo</h3>
+                    <p>Ultime 3 visite</p>
+                    <div class="container_chart_dashboard">
+                        <canvas id="chart4"></canvas>
+                    </div>
+                    <div class="data">
+                        <table>
+                            <tr>
+                                <td>24/04/2024</td>
+                                <td>260</td>
+                            </tr>
+                            <tr>
+                                <td>16/04/2024</td>
+                                <td>280</td>
+                            </tr>
+                            <tr>
+                                <td>10/04/2024</td>
+                                <td>255</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+    </div>
+
+
     <div class="content-chart">
       <div class="charts-section">
         <div class="chart-container">
@@ -155,6 +269,63 @@
       window.emailCount = {{ emails|length }};
   </script>
 </body>
+
+<script>
+   function generateChart(ctx, data, label) {
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                labels: ["Giorno 1", "Giorno 2", "Giorno 3"],  
+                datasets: [{
+                    label: label,
+                    data: data,
+                    backgroundColor: "#3b255d2c",
+                    borderColor: "#3a255d",
+                    tension: 0.3,
+                    fill: true,
+                }],
+                },
+                options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } },
+                },
+            });
+        }
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+       // Chart 1: Livello BP
+            generateChart(
+            document.getElementById("chart1").getContext("2d"),
+            [2, 4, 6],
+            "Insulina"
+            );
+
+            // Chart 2: Glicemia (ultime 3 visite: 110,95,140)
+            generateChart(
+            document.getElementById("chart2").getContext("2d"),
+            [110, 95, 140],
+            "Glicemia"
+            );
+
+            // Chart 3: Emoglobina (ultime 3 visite: 22,26,28)
+            generateChart(
+            document.getElementById("chart3").getContext("2d"),
+            [22, 26, 28],
+            "Emoglobina"
+            );
+
+            // Chart 4: Colesterolo (ultime 3 visite: 260,280,255)
+            generateChart(
+            document.getElementById("chart4").getContext("2d"),
+            [260, 280, 255],
+            "Colesterolo"
+            );
+
+    })
+</script>
 
 <!-- Script per dati email -->
 <script id="emails-data" type="application/json">[]</script>

@@ -1,0 +1,1063 @@
+<!-- 
+    /CARTELLA PAZIENTE
+-->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Favicon -->
+    <link rel="sortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <title>BVA - Cartella Paziente</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cartellaPaziente.css' %}">
+    <link rel="stylesheet" href="{% static 'css/homePage.css' %}">
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    
+    <!-- CDN IMPORT -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Flip.min.js"></script>
+    <script src="https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+</head>
+
+<body>
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBar.html' %}
+
+    <main>
+        <!-- MENU TRACE -->
+        <div class="main-title-nav">
+
+            <div class="back-tittle">
+                <a id="back" href="{% url 'HomePage' %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+                <!-- <h2 class="main-welcome-title">
+                    <span>{{ persona.surname|title }}</span>
+                    <span>{{ persona.name|title }}</span> |
+                    <span>Età: {{ persona.chronological_age }}</span>
+                    {% if persona.phone and persona.email %}
+                    |
+                    <span class="phone_span">
+                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                        Telefono: {{ persona.phone }}
+                    </span> |
+                    <span class="email_span">
+                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                        Email: {{ persona.email }}
+                    </span>
+                    {% endif %}
+                </h2> -->
+            </div>
+        
+            <div class="main-menu-trace">
+                <a href="{% url 'HomePage' %}">
+                    <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                </a>
+                <p>»</p>
+                <p class="breadcrumb">Cartella Paziente</p>
+            </div>
+        
+        </div>  
+
+        <!-- MESSAGGIO DI SUCCESSO CON PUNTEGGIO -->
+        {% if success or errore %}
+        <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    setTimeout(() => {
+                        const modal = document.getElementById("modal_message");
+                        if (modal) {
+                            modal.style.transition = "opacity 0.3s ease";
+                            modal.style.opacity = "0";
+                            setTimeout(() => modal.remove(), 500); // rimuove dal DOM dopo fade out
+                        }
+                    }, 4000); // tempo in millisecondi prima che scompaia (4s)
+                });
+        </script>
+        {% endif %}
+
+        {% if success %}
+        <div class="success_message" id="modal_message">
+
+                <div class="header_message">
+                    <div class="contianer-title">
+                        <img src="{% static 'image/Success.png' %}" alt="">
+                        <p class="title_message">Success!</p>
+                    </div>
+                    <button class="close" onclick="closeModal()">x</button>
+                    
+                </div>
+
+                <p>I dati delle informazioni personali sono state correttamente aggiornate!</p>
+
+        </div>  
+        {% endif %}
+
+        <!-- MESSAGGIO ERRORE -->
+        {% if errore %}
+        <div class="erorre_message" id="modal_message">
+    
+                    <div class="header_message">
+                        <div class="contianer-title">
+                            <img src="{% static 'includes/images/unsuccess.png' %}" alt="">
+                            <p class="title_message_errore">Errore!</p>
+                        </div>
+                        <button class="close" onclick="closeModal()">x</button>
+                        
+                    </div>
+                    <p>Sembra che qualcosa sia andato storto.</p>
+                    <p style="margin-top: -1rem; color: #c74b5b; font-weight: bold;">X {{ errore }}</p>
+                
+        </div>
+        {% endif %}
+
+        <!-- Backdrop -->
+        <div class="backdrop-indici" id="backdropIndici"></div>
+        
+        <!-- Modale: Salute Cuore -->
+        {% include 'dynamic_templates/cartella_paziente/modale_salute_cuore.html' %}
+        <!-- Modale: Salute Renale -->
+        {% include 'dynamic_templates/cartella_paziente/modale_salute_del_rene.html' %}
+        <!-- Modale: Salute Epatica -->
+        {% include 'dynamic_templates/cartella_paziente/modale_salute_epatica.html' %}
+        <!-- Modale: Salute Cerebrale -->
+        {% include 'dynamic_templates/cartella_paziente/modale_salute_cerebrale.html' %}
+        <!-- Modale: Salute Ormonale -->
+        {% include 'dynamic_templates/cartella_paziente/modale_salute_ormonale.html' %}
+        <!-- Modale: Salute del Sangue -->
+        {% include 'dynamic_templates/cartella_paziente/modale_salute_del_sangue.html' %}
+        <!-- Modale: Salute del Sistema Immunitario -->
+        {% include 'dynamic_templates/cartella_paziente/modale_salute_del_sistema_immunitario.html' %}
+
+        <div class="backdrop-modale-note" id="backdropModaleNote"></div>
+
+        <!-- MODALE NOTE -->
+        <div class="modale-note" id="modale_note">
+            <form method="POST" action="{% url 'cartellaPaziente_note' persona.id %}">
+                {% csrf_token %}
+                <h3>Note Patologie Paziente</h3>
+
+                <textarea name="note_patologie" id="text_area" placeholder="{{ persona.note_patologie | default:'Inserisci qui la nota testuale' }}"></textarea>
+
+                <div class="modale-button">
+
+                    <button type="button" class="button" id="modify-btn-note">modify</button>
+
+                    <div class="sub-div-button">
+                        <button type="submit" class="button" id="save">save</button>
+                        <button type="button" class="button" id="close">close</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+
+        <!-- MODALE INFORMAZIONI PERSONALI -->
+        <div class="container-informazioni-personali">
+            
+            <form id="personaForm" method="POST" action="{% url 'cartella_paziente' persona.id %}">
+                {% csrf_token %}
+
+                <div class="container-title-modale">
+
+                    <div class="container-header-info">
+                        <div class="container-dati-anagrafici">
+                            <img src="{% static 'image/Dati_angrafici.png' %}" alt="">
+                            <h3>{{ persona.name }}</h3>
+                            <h3>{{ persona.surname }}</h3>
+                            <h3 class="extra-info">età: {{ persona.chronological_age }}</h3>
+                            {% if persona.phone %}
+                                <h3 class="extra-info">telefono: {{ persona.phone }}</h3>
+                            {% endif %}
+                        </div>
+                    
+                        <button type="button" class="button-patologia"><span>patologia:</span></button>
+                        
+                    </div>
+        
+                    <div class="header-tools">
+                        <button type="button" id="modale-note">
+                            <img src="{% static 'image/Note.png' %}" alt="Note" title="Note">
+                        </button>
+                    
+                        <a href="{% static 'includes/pdfTemplates/Privacy&Policy.pdf' %}" download class="privacy-icon">
+                            <img src="data:image/png;base64,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" alt="data-protection" title="Privacy & Policy">
+                        </a>      
+                        
+                        <button type="button" class="button" id="edit_btn">
+                            <span class="button__icon-wrapper">
+                                <!-- Edita (normale) -->
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    width="18"
+                                    class="button__icon-svg">
+                                <path d="M4 17.25V21h3.75L18.81 9.94l-3.75-3.75L4 17.25z"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"/>
+                                <path d="M20.71 7.04a1.003 1.003 0 0 0-1.42 0l-2.34 2.34 3.75 3.75 2.34-2.34a1.003 1.003 0 0 0 0-1.42l-2.33-2.33z"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"/>
+                                </svg>
+
+                                <!-- Edita (copy) -->
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    width="18"
+                                    class="button__icon-svg button__icon-svg--copy">
+                                <path d="M4 17.25V21h3.75L18.81 9.94l-3.75-3.75L4 17.25z"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"/>
+                                <path d="M20.71 7.04a1.003 1.003 0 0 0-1.42 0l-2.34 2.34 3.75 3.75 2.34-2.34a1.003 1.003 0 0 0 0-1.42l-2.33-2.33z"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="btn-text">Edita</span>
+                        </button>
+
+                        <!-- Bottone Annulla (nascosto di default) -->
+                        <button type="button" id="cancel_btn" class="button hidden">
+                            <span class="btn-text">Annulla</span>
+                            <!-- se vuoi, aggiungi un’icona SVG per “X” o “Chiudi” -->
+                        </button>
+                        
+                        <button type="button" class="button" id="base_btn" onclick="window.location.href='{% url 'dati_base' persona.id %}'">
+                            <span class="button__icon-wrapper">
+                        
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg">
+                                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+
+                        
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg button__icon-svg--copy">
+                                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+
+                            </span>
+                            Dati Base Paziente
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="container_box">
+                    <div class="grid-container">
+                        <div class="field">
+                        <p class="field-title">Età:</p>
+                        <input class="input-disabled" type="text" name="codice_fiscale"
+                            value="{{ persona.chronological_age |default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Codice Fiscale:</p>
+                        <input class="input-disabled" type="text" name="codice_fiscale"
+                            value="{{ persona.codice_fiscale|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Data di Nascita:</p>
+                        <input class="input-disabled" type="text" name="dob"
+                            value="{{ persona.dob|date:'d/m/Y'|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Città di nascita:</p>
+                        <input class="input-disabled" type="text" name="place_of_birth"
+                            value="{{ persona.place_of_birth|title|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Città di residenza:</p>
+                        <input class="input-disabled" type="text" name="residence"
+                            value="{{ persona.residence|title|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">CAP:</p>
+                        <input class="input-disabled" type="text" name="cap"
+                            value="{{ persona.cap|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Provincia:</p>
+                        <input class="input-disabled" type="text" name="province"
+                            value="{{ persona.province|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Genere:</p>
+                        <input class="input-disabled" type="text" name="gender"
+                            value="{{ persona.gender|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    </div>
+
+                    <div class="other_container">
+                    <div class="subCard-container">
+                        <!-- Dottore Associato -->
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Stetoscopio.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p class="mb-1">Dottore Associato</p>
+                            {% if is_secretary %}
+                            <span id="associate-display" class="type-two">
+                                {{ persona.dottore.nome|title }} {{ persona.dottore.cognome|title }}
+                            </span>
+                            <select id="associate-select" name="dottore" class="type-two" style="display:none">
+                                <option value="">Seleziona Dottore</option>
+                                {% for doc in dottori %}
+                                <option value="{{ doc.id }}"
+                                    {% if persona.dottore and persona.dottore.id == doc.id %}selected{% endif %}>
+                                    {{ doc.nome|title }} {{ doc.cognome|title }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% else %}
+                            <span id="associate-display" class="type-two input-disabled">
+                                {{ persona.dottore.nome|title }} {{ persona.dottore.cognome|title }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        </div>
+
+                        <!-- Visita Recente -->
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Ospedale.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Visita Recente</p>
+                            <span class="type-two cursor-not-allowed">
+                            {% if ultimo_appuntamento %}{{ ultimo_appuntamento.data|date:"d/m/Y" }}
+                            {% else %}non presente.{% endif %}
+                            </span>
+                        </div>
+                        </div>
+
+                        <!-- Prossima Visita -->
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Calendario.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Prossima Visita</p>
+                            <span class="type-two cursor-not-allowed">
+                            {% if prossimo_appuntamento %}{{ prossimo_appuntamento.data|date:"d/m/Y" }}
+                            {% else %}non presente.{% endif %}
+                            </span>
+                        </div>
+                        </div>
+
+                        <!-- Gruppo Sanguigno -->
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Blood.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Gruppo Sanguigno</p>
+                            <input class="input-disabled type-two" type="text" name="blood_group"
+                                value="{{ persona.blood_group|default:'non inserito' }}" disabled>
+                        </div>
+                        </div>
+                    </div>
+
+                    <div class="Contact-Container">
+                        <!-- Email -->
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Email_Violet.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Email</p>
+                            <input class="input-disabled type-two" type="text" name="email"
+                                value="{{ persona.email|default:'non inserito' }}" disabled>
+                        </div>
+                        </div>
+
+                        <!-- Telefono -->
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Phone.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Telefono</p>
+                            <input class="input-disabled type-two" type="text" name="phone"
+                                value="{{ persona.phone|default:'non inserito' }}" disabled>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+
+        <div class="container-scrollable">
+
+            <div class="container-diario-piano">
+                <div class="terapeutico-card">
+
+                    <div class="terapeutico-body">
+
+                        <div class="terapeutico-text">
+                            <h3>Diario Clinico</h3>
+                            <p>
+                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ipsum impedit velit libero perspiciatis. Qui, a nihil earum quasi impedit praesentium quia temporibus magnam modi minima libero delectus nam repudiandae amet?
+                            </p>
+                            <a href="{% url 'diario_clinico' persona.id %}" class="btn-link">
+                                Vai alla sezione <span class="arrow">➔</span>
+                            </a>
+                        </div>
+
+                        <div class="terapeutico-image">
+                            <img src="{% static 'image/DiarioClinico.png' %}" alt="Piano Terapeutico">
+                        </div>
+
+                    </div>
+                </div>
+                
+                <div class="terapeutico-card">
+
+                    <div class="terapeutico-body">
+
+                        <div class="terapeutico-text">
+                            <h3>Piano Terapeutico</h3>
+                            <p>
+                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ipsum impedit velit libero perspiciatis. Qui, a nihil earum quasi impedit praesentium quia temporibus magnam modi minima libero delectus nam repudiandae amet?
+                            </p>
+                            <a href="{% url 'piano_terapeutico' persona.id %}" class="btn-link">
+                                Vai alla sezione <span class="arrow">➔</span>
+                            </a>
+                        </div>
+
+                        <div class="terapeutico-image">
+                            <img src="{% static 'image/PianoTerapeutico.png' %}" alt="Piano Terapeutico">
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTAINER INFORMAZIONI PERSONALI -->
+            <div class="container-flex-layout">
+                
+                <div class="container-info">
+
+                    <div class="container-titolo">
+                        <img src="{% static 'image/Info.png' %}" alt="">
+                        <h3>Informazioni Generali</h3>
+                    </div>
+                    
+                </div>
+
+                <div class="container-storico">
+
+                    <div class="card-storico" onclick="window.location.href='{% url 'storico' persona.id %}'">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Storico_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'storico' persona.id %}">
+                        <span class="freccia">&larr;</span> Storico
+                        </a>
+                    </div>
+
+                    <div class="card-storico" onclick="window.location.href='{% url 'diagnosi' persona.id %}'">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Diagnosi_color.png' %}" alt="">
+                        </div>
+                        
+                        <a href="{% url 'diagnosi' persona.id %}">
+                        <span class="freccia">&larr;</span> Diagnosi
+                        </a>
+                    </div>
+
+                    <div class="card-storico">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Terapie_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'terapie' persona.id %}">
+                        <span class="freccia">&larr;</span> Terapie
+                        </a>
+                    </div>
+
+                    <div class="card-storico">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Esame_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'esami' persona.id %}">
+                        <span class="freccia">&larr;</span> Esami
+                        </a>
+                    </div>
+
+                    <div class="card-storico">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Visite_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'visite' persona.id %}">
+                        <span class="freccia">&larr;</span> Visite
+                        </a>
+                    </div>
+
+                    <div class="card-storico">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Allegati_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'allegati' persona.id %}">
+                        <span class="freccia">&larr;</span> Allegati
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+        
+            
+
+            
+        </div>        
+    </main>
+
+
+
+    <!-- SCRIPT SCORE -->
+    <script>
+        // Anima un singolo cerchio di progresso
+        function animateClock(clockId, percentageId, targetPercentage) {
+            const clock = document.getElementById(clockId);
+            const pctEl = document.getElementById(percentageId);
+            if (!clock || !pctEl) return;
+
+            const radius = clock.r.baseVal.value;
+            const circumference = 2 * Math.PI * radius;
+            const pct = Math.min(Math.max(targetPercentage, 0), 100);
+            const offset = ((100 - pct) / 100) * circumference;
+
+            // 1) imposta dasharray
+            clock.style.strokeDasharray = `${circumference} ${circumference}`;
+
+            // 2) disabilita la transizione per il "reset"
+            clock.style.transition = 'none';
+            clock.style.strokeDashoffset = circumference;
+
+            // 3) forza il reflow per essere sicuri che il reset sia applicato subito
+            clock.getBoundingClientRect();
+
+            // 4) con un tick riattiva la transizione e porta al valore corretto
+            setTimeout(() => {
+                clock.style.transition = 'stroke-dashoffset 0.35s ease-in-out';
+                clock.style.strokeDashoffset = offset;
+            }, 50);
+
+            // 5) aggiorna la percentuale testuale
+            pctEl.textContent = `${pct}%`;
+        }
+
+      
+        // Genera i grafici (invariato)
+       
+
+      
+        // Al caricamento della pagina, anima tutti i clock e genera i grafici
+        document.addEventListener("DOMContentLoaded", () => {
+          animateClock("heartClock",    "heartPercentage",    {{ score.Cuore }});
+          animateClock("kidneyClock",   "kidneyPercentage",   {{ score.Reni }});
+          animateClock("liverClock",    "liverPercentage",    {{ score.Fegato }});
+          animateClock("brainClock",    "brainPercentage",    {{ score.Cervello }});
+          animateClock("hormoneClock",  "hormonePercentage",  {{ score.Sistema_Ormonale }});
+          animateClock("bloodClock",    "bloodPercentage",    {{ score.Sangue }});
+          animateClock("immuneClock",   "immunePercentage",   {{ score.Sistema_Immunitario }});
+          animateClock("muscleClock",   "musclePercentage",   75);
+      
+            // Chart 1: Livello BP
+            generateChart(
+            document.getElementById("chart1").getContext("2d"),
+            [2, 4, 6],
+            "Insulina"
+            );
+
+            // Chart 2: Glicemia (ultime 3 visite: 110,95,140)
+            generateChart(
+            document.getElementById("chart2").getContext("2d"),
+            [110, 95, 140],
+            "Glicemia"
+            );
+
+            // Chart 3: Emoglobina (ultime 3 visite: 22,26,28)
+            generateChart(
+            document.getElementById("chart3").getContext("2d"),
+            [22, 26, 28],
+            "Emoglobina"
+            );
+
+            // Chart 4: Colesterolo (ultime 3 visite: 260,280,255)
+            generateChart(
+            document.getElementById("chart4").getContext("2d"),
+            [260, 280, 255],
+            "Colesterolo"
+            );
+        });
+    </script>
+      
+    <!-- IMPORT JS PRE DOBY CLOSE TAG -->
+    <script src="{% static 'js/cartellaPaziente.js' %}" type="module"></script>
+    
+    <!--  CLOSE MODALE MESSAGE SUCCESS -->
+    <script>
+        function closeModal(){
+            const modale = document.getElementById('modal_message');
+            modale.style.display = 'none';
+        }
+    </script>
+    <!-- SCRIPT CAPACITA' VITALE -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const wave1 = "M0,40 C150,100 350,-20 500,60 L500,100 L0,100 Z";
+            const wave2 = "M0,60 C150,40 350,120 500,30 L500,100 L0,100 Z";
+        
+            document.querySelectorAll(".capacita_vitale").forEach(card => {
+                // Ottieni il punteggio, oppure assegna 1 se mancante (10%)
+                const punteggio = parseFloat(card.dataset.punteggio);
+                const punteggioFinale = isNaN(punteggio) ? 1 : punteggio;
+        
+                // Se il punteggio è maggiore di 10, è in base 100, altrimenti in base 10
+                const percentuale = punteggioFinale > 10 
+                    ? Math.min(punteggioFinale, 100) 
+                    : Math.min((punteggioFinale / 10) * 100, 100);
+        
+                const backdrop = card.querySelector(".backdrop-riempimento");
+                const wavePath = card.querySelector(".wavePath");
+        
+                if (!wavePath || !backdrop) return;
+        
+                // Animazione ondina
+                gsap.to(wavePath, {
+                    duration: 2,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut",
+                    attr: { d: wave2 }
+                });
+        
+                // Altezza riempimento
+                gsap.to(backdrop, {
+                    duration: 1.8,
+                    height: `${percentuale}%`,
+                    ease: "power2.out"
+                });
+            });
+        });
+    </script>
+
+    <!-- CDN import -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.7.0/build/index.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.0.2/docx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+   
+    <!-- IS SECRETARY -->
+    <script>
+        window.isSecretary = {{ is_secretary|yesno:"true,false" }};
+    </script> 
+
+
+
+</body>
+</html>
+
+
+
+
+
+
+<!-- MODALE INFORMAZIONI
+<div class="modal-overlay" id="modal-overlay">
+            <div id="modal-content" class="modal-content">
+                <form id="personaForm" method="POST" action="{% url 'cartella_paziente' persona.id %}">
+                {% csrf_token %}
+
+                <div class="container-title-modale">
+                    <div class="container-titolo">
+                        <img src="{% static 'image/Dati_angrafici.png' %}" alt="">
+                        <h3>Dati Anagrafici</h3>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="Btn-modify">
+                        <span class="btn-text">Edita</span>
+                        <svg class="svg" viewBox="0 0 512 512">
+                            <path d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"/>
+                        </svg>
+                        </button>
+                        <button type="button" class="button btn-cancel">
+                        <span class="btn-text">Chiudi</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="container_box">
+                    <div class="grid-container">
+                    <div class="field">
+                        <p class="field-title">Codice Fiscale:</p>
+                        <input class="input-disabled" type="text" name="codice_fiscale"
+                            value="{{ persona.codice_fiscale|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Data di Nascita:</p>
+                        <input class="input-disabled" type="text" name="dob"
+                            value="{{ persona.dob|date:'d/m/Y'|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Città di nascita:</p>
+                        <input class="input-disabled" type="text" name="place_of_birth"
+                            value="{{ persona.place_of_birth|title|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Città di residenza:</p>
+                        <input class="input-disabled" type="text" name="residence"
+                            value="{{ persona.residence|title|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">CAP:</p>
+                        <input class="input-disabled" type="text" name="cap"
+                            value="{{ persona.cap|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Provincia:</p>
+                        <input class="input-disabled" type="text" name="province"
+                            value="{{ persona.province|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    <div class="field">
+                        <p class="field-title">Genere:</p>
+                        <input class="input-disabled" type="text" name="gender"
+                            value="{{ persona.gender|default:'non inserito' }}"
+                            disabled>
+                    </div>
+                    </div>
+
+                    <div class="other_container">
+                    <div class="subCard-container">
+                        
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Stetoscopio.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p class="mb-1">Dottore Associato</p>
+                            {% if is_secretary %}
+                            <span id="associate-display" class="type-two">
+                                {{ persona.dottore.nome|title }} {{ persona.dottore.cognome|title }}
+                            </span>
+                            <select id="associate-select" name="dottore" class="type-two" style="display:none">
+                                <option value="">Seleziona Dottore</option>
+                                {% for doc in dottori %}
+                                <option value="{{ doc.id }}"
+                                    {% if persona.dottore and persona.dottore.id == doc.id %}selected{% endif %}>
+                                    {{ doc.nome|title }} {{ doc.cognome|title }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% else %}
+                            <span id="associate-display" class="type-two input-disabled">
+                                {{ persona.dottore.nome|title }} {{ persona.dottore.cognome|title }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        </div>
+
+                     
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Ospedale.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Visita Recente</p>
+                            <span class="type-two cursor-not-allowed">
+                            {% if ultimo_appuntamento %}{{ ultimo_appuntamento.data|date:"d/m/Y" }}
+                            {% else %}non presente.{% endif %}
+                            </span>
+                        </div>
+                        </div>
+
+                     
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Calendario.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Prossima Visita</p>
+                            <span class="type-two cursor-not-allowed">
+                            {% if prossimo_appuntamento %}{{ prossimo_appuntamento.data|date:"d/m/Y" }}
+                            {% else %}non presente.{% endif %}
+                            </span>
+                        </div>
+                        </div>
+
+                  
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Blood.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Gruppo Sanguigno</p>
+                            <input class="input-disabled type-two" type="text" name="blood_group"
+                                value="{{ persona.blood_group|default:'non inserito' }}" disabled>
+                        </div>
+                        </div>
+                    </div>
+
+                    <div class="Contact-Container">
+                   
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Email_Violet.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Email</p>
+                            <input class="input-disabled type-two" type="text" name="email"
+                                value="{{ persona.email|default:'non inserito' }}" disabled>
+                        </div>
+                        </div>
+
+                  
+                        <div class="card-subcard">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Phone.png' %}" alt="">
+                        </div>
+                        <div class="container-input-info">
+                            <p>Telefono</p>
+                            <input class="input-disabled type-two" type="text" name="phone"
+                                value="{{ persona.phone|default:'non inserito' }}" disabled>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                </form>
+            </div>
+</div>
+
+
+SCRIPT JS PER MODALE
+<script type="module">
+  import showAlert from "{% static 'js/components/showAlert.js' %}";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    gsap.registerPlugin();
+
+    const btnOpen   = document.querySelector(".button-view-all");
+    const overlay   = document.getElementById("modal-overlay");
+    const modal     = document.getElementById("modal-content");
+    const form      = document.getElementById("personaForm");
+    const btnEdit   = modal.querySelector(".Btn-modify");
+    const btnCancel = modal.querySelector(".btn-cancel");
+
+    let isOpen = false, isEditing = false;
+
+    // Funzione per aprire modal
+    function openModal() {
+      // blocco scroll
+      document.body.style.overflow = "hidden";
+      overlay.classList.add("show");
+
+      // animazione di “risucchio”
+      const fromRect = btnOpen.getBoundingClientRect();
+      const toRect   = modal.getBoundingClientRect();
+      const dx = fromRect.left + fromRect.width/2  - (toRect.left + toRect.width/2);
+      const dy = fromRect.top  + fromRect.height/2 - (toRect.top  + toRect.height/2);
+
+      gsap.from(modal, {
+        x: dx, y: dy, scale: 0,
+        duration: 0.5, ease: "power2.inOut"
+      });
+
+      isOpen = true;
+    }
+
+    // Funzione per chiudere modal
+    function closeModal() {
+      const fromRect = btnOpen.getBoundingClientRect();
+      const toRect   = modal.getBoundingClientRect();
+      const dx = fromRect.left + fromRect.width/2  - (toRect.left + toRect.width/2);
+      const dy = fromRect.top  + fromRect.height/2 - (toRect.top  + toRect.height/2);
+
+      gsap.to(modal, {
+        x: dx, y: dy, scale: 0,
+        duration: 0.5, ease: "power2.inOut",
+        onComplete() {
+          overlay.classList.remove("show");
+          document.body.style.overflow = "auto";
+          gsap.set(modal, { clearProps: "all" });
+          // reset editing mode
+          if (isEditing) {
+            toggleEditMode(false);
+          }
+        }
+      });
+
+      isOpen = false;
+    }
+
+    // Attacco evento al bottone “Mostra di più”
+    btnOpen.addEventListener("click", () => {
+      if (!isOpen) openModal();
+      else          closeModal();
+    });
+
+    // Chiudi cliccando fuori
+    overlay.addEventListener("click", e => {
+      if (e.target === overlay && isOpen) {
+        closeModal();
+      }
+    });
+
+    // Toggle edit/save
+    function toggleEditMode(enable) {
+      const inputs = form.querySelectorAll(".input-disabled");
+      if (enable) {
+        inputs.forEach(i => { i.disabled = false; i.classList.add("editing"); });
+        btnEdit.querySelector(".btn-text").textContent = "Salva";
+        isEditing = true;
+      } else {
+        inputs.forEach(i => { i.disabled = true; i.classList.remove("editing"); });
+        btnEdit.querySelector(".btn-text").textContent = "Edita";
+        isEditing = false;
+      }
+    }
+
+    // Edita / Salva
+    btnEdit.addEventListener("click", e => {
+      e.preventDefault();
+      if (!isEditing) {
+        toggleEditMode(true);
+      } else {
+        form.submit();
+      }
+    });
+
+    // Annulla
+    btnCancel.addEventListener("click", e => {
+      e.preventDefault();
+      closeModal();
+    });
+  });
+    </script>
+
+
+
+
+
+  <!-- <div class="eta-container">
+                        <a href="{% url 'eta_biologica' persona.id %}" style="text-decoration: none; color: inherit;" title="Età Biologica">
+                            <h3>Età Biologica</h3>
+
+                            <script>
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    const crono = document.getElementById('crono');
+                                    const biologica = document.getElementById('biologica');
+                                
+                                    if (crono && biologica) {
+                                        const percentuale_crono = parseInt(crono.textContent);
+                                        const percentuale_biologica = parseInt(biologica.textContent); 
+                                
+                                        const div_crono = document.querySelector('.cronologic-age');
+                                        const div_biologica = document.querySelector('.biologic-age');
+                                
+                                        div_crono.style.left = `${percentuale_crono}%`;
+                                        div_biologica.style.left = `${percentuale_biologica}%`;
+                                
+                                      
+                                        if (percentuale_biologica < percentuale_crono) {
+                                            div_biologica.classList.add('freccia-up');
+                                        } else if (percentuale_biologica > percentuale_crono) {
+                                            div_biologica.classList.add('freccia-down');
+                                        } else {
+                                            div_biologica.classList.add('freccia-equal');
+                                        }
+                                    } else {
+                                        console.warn("Elemento 'crono' o 'biologica' non trovato nel DOM.");
+                                    }
+                                });
+                            </script>
+   
+                            <div class="lineaContainer">
+                               <p class="estremoInferiore">0</p>
+    
+                                <div class="cronologic-age">
+                                    <img src="{% static 'image/Eta_Cronologica.png' %}" alt="">
+                                    <p id="crono">{{ persona.chronological_age }}</p>      
+                                </div>
+                                
+                                <div class="biologic-age">
+                                    <img src="{% static 'image/Eta_Biologica.png' %}" alt="" style="margin-top: 15px;"> 
+                                    <p id="biologica" style="margin-top: 5px; margin-bottom: 0px;">{{ dati_estesi_ultimo_referto.biological_age }}</p>
+                                </div>
+    
+                                <p class="estremoSuperiore">100</p>
+                            </div>
+
+                            <div class="legenda">
+                                <div class="subcontainer-legenda">
+                                    <img src="{% static 'image/Eta_Biologica.png' %}" alt="">
+                                    <p>Età Biologica</p>
+                                </div>
+                            
+                                <div class="subcontainer-legenda">
+                                    <img src="{% static 'image/Eta_Cronologica.png' %}" alt="" >
+                                    <p>Età Cronologica</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>  -->     
+
+                    
+
+
+
+
+
+
+
+
+
+
+-->
