@@ -424,7 +424,7 @@
   margin: auto;
   display: flex;
   gap: 10px;
-  height: 300px;
+  height: 360px;
   margin-top: 1rem;
 }
 .container-list{
@@ -441,7 +441,7 @@
   background-color: white;
   border: 1px solid #DDD;
   box-shadow: 1px 1px 8px 2px rgba(0, 0, 0, 0.05);
-  height: 200px;
+  height: 240px;
   overflow: auto;
   margin-top: 1.5rem;
   border-radius: 4px;
@@ -476,13 +476,10 @@
 
 /* STYLE DIARIO CLINICO*/
 .container-tabella{
-  width: 98%;
   background-color: var(--card-color);
   border-radius: 8px;
-  margin: auto;
-  height: 500px;
-  margin-top: 1rem;
   padding: 20px;
+  height: 360px;
 }
 .header-container{
   width: 100%;
@@ -515,15 +512,16 @@
   background-color: var(--contrast-color)!important;
   color: white;
 }
+
+
 .container-content{
   background-color: white;
-  height: 350px;
   border-radius: 8px;
   margin-top: 1rem;
   box-shadow: 1px 1px 8px 4px rgba(0,0,0,0.05);
   border: 1px solid #DDD;
   display: grid;
-  grid-template-rows: 15% 85%;
+  grid-template-rows: 20% 80%;
 }
 
 
@@ -531,11 +529,11 @@
 /* STYLE TABELLA */
 .container-table{
   display: grid;
-  grid-template-rows: repeat(6, 1fr);
+  grid-template-rows: repeat(3, 1fr);
 }
 .header-table{
   display: grid;
-  grid-template-columns: 20% 40% 20% 20%;
+  grid-template-columns: 15% 45% 20% 20%;
   border-radius: 8px 8px 0px 0px;
   background-color: var(--contrast-color-shadow);
   border-bottom: 1px solid #DDD;
@@ -557,7 +555,7 @@
 }
 .row-table{
   display: grid;
-  grid-template-columns: 20% 40% 20% 20%;
+  grid-template-columns: 15% 45% 20% 20%;
 }
 .row-cella{
   display: flex;
