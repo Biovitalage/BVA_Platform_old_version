@@ -634,13 +634,13 @@ class AppointmentViewHome(LoginRequiredMixin, View):
 class AppuntamentiView(LoginRequiredMixin,View):
     def get(self, request):
         profile = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-        is_secretary = profile.isSecretary
+        role = get_user_role(request)
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
 
         # se può scegliere, passiamo la lista completa
-        dottori = UtentiRegistratiCredenziali.objects.all() if is_secretary else None
+        dottori = UtentiRegistratiCredenziali.objects.all() if role else None
 
-        if is_secretary:
+        if role:
             persone = (
                 TabellaPazienti.objects.all()
                 .order_by(
@@ -650,7 +650,7 @@ class AppuntamentiView(LoginRequiredMixin,View):
             )
 
         # nella tua view:
-        if not is_secretary:
+        if not role:
             persone = (
                 TabellaPazienti.objects
                 .filter(dottore=dottore)
@@ -660,10 +660,10 @@ class AppuntamentiView(LoginRequiredMixin,View):
                 )
             )
 
-        if is_secretary:
+        if role:
             appuntamenti = Appointment.objects.all().order_by('-id')
 
-        if not is_secretary:
+        if not role:
             appuntamenti = Appointment.objects.filter(dottore=dottore).order_by('-id')
 
 
@@ -682,7 +682,7 @@ class AppuntamentiView(LoginRequiredMixin,View):
         visita = Appointment._meta.get_field('visita').choices
 
         context = {
-            'is_secretary': is_secretary,
+            'is_secretary': role,
             'dottori': dottori,
             'dottore': dottore,
             'persone': persone,

@@ -337,7 +337,7 @@
 /* STILE FIELD */
 .grid-container{
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 20px;
 }
 .field {
@@ -779,8 +779,6 @@
 
 
 /* STYLE DA SISTEMARE */
-
-
 .eta-container{
   width: 35%;
   box-shadow: 1px 1px 8px 1px rgba(0, 0, 0, 0.1);
@@ -1232,11 +1230,9 @@ strong {
   width: 40px;
   transition: transform 0.3s ease-in-out;
 }
-
 .riga-container a img:hover {
   transform: scale(1.1);
 }
-
 #btnTabellaPrescrizioni{
   background: none;
   border: none;
@@ -1365,8 +1361,6 @@ strong {
 .button-view-all {
   position: relative;
 }
-
-
 #card-style{
   height: 680px;
 }
@@ -1377,6 +1371,120 @@ strong {
 
 
 
+
+
+
+/* STILE STORICO */
+.container-storico{
+  width: 98%;
+  margin: auto;
+  border-radius: 8px;
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+.card-storico{
+  background-color: white;
+  border: 1px solid #ddd;
+  height: 120px;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 1px 1px 8px 1px rgba(0, 0, 0, 0.05);
+  margin-top: 1rem;
+}
+.card-storico:hover{
+  cursor: pointer;
+}
+.card-storico img{
+  width: 40px;
+  height: 40px;
+}
+.card-storico a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; 
+  color: #808080;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  font-size: 20px;
+  font-weight: bold;
+}
+.card-storico .freccia {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  color: var(--contrast-color);
+}
+.card-storico:hover a {
+  color: var(--contrast-color);
+}
+.card-storico:hover .freccia {
+  opacity: 1;
+  transform: translateX(0);
+}
+.card-storico a span {
+  transition: margin-left 0.3s ease;
+}
+.card-storico:hover a {
+  margin-left: 5px;
+}
+
+
+/* PERSONAL INFORMATION CARD STYLE*/
+.container-flex-layout{
+  margin-top: 20px !important;
+  margin-bottom: 20px !important;
+  background-color: var(--card-color);
+  width: 98%;
+  margin: auto;
+  border-radius: 8px;
+  height: 250px;
+}
+.container-info{
+  background-color: var(--contrast-color-shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 1px 1px 8px 1px rgba(0, 0, 0, 0.05);
+  padding: 10px 5px;
+/*   border-bottom: 2px solid #505050; */
+}
+.container-titolo{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 15px;
+  padding: 5px 20px;
+}
+.container-titolo h3 {
+  color: var(--contrast-color);
+  font-size: 25px;
+  margin-top: 10px;
+}
+.container-titolo img{
+  width: 40px;
+  height: 40px;
+}
+.header-tools{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-right: 1rem;
+}
+.header-tools a img{
+  width: 40px;
+  height: 40px;
+}
+.header-tools button{
+  height: 2.5rem;
+  border-radius: 8px;
+}
 
 
 

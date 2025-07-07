@@ -107,10 +107,6 @@
           <img src="{% static 'image/Configurazione.png' %}" alt="icon-Configurazione" />
         </a>
 
-        <a href="{% url 'statistiche' %}" title="Statistiche" data-section="Statistiche">
-          <img src="{% static 'image/Statistiche.png' %}" alt="icon-statistiche" />
-        </a>
-        
       </div>
 
       <div class="main-menu-trace" title="Home Page">
@@ -181,7 +177,7 @@
           </div>
 
           <div class="action-card">
-            <div class="action-card-image">
+            <div class="action-card-image" onclick="window.location.href='{% url 'statistiche' %}'">
               <img src="{% static 'image/Statistiche_Colorato.png' %}" alt="">
             </div>
             <p>Statistiche</p>

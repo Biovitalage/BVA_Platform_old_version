@@ -56,13 +56,26 @@
                     <button title="Prescrione certificati"><img src="{% static 'image/Certificato.png' %}" alt=""></button> <!-- certificati -->
                 </div>
             
-                <div class="main-menu-trace">
-                    <a href="{% url 'HomePage' %}">
-                        <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
-                    </a>
-                    <p>»</p>
-                    <p class="breadcrumb">Cartella Paziente</p>
+                <div class="tools-container-left-side" style="display: flex; justify-content: center; align-items: center; width: 28rem">
+
+                    <div class="tools-menu-trace">   
+                
+                        <button title="Prescrione esami"><img src="{% static 'image/Esame_grey.png' %}" alt=""></button> <!-- esami -->
+                        <button title="Prescrione farmaci"><img src="{% static 'image/Farmaci.png' %}" alt=""></button> <!-- farmaci -->
+                        <button title="Prescrione libera"><img src="{% static 'image/Foglio.png' %}" alt=""></button> <!-- libera -->
+                    </div>
+
+                    <div class="main-menu-trace">
+                        <a href="{% url 'HomePage' %}">
+                            <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                        </a>
+                        <p>»</p>
+                        <p class="breadcrumb">Cartella Paziente</p>
+                    </div>
+
                 </div>
+
+                
             </div>  
 
             <!-- MESSAGGIO DI SUCCESSO CON PUNTEGGIO -->
@@ -270,16 +283,16 @@
                                 <p>{{ persona.gender|default:'non inserito' }}</p>
                             </div>
 
-                            <div class="field">
+                            <!-- <div class="field">
                                 <p class="field-title">Gruppo Sanguigno:</p>
                                 <p>{{ persona.blood_group|default:'non inserito' }}</p>
-                            </div>
+                            </div> -->
                         </div>
 
                         <div class="footer-container">
                             <div class="subCard-container">
                             
-                                <div class="card-subcard">
+                                <!-- <div class="card-subcard">
 
                                     <div class="img-circle-container">
                                         <img src="{% static 'image/Stetoscopio.png' %}" alt="">
@@ -312,20 +325,20 @@
 
                                     </div>
 
-                                </div>
+                                </div> -->
 
-                                <div class="card-subcard">
-                                <div class="img-circle-container">
-                                    <img src="{% static 'image/Ospedale.png' %}" alt="">
-                                </div>
-                                <div class="container-input-info">
-                                    <p>Visita Recente</p>
-                                    <span class="type-two cursor-not-allowed">
-                                    {% if ultimo_appuntamento %}{{ ultimo_appuntamento.data|date:"d/m/Y" }}
-                                    {% else %}non presente.{% endif %}
-                                    </span>
-                                </div>
-                                </div>
+                                <!-- <div class="card-subcard">
+                                    <div class="img-circle-container">
+                                        <img src="{% static 'image/Ospedale.png' %}" alt="">
+                                    </div>
+                                    <div class="container-input-info">
+                                        <p>Visita Recente</p>
+                                        <span class="type-two cursor-not-allowed">
+                                        {% if ultimo_appuntamento %}{{ ultimo_appuntamento.data|date:"d/m/Y" }}
+                                        {% else %}non presente.{% endif %}
+                                        </span>
+                                    </div>
+                                </div> -->
 
                                 <div class="card-subcard">
                                 <div class="img-circle-container">
@@ -560,6 +573,80 @@
                 </div>
             </div>
 
+            <!-- CONTAINER STORICO -->
+            <div class="container-flex-layout">
+                
+                <div class="container-info">
+
+                    <div class="container-titolo">
+                        <img src="{% static 'image/Info.png' %}" alt="">
+                        <h3>Informazioni Generali</h3>
+                    </div>
+                    
+                </div>
+
+                <div class="container-storico">
+
+                    <div class="card-storico" onclick="window.location.href='{% url 'storico' persona.id %}'">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Storico_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'storico' persona.id %}">
+                        <span class="freccia">&larr;</span> Storico
+                        </a>
+                    </div>
+
+                    <div class="card-storico" onclick="window.location.href='{% url 'diagnosi' persona.id %}'">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Diagnosi_color.png' %}" alt="">
+                        </div>
+                        
+                        <a href="{% url 'diagnosi' persona.id %}">
+                        <span class="freccia">&larr;</span> Diagnosi
+                        </a>
+                    </div>
+
+                    <div class="card-storico">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Terapie_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'terapie' persona.id %}">
+                        <span class="freccia">&larr;</span> Terapie
+                        </a>
+                    </div>
+
+                    <div class="card-storico">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Esame_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'esami' persona.id %}">
+                        <span class="freccia">&larr;</span> Esami
+                        </a>
+                    </div>
+
+                    <div class="card-storico">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Visite_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'visite' persona.id %}">
+                        <span class="freccia">&larr;</span> Visite
+                        </a>
+                    </div>
+
+                    <div class="card-storico">
+                        <div class="img-circle-container">
+                            <img src="{% static 'image/Allegati_color.png' %}" alt="">
+                        </div>
+                        <a href="{% url 'allegati' persona.id %}">
+                        <span class="freccia">&larr;</span> Allegati
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+        
+
             <!-- Indicatori di performance -->
             <div class="container-indicatori containerStyle">
 
@@ -782,7 +869,7 @@
 
                         <div class="capacita_vitale" data-punteggio="{{ referti_test_recenti.resilienza|default:'2' }}">
                             <a href="{% url 'resilienza' persona.id %}" style="text-decoration: none; color: inherit;" title="Resilienza">
-                                <h3>Età Neurologica</h3>
+                                <h3>Età Neurocognitiva</h3>
                                 <div class="card-polmone">
                                     <div class="backdrop-riempimento">
                                         <svg class="ondina" viewBox="0 0 500 100" preserveAspectRatio="none">
@@ -811,8 +898,6 @@
                 </div>
                 
             </div> 
-
-
         </main>
 
 
