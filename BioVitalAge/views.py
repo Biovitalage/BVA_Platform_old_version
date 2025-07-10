@@ -700,8 +700,9 @@ class AppuntamentiSalvaView(LoginRequiredMixin, View):
     def post(self, request):
         data = json.loads(request.body.decode())
         profile = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
+        role = get_user_role(request)
         # se è segretaria/o, prendo il dottore scelto
-        if profile.isSecretary:
+        if role == "secretary":
             dott_id = data.get("dottore_id")
             if not dott_id:
                 return JsonResponse(
@@ -767,10 +768,9 @@ class AppuntamentiSalvaView(LoginRequiredMixin, View):
 class GetSingleAppointmentView(LoginRequiredMixin, View):
     def get(self, request, appointment_id):
         try:
-            profile = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-            is_secretary = profile.isSecretary
+            is_secretary = get_user_role(request)
 
-            if is_secretary:
+            if is_secretary == "secretary":
                 appointment = get_object_or_404(Appointment, id=appointment_id)
             else:
                 dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
@@ -823,10 +823,10 @@ class AppuntamentiGetView(LoginRequiredMixin,View):
     def get(self, request):
         """Recupera gli appuntamenti futuri o di oggi"""
         email = request.user.email.lower()
-        is_secretary = (email == "isabella.g.santandrea@gmail.com")
+        is_secretary = get_user_role(request)
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
 
-        if is_secretary and request.GET.get("dottore_id"):
+        if is_secretary == "secretary":
             dottore = get_object_or_404(
                 UtentiRegistratiCredenziali,
                 id=request.GET["dottore_id"]
@@ -841,7 +841,7 @@ class AppuntamentiGetView(LoginRequiredMixin,View):
 
         deleted_count= 0
 
-        if is_secretary:
+        if is_secretary == "secretary":
             future_appointments = Appointment.objects.filter(
                 data__gte=today,
             )
@@ -884,7 +884,7 @@ class UpdateAppointmentView(LoginRequiredMixin,View):
 
 
             # only allow doctor change to special user
-            if profile.isSecretary and data.get("dottore_id"):
+            if profile.role == "secretary" and data.get("dottore_id"):
                         new_doc = get_object_or_404(UtentiRegistratiCredenziali, id=data["dottore_id"])
                         appointment.dottore = new_doc
             if data.get("new_date"):
@@ -958,6 +958,7 @@ class SearchAppointmentsView(LoginRequiredMixin, View):
             return JsonResponse({"success": False, "error": "Nessuna query fornita"})
 
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
+        role = get_user_role(request)
 
         appointments = Appointment.objects.filter(
             Q(nome_paziente__icontains=query) |
@@ -965,7 +966,7 @@ class SearchAppointmentsView(LoginRequiredMixin, View):
             Q(orario__icontains=query)
         )
 
-        if not dottore.isSecretary:
+        if not role:
             appointments = appointments.filter(dottore=dottore)
 
         current_date = timezone.localdate()
@@ -1052,12 +1053,12 @@ class InserisciPazienteView(LoginRequiredMixin,View):
         role = get_user_role(request)
         
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-        profile = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
+        role = get_user_role(request)
         dottori = UtentiRegistratiCredenziali.objects.all() if role else None
 
         context = {
             'dottore' : dottore,
-            #'isSecretary' : is_secretary,
+            'isSecretary' : role == "secretary",
             'dottori' : dottori,
         }
         return render(request, "includes/InserisciPaziente.html", context)  
@@ -1433,7 +1434,7 @@ class CartellaPazienteView(LoginRequiredMixin,View):
             'ultimo_appuntamento': ultimo_appuntamento,
             'prossimo_appuntamento': prossimo_appuntamento,
             'dottori': dottori,
-            #'is_secretary': is_secretary,
+            'is_secretary': role == "secretary",
 
             # indicatori 
             "Salute_del_cuore": lista_filtered_value[0],
@@ -2233,7 +2234,7 @@ class VisiteView(View):
         visite = paginator.get_page(page_number)
 
         profile = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-        #is_secretary = profile.isSecretary
+        is_secretary = get_user_role(request)
 
         dottori = UtentiRegistratiCredenziali.objects.all() if role == 'secretary' else None
 
@@ -2245,7 +2246,7 @@ class VisiteView(View):
             'tipologia_appuntamenti': tipologia_appuntamenti,
             'numero_studio': numero_studio,
             'visita': visita,
-            #'is_secretary': is_secretary,
+            'is_secretary': is_secretary == "secretary",
             'dottori': dottori,
         }
         return render(request, "cartella_paziente/sezioni_storico/visite.html", context)
