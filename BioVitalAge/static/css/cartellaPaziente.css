@@ -538,6 +538,12 @@
   background-color: var(--contrast-color-shadow);
   border-bottom: 1px solid #DDD;
 }
+.second-table{
+  grid-template-columns: 50% 50%;
+}
+.spacer-second-table{
+  height: 2.5rem;
+}
 .header-cella p{
   color: var(--dark1);
   font-weight: bold;
@@ -556,6 +562,9 @@
 .row-table{
   display: grid;
   grid-template-columns: 15% 45% 20% 20%;
+}
+.second-row{
+  grid-template-columns: 50% 50%;
 }
 .row-cella{
   display: flex;

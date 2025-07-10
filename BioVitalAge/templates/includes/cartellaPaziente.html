@@ -485,6 +485,79 @@
                     </div>
                 </div>
 
+                <div class="container-tabella" style="width: 50%;">
+
+                    <div class="spacer-second-table">
+
+                    </div>
+                       
+                    <div class="container-content">
+                        <div class="second-table header-table">
+                            <div class="header-cella">
+                                <p>Fattori di Rischio Prevenzione</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Problemi</p>
+                            </div>
+                        </div>
+
+                        <div class="container-table">
+
+                            <div class="second-row row-table">
+                                <div class="row-cella">
+                                    <p>Allergie</p>
+                                </div>
+                                <div class="row-cella">
+                                    <p>Nessun problema riscontrato</p>
+                                </div>
+                            </div>
+
+                            <div class="second-row row-table">
+                                <div class="row-cella">
+                                    <p>emocromo e urino cultura</p>
+                                </div>
+                                <div class="row-cella">
+                                    <p>Nessun problema riscontrato</p>
+                                </div>
+                            </div>
+
+                            <div class="second-row row-table">
+                                <div class="row-cella">
+                                    <p>Reazione avverse ai farmaci</p>
+                                </div>
+                                <div class="row-cella">
+                                    <p>Nessun problema riscontrato</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pagination_tabella">
+                        
+                            {% if storico_page.has_previous %}
+                            <a class="previous" href="?page={{ storico_page.previous_page_number }}">Previous</a>
+                            {% else %}
+                            <span class="previous disabled">Previous</span>
+                            {% endif %}
+                    
+                            {% for num in storico_page.paginator.page_range %}
+                            {% if storico_page.number == num %}
+                            <span class="current">{{ num }}</span>
+                            {% else %}
+                            <a href="?page={{ num }}">{{ num }}</a>
+                            {% endif %}
+                            {% endfor %}
+                    
+                            {% if storico_page.has_next %}
+                            <a class="next" href="?page={{ storico_page.next_page_number }}">Next</a>
+                            {% else %}
+                            <span class="next disabled">Next</span>
+                            {% endif %}
+                    
+                        </div>
+                    </div>
+                </div>
+
+                <!--
                 <div class="container-list" style="width: 30%;">
                     <h3>Fattori di Rischio Prevenzione</h3>
                     <div class="container-test">
@@ -526,6 +599,7 @@
                         <p style="text-align: center; border-bottom: none; margin-top: 2rem;">Nessun Problema riscontrato</p>
                     </div>
                 </div>
+                -->
             </div>
 
             <!-- TABELLA DIARIO CLINICO -->

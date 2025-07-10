@@ -2128,24 +2128,30 @@ class AllegatiView(View):
         return render(request, "cartella_paziente/sezioni_storico/allegati.html", context)
 
 ## DOWNLOAD ALLEGATI
+from django.http import HttpResponseServerError
+
 @method_decorator(login_required, name='dispatch')
 class DownloadAllegatoView(View):
     def get(self, request, tipo, allegato_id):
-        if tipo == "laboratorio":
-            allegato = get_object_or_404(AllegatiLaboratorio, id=allegato_id)
-        elif tipo == "strumentale":
-            allegato = get_object_or_404(AllegatiStrumentale, id=allegato_id)
-        else:
-            raise Http404("Tipo non valido")
+        try:
+            if tipo == "laboratorio":
+                allegato = get_object_or_404(AllegatiLaboratorio, id=allegato_id)
+            elif tipo == "strumentale":
+                allegato = get_object_or_404(AllegatiStrumentale, id=allegato_id)
+            else:
+                raise Http404("Tipo non valido")
 
-        if not allegato.file:
-            raise Http404("File non trovato")
+            if not allegato.file:
+                raise Http404("File non trovato")
 
-        return FileResponse(
-            allegato.file.open("rb"),
-            as_attachment=True,
-            filename=allegato.file.name.split("/")[-1]
-        )
+            return FileResponse(
+                allegato.file.open("rb"),
+                as_attachment=True,
+                filename=allegato.file.name.split("/")[-1]
+            )
+        except Exception as e:
+            import traceback
+            return HttpResponseServerError(f"<pre>{traceback.format_exc()}</pre>")
 
 ## ELIMINA ALLEGATI
 class DeleteAllegatoView(LoginRequiredMixin, View):
@@ -4961,7 +4967,6 @@ class UpdatePersonaContactView(LoginRequiredMixin,View):
             from .models import TabellaPazienti 
 
             profile = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-            #is_secretary = profile.isSecretary
 
             persona = TabellaPazienti.objects.get(id=id)
             persona.cap = cap
