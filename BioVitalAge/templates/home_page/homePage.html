@@ -330,8 +330,8 @@
                     <p>{{ persona.codice_fiscale }}</p>
                     <p>{{ persona.place_of_birth|title }}</p>
                     <p>{{ persona.chronological_age }}</p>
-                    {% if persona.associate_staff %}
-                    <p>{{ persona.associate_staff|title }}</p>
+                    {% if persona.dottore %}
+                    <p>{{ persona.dottore|title }}</p>
                     {% else %}
                     <p>Dottore non associato.</p>
                     {% endif %}

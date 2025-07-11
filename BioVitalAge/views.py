@@ -1054,7 +1054,7 @@ class InserisciPazienteView(LoginRequiredMixin,View):
         
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         role = get_user_role(request)
-        dottori = UtentiRegistratiCredenziali.objects.all() if role else None
+        dottori = UtentiRegistratiCredenziali.objects.all() if role == "secretary" else UtentiRegistratiCredenziali.objects.filter(user=request.user)
 
         context = {
             'dottore' : dottore,
@@ -1064,6 +1064,7 @@ class InserisciPazienteView(LoginRequiredMixin,View):
         return render(request, "includes/InserisciPaziente.html", context)  
     
     def post(self, request):
+        print("POST DATA:", request.POST)
 
         role = get_user_role(request)
 
@@ -1073,14 +1074,20 @@ class InserisciPazienteView(LoginRequiredMixin,View):
             codice_fiscale = request.POST.get('codice_fiscale')
             
             dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-            context = {'dottore': dottore}
+            dottori = UtentiRegistratiCredenziali.objects.all() if role == "secretary" else None
+
+            context = {
+                'dottore': dottore,
+                'isSecretary': role == "secretary",
+                'dottori': dottori
+            }
 
             def parse_date(date_str):
                 return date_str if date_str else None
 
             profile = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
 
-            if role:
+            if role == "secretary":
                 paziente = TabellaPazienti.objects.filter(codice_fiscale=codice_fiscale).first()
             else:
                 paziente = TabellaPazienti.objects.filter(dottore=dottore, codice_fiscale=codice_fiscale).first()
@@ -1108,7 +1115,7 @@ class InserisciPazienteView(LoginRequiredMixin,View):
                 else:
                     errore = "⚠️ Il paziente esiste già e non sono stati forniti nuovi dati da aggiornare."
             else:
-                if role:
+                if role == "secretary":
                     paziente = TabellaPazienti(
                         dottore_id = request.POST.get('dottore'),  
                         codice_fiscale=codice_fiscale,
@@ -1147,6 +1154,7 @@ class InserisciPazienteView(LoginRequiredMixin,View):
                         setattr(paziente, field_name, parse_date(val) if isinstance(field, models.DateField) else val)
 
                 paziente.save()
+                print("Paziente salvato:", paziente)
                 success = "Nuovo paziente salvato con successo!"
 
             # 🔽 CREAZIONE REFERTI ETA' METABOLICA SE PRESENTI
