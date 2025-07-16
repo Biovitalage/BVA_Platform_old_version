@@ -1,0 +1,79 @@
+{
+  "Foglio1": [
+    {
+      "CODICE_UNIVOCO_FARMACO_PIATTAFORMA": 1,
+      "NOME_FARMACO": "Paracetamolo",
+      "PRINCIPIO_ATTIVO": "Paracetamolo",
+      "COD_AIC": "022830",
+      "COD_ATC": "N02BE01",
+      "FORMA_FARMACEUTICA": "Compresse",
+      "DOSAGGIO": "500 mg",
+      "POSOLOGIA_ADULTO": "500-1000 mg ogni 4-6 ore, max 3g/die",
+      "POSOLOGIA_BAMBINO": "10-15 mg/kg ogni 4-6 ore",
+      "INDICAZIONI": "Dolore lieve-moderato, febbre",
+      "CONTROINDICAZIONI": "Ipersensibilità, grave insufficienza epatica",
+      "EFFETTI_COLLATERALI": "Rari: rash, epatotossicità",
+      "APPARATO_or_I_SISTEMI": "SISTEMA NERVOSO"
+    },
+    {
+      "CODICE_UNIVOCO_FARMACO_PIATTAFORMA": 2,
+      "NOME_FARMACO": "Ibuprofene",
+      "PRINCIPIO_ATTIVO": "Ibuprofene",
+      "COD_AIC": "025004",
+      "COD_ATC": "M01AE01",
+      "FORMA_FARMACEUTICA": "Compresse",
+      "DOSAGGIO": "200 mg",
+      "POSOLOGIA_ADULTO": "200-400 mg ogni 6-8 ore, max 1200 mg/die",
+      "POSOLOGIA_BAMBINO": "5-10 mg/kg ogni 6-8 ore",
+      "INDICAZIONI": "Dolore, infiammazione, febbre",
+      "CONTROINDICAZIONI": "Ulcera, insufficienza renale, gravidanza terzo trimestre",
+      "EFFETTI_COLLATERALI": "Gastralgia, nausea, rash, aumento rischio cardiovascolare",
+      "APPARATO_or_I_SISTEMI": "SISTEMA MUSCOLO-SCHELETRICO"
+    },
+    {
+      "CODICE_UNIVOCO_FARMACO_PIATTAFORMA": 3,
+      "NOME_FARMACO": "Amoxicillina",
+      "PRINCIPIO_ATTIVO": "Amoxicillina",
+      "COD_AIC": "023123",
+      "COD_ATC": "J01CA04",
+      "FORMA_FARMACEUTICA": "Capsule",
+      "DOSAGGIO": "500 mg",
+      "POSOLOGIA_ADULTO": "500-1000 mg ogni 8 ore",
+      "POSOLOGIA_BAMBINO": "20-40 mg/kg/die in 2-3 dosi",
+      "INDICAZIONI": "Infezioni batteriche",
+      "CONTROINDICAZIONI": "Allergia alle penicilline",
+      "EFFETTI_COLLATERALI": "Diarrea, rash, nausea",
+      "APPARATO_or_I_SISTEMI": "SISTEMA IMMUNITARIO"
+    },
+    {
+      "CODICE_UNIVOCO_FARMACO_PIATTAFORMA": 4,
+      "NOME_FARMACO": "Metformina",
+      "PRINCIPIO_ATTIVO": "Metformina cloridrato",
+      "COD_AIC": "028123",
+      "COD_ATC": "A10BA02",
+      "FORMA_FARMACEUTICA": "Compresse",
+      "DOSAGGIO": "500 mg",
+      "POSOLOGIA_ADULTO": "500-1000 mg 2-3 volte al giorno",
+      "POSOLOGIA_BAMBINO": "Non raccomandato sotto i 10 anni",
+      "INDICAZIONI": "Diabete mellito tipo 2",
+      "CONTROINDICAZIONI": "Insufficienza renale, acidosi metabolica",
+      "EFFETTI_COLLATERALI": "Disturbi gastrointestinali, acidosi lattica (rara)",
+      "APPARATO_or_I_SISTEMI": "SISTEMA ENDOCRINO"
+    },
+    {
+      "CODICE_UNIVOCO_FARMACO_PIATTAFORMA": 5,
+      "NOME_FARMACO": "Ramipril",
+      "PRINCIPIO_ATTIVO": "Ramipril",
+      "COD_AIC": "031234",
+      "COD_ATC": "C09AA05",
+      "FORMA_FARMACEUTICA": "Compresse",
+      "DOSAGGIO": "5 mg",
+      "POSOLOGIA_ADULTO": "2.5-10 mg/die",
+      "POSOLOGIA_BAMBINO": "Non raccomandato",
+      "INDICAZIONI": "Ipertensione, insufficienza cardiaca",
+      "CONTROINDICAZIONI": "Gravidanza, angioedema, stenosi bilaterale arterie renali",
+      "EFFETTI_COLLATERALI": "Tosse secca, ipotensione, iperkaliemia",
+      "APPARATO_or_I_SISTEMI": "APPARATO CARDIOVASCOLARE"
+    }
+  ]
+}

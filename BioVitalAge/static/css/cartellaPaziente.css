@@ -108,6 +108,161 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* STYLE MODALE PROBLEMI */
+.backdrop-modale-problemi{
+  position: absolute;
+  top: -75px;
+  left: 0;
+  z-index: 9999;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+}
+.modale-problemi{
+  background-color: var(--card-color);
+  border-radius: 8px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 850px;
+  height: 700px;
+  z-index: 9999;
+  padding: 20px;
+  overflow: auto;
+  display: none;
+}
+.modale-problemi h3{
+  color: var(--contrast-color);
+}
+.modale-problemi textarea{
+  width: 100%;
+  height: 200px;
+  margin-top: 1rem;
+  padding: 20px;
+  border: none;
+  box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  border-radius: 8px;
+  outline-color: var(--contrast-color2);
+}
+.modale-problemi textarea:disabled{
+  background-color: #edededdd;
+  cursor: not-allowed;
+  height: 200px;
+}
+.modale-problemi p{
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out;
+}
+.modale-problemi .modale-button{
+  height: 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.modale-problemi .modale-button button{
+  border-radius: 8px !important;
+}
+.sub-div-button{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+#save-problemi{
+  background-color: var(--positive-color);
+  transition: transform 0.3s ease-in-out;
+}
+#save-problemi:hover{
+  transform: scale(1.1);
+}
+#close-problemi{
+  background-color: #c74b5b;
+  transition: transform 0.3s ease-in-out;
+}
+#close-problemi:hover{
+  transform: scale(1.1);
+}
+#modify-btn-problemi{
+  background-color: var(--contrast-color2);
+  transition: all 0.3s ease-in-out;
+  border: 2px solid var(--contrast-color2);
+}
+#modify-btn-problemi:hover{
+  background-color: var(--contrast-color);
+}
+
+/* STYLE LISTA PROBLEMI */
+.lista-ec10{
+  background-color: var(--contrast-color-shadow);
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 1rem;
+}
+.lista-ec10 h3{
+  color: var(--contrast-color);
+  font-size: 18px;
+  font-weight: 600;
+}
+.lista-problemi{
+  display: flex;
+  flex-direction: column;
+}
+.lista-problemi p{
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+  background-color: var(--contrast-color-shadow);
+  background-size: 0 100%;
+  border-radius: 8px;
+  padding: 10px;
+}
+.lista-problemi p:hover{
+  border-radius: 8px;
+  background-color: var(--contrast-color);
+  background-size: 100% 100%;
+  background-position: 0 0;
+  padding: 10px;
+}
+.problema{
+  background-color: var(--contrast-color-shadow);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* MODALE INDICI STYLE */
 .modale-indici{
   background-color: var(--card-color);
@@ -521,8 +676,18 @@
   box-shadow: 1px 1px 8px 4px rgba(0,0,0,0.05);
   border: 1px solid #DDD;
   display: grid;
-  grid-template-rows: 20% 80%;
 }
+/* STYLE CONTENUTO SECONDO */
+.container-content-second{
+  background-color: white;
+  border-radius: 8px;
+  margin-top: 1rem;
+  box-shadow: 1px 1px 8px 4px rgba(0,0,0,0.05);
+  border: 1px solid #DDD;
+  display: grid;
+}
+
+
 
 
 
@@ -538,11 +703,17 @@
   background-color: var(--contrast-color-shadow);
   border-bottom: 1px solid #DDD;
 }
+.farmaci .header-table{
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+}
 .second-table{
   grid-template-columns: 50% 50%;
 }
-.spacer-second-table{
-  height: 2.5rem;
+.container-header-diario-second{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
 }
 .header-cella p{
   color: var(--dark1);
@@ -563,6 +734,9 @@
   display: grid;
   grid-template-columns: 15% 45% 20% 20%;
 }
+.farmaci .row-table{
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+}
 .second-row{
   grid-template-columns: 50% 50%;
 }
@@ -570,6 +744,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 10px;
   border: 1px solid #ddd;
 }
 .row-cella p{
@@ -1326,6 +1501,7 @@ strong {
   margin-top: -1rem;
   color: var(--dark1);
   background-color: #dddddd86;
+  transition: transform 0.2s ease-in-out;
 }
 .close:hover{
   transform: scale(1.1);
@@ -1496,3 +1672,294 @@ strong {
 
 
 
+
+
+
+/* STILE MODALE PRESCRIZIONE FARMACI */
+/* Stile Modale */
+#backdropModale {
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: none;
+}
+
+#ModaleInserimento {
+  display: none;
+  background-color: var(--card-color);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 1400px;
+  max-height: 890px;
+  position: fixed;
+  top: 6%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1100;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+.title-header-container{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.close{
+  margin-right: 1rem;
+  height: 2rem;
+  width: 3rem;
+  border-radius: 8px;
+  border: none;
+  background-color: red;
+  color: white;
+  transition: transform 0.3s ease-in-out;
+}
+.close:hover{
+  transform: scale(1.1);
+}
+#ModaleInserimento h3{
+  color: var(--contrast-color);
+  padding: 15px;
+  font-size: 25px;
+  font-weight: bolder;
+}
+#ModaleInserimento .subtitle{
+  padding-left: 15px;
+}
+.ModaleHeader{
+  margin: auto;
+  background-color: var(--contrast-color-shadow);
+  width: 98%;
+  height: 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px;
+}
+.Modale-Result-content{
+  background-color: var(--contrast-color-shadow);
+  max-height: 400px;
+  width: 98%;
+  margin: 1rem auto;
+  border-radius: 8px;
+  overflow-y: auto; 
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; 
+  align-items: center;
+  gap: 5px;
+  padding: 10px;
+}
+.Modale-Result-content .rowModale{
+  width: 100%;
+  background-color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.rowModale p{
+  width: 100%;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+.Modal-result-button{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 1rem;
+}
+.nomeEsame{
+  font-weight: bold;
+}
+#filtri{
+  height: 2.5rem;
+  border-radius: 8px;
+  outline: none;
+  border: 1px solid #ddd;
+  margin-left: 10px;
+  padding: 10px;
+  cursor: pointer;
+}
+#buttonAdd{
+  margin-left: 15px;
+  margin-top: 20px;
+}
+.tendinaPrescrizioni{
+  width: 30%;
+  height: 2.5rem;
+  border-radius: 8px;
+  padding: 5px;
+  outline: none;
+  margin-right: 10px;
+  border: 1px solid #ddd;
+}
+.barra-ricercaModale{
+  width: 40%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.barra-ricercaModale input{
+  height: 100%;
+  height: 2.5rem;
+  border-radius: 8px 0px 0px 8px;
+  border: 1px solid #ddd;
+  padding-left: 10px;
+  width: 75%;
+  outline-color: var(--contrast-color2);
+}
+.barra-ricercaModale button{
+  width: 25%;
+  height: 2.5rem;
+  border-radius: 0px 8px 8px 0px;
+}
+
+
+
+/* WEBKIT SCROLL MODALE STYLE */
+::-webkit-scrollbar {
+  width: 8px; 
+}
+::-webkit-scrollbar-track {
+  background: var(--contrast-color-shadow); 
+  border-radius: 8px; 
+}
+::-webkit-scrollbar-thumb  {
+  background: rgba(0, 0, 0, 0.3); 
+  border-radius: 8px; 
+  transition: background 0.3s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5); 
+}
+
+
+.recent-patients{
+  width: 100%;
+  background-color: white !important;
+  margin: auto!important;
+  margin-top: 1rem!important;
+}
+
+/* Tabella contenuto */
+.tabella-prescrizioni{
+  width: 98%;
+  margin: auto;
+  height: 550px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+.table-content{
+  background-color: white;
+  height: 200px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: auto;
+  box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.5);
+  display: flex;
+  margin: 1rem;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.add-btn,
+.delete-button,
+.remove-btn{
+  border: none;
+  background: none;
+  transition: transform 0.3s ease-in-out;
+}
+#cellaButton{
+  width: 30%;
+}
+.Message{
+  width: 100%;
+}
+.Message p{
+  padding: 40px 0px;
+  text-align: center;
+}
+.add-btn:hover,
+.delete-button:hover,
+.remove-btn:hover{
+  transform: scale(1.2);
+}
+.table-content{
+  border-radius: 0px;
+  border: none;
+}
+.table-content .rowModale{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 5rem;
+  border-bottom: 1px solid #ddd;
+}
+.colModale{
+  width: 5%;
+  text-align: center;
+  height: 4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.colModale span{
+  display: block;
+}
+.colModale.nomeEsame{
+  width: 35%;
+}
+.colModale.apparato{
+  width: 25%;
+}
+.colModale.metodica{
+  width: 15%;
+}
+.colModale.codici{
+  width: 7.5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+
+.tabella-prescrizioni .colModale{
+  width: 6%;
+}
+.tabella-prescrizioni .colModale:first-of-type{
+  width: 14%;
+}
+.tabella-prescrizioni .colModale.nomeEsame{
+  width: 18%;
+  width: 18%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.tabella-prescrizioni .colModale.apparati{
+  width: 16%;
+}
+.tabella-prescrizioni .colModale.metodica{
+  width: 16%;
+}
+.tabella-prescrizioni .colModale.codici{
+  width: 15%;
+}

@@ -199,6 +199,7 @@ ADMIN_REORDER = [
             "BioVitalAge.RefertiCapacitaVitale",
             "BioVitalAge.DatiEstesiRefertiCapacitaVitale",
             "BioVitalAge.PrescrizioniEsami",
+            "BioVitalAge.PrescrizioneFarmaco",
             "BioVitalAge.ValutazioneMS",
             "BioVitalAge.Resilienza",
         ],

@@ -738,6 +738,8 @@ class Diagnosi(models.Model):
     stato = models.CharField(max_length=100)
     note = models.TextField(blank=True, null=True)
     gravita = models.IntegerField()
+    rischi = models.TextField(blank=True, null=True)
+    problemi = models.TextField(blank=True, null=True)
     risolta = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -859,3 +861,74 @@ class MicrobiotaReport(models.Model):
 
     def __str__(self):
         return f"Report {self.id} – {self.paziente} ({self.created_at.date()})"
+
+
+
+## FARMACI PRESCRITTI
+class Farmaco(models.Model):
+    codice_univoco_farmaco = models.CharField(max_length=50, unique=True)
+    nome_farmaco = models.CharField(max_length=200)
+    principio_attivo = models.CharField(max_length=200)
+    cod_aic = models.CharField(max_length=20, blank=True, null=True)
+    cod_atc = models.CharField(max_length=20, blank=True, null=True)
+    forma_farmaceutica = models.CharField(max_length=100, blank=True, null=True)
+    dosaggio = models.CharField(max_length=100, blank=True, null=True)
+    posologia_adulto = models.TextField(blank=True, null=True)
+    posologia_bambino = models.TextField(blank=True, null=True)
+    indicazioni = models.TextField(blank=True, null=True)
+    controindicazioni = models.TextField(blank=True, null=True)
+    effetti_collaterali = models.TextField(blank=True, null=True)
+    apparato_sistemi = models.CharField(max_length=200, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Farmaco"
+        verbose_name_plural = "Farmaci"
+        ordering = ['nome_farmaco']
+
+    def __str__(self):
+        return f"{self.nome_farmaco} - {self.dosaggio}"
+
+class PrescrizioneFarmaco(models.Model):
+    # Relazioni
+    paziente = models.ForeignKey(
+        TabellaPazienti, 
+        on_delete=models.CASCADE, 
+        related_name='prescrizioni_farmaci'
+    )
+    medico = models.ForeignKey(
+        UtentiRegistratiCredenziali, 
+        on_delete=models.CASCADE, 
+        related_name='farmaci_prescritti'
+    )
+    farmaco = models.ForeignKey(Farmaco, on_delete=models.CASCADE)
+
+    # Dati della prescrizione
+    data_prescrizione = models.DateTimeField(auto_now_add=True)
+    data_inizio = models.DateField()
+    data_fine = models.DateField(blank=True, null=True)
+    posologia_personalizzata = models.TextField(blank=True, null=True)
+    note_medico = models.TextField(blank=True, null=True)
+    diagnosi = models.CharField(max_length=500, blank=True, null=True)
+
+    # Stati
+    STATO_CHOICES = [
+        ('attiva', 'Attiva'),
+        ('sospesa', 'Sospesa'),
+        ('completata', 'Completata'),
+        ('annullata', 'Annullata'),
+    ]
+    stato = models.CharField(max_length=20, choices=STATO_CHOICES, default='attiva')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Prescrizione Farmaco"
+        verbose_name_plural = "Prescrizioni Farmaci"
+        ordering = ['-data_prescrizione']
+        unique_together = ['paziente', 'farmaco', 'data_prescrizione']
+
+    def __str__(self):
+        return f"{self.farmaco.nome_farmaco} - {self.paziente} ({self.data_prescrizione.strftime('%d/%m/%Y')})"

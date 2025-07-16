@@ -1221,6 +1221,7 @@ class CartellaPazienteView(LoginRequiredMixin,View):
         role = get_user_role(request)
 
         params = {
+            'code': 'icd11',
             'r': 'json',
             'desc': 'long',
             'type': 'cm',
@@ -1243,12 +1244,17 @@ class CartellaPazienteView(LoginRequiredMixin,View):
         persona = ViewSetResult.get_patient_info(id)
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         dottori = UtentiRegistratiCredenziali.objects.all() if role else None
-    
-        # Fetch Referti Età BioVitale
-        referti = ViewSetResult.get_all_bio_referti(id)
+        farmaci = Farmaco.objects.all()
+        paginator = Paginator(farmaci, 3)
+        page_number = request.GET.get('page')
+        farmaci_page = paginator.get_page(page_number)
         
         # Fetch Last referto età biologica e filtrato
         lista_filtered_value = ViewSetResult.get_datiEstesi_filtered(id)
+
+        # Fetch Problemi Paziente
+        problemi = Diagnosi.objects.filter(paziente=persona).values_list('problemi', flat=True)
+        rischi = Diagnosi.objects.filter(paziente=persona).values_list('rischi', flat=True)
 
         # DATI PER GLI INDICATORI DI PERFORMANCE
         ## CAPACITÀ VITALE
@@ -1429,6 +1435,8 @@ class CartellaPazienteView(LoginRequiredMixin,View):
             .filter(referto=persona.referti.order_by('-data_referto').first())
             .first()
         )
+
+        diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
         
         #Retrive note 
         note_text = persona.note_patologie
@@ -1443,6 +1451,9 @@ class CartellaPazienteView(LoginRequiredMixin,View):
             'prossimo_appuntamento': prossimo_appuntamento,
             'dottori': dottori,
             'is_secretary': role == "secretary",
+            'diagnosi_list': diagnosi_list,
+            'icd10': data,
+            'farmaci_page': farmaci_page,
 
             # indicatori 
             "Salute_del_cuore": lista_filtered_value[0],
@@ -1467,6 +1478,10 @@ class CartellaPazienteView(LoginRequiredMixin,View):
             # Punteggio età metabolica e dati bio
             'punteggio_eta_metabolica': punteggio_eta_metabolica,
             'dati_estesi_ultimo_bio': dati_estesi_ultimo_bio,
+
+            # Problemi Paziente
+            'problemi': problemi,
+            'rischi': rischi,
         }
 
         return render(request, "includes/cartellaPaziente.html", context)
@@ -1486,9 +1501,12 @@ class CartellaPazienteView(LoginRequiredMixin,View):
         
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         persona = get_object_or_404(TabellaPazienti, id=id)
+        dati_diagnosi = Diagnosi.objects.filter(paziente=persona)
 
-        # 2) recupera il profilo DjangoSocial / UtentiRegistratiCredenziali
-        profile = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
+        farmaci = Farmaco.objects.all()
+        paginator = Paginator(farmaci, 3)
+        page_number = request.GET.get('page')
+        farmaci_page = paginator.get_page(page_number)
     
         persona.codice_fiscale = request.POST.get('codice_fiscale')
         persona.dob = parse_date(request.POST.get('dob'))
@@ -1553,6 +1571,8 @@ class CartellaPazienteView(LoginRequiredMixin,View):
             'referti_test_recenti': ultimo_referto,
             'ultimo_appuntamento': ultimo_appuntamento,
             'prossimo_appuntamento': prossimo_appuntamento,
+            'farmaci_page': farmaci_page,
+            'dati_diagnosi': dati_diagnosi,
 
             #ULTIMO REFERTO ETA METABOLICA
             'ultimo_referto_eta_metabolica': ultimo_referto_eta_metabolica,
@@ -1562,6 +1582,147 @@ class CartellaPazienteView(LoginRequiredMixin,View):
         }
         return render(request, "includes/cartellaPaziente.html", context)
 
+@method_decorator(csrf_exempt, name='dispatch')
+class AggiungiFarmacoView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            paziente_id = data.get('paziente_id')
+            
+            # Controlla se è una lista di farmaci o un singolo farmaco
+            farmaci_data = data.get('farmaci', [])
+            if not farmaci_data:
+                # Fallback per singolo farmaco (compatibilità)
+                farmaci_data = [data]
+
+            if not paziente_id:
+                return JsonResponse({'success': False, 'error': 'paziente_id è obbligatorio'}, status=400)
+            
+            # Usa TabellaPazienti invece di User
+            paziente = get_object_or_404(TabellaPazienti, id=paziente_id)
+            
+            # Ottieni il medico da UtentiRegistratiCredenziali
+            try:
+                medico = UtentiRegistratiCredenziali.objects.get(user=request.user)
+            except UtentiRegistratiCredenziali.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Medico non trovato'}, status=400)
+
+            prescrizioni_create = []
+            oggi = timezone.now().date()
+
+            # Processa ogni farmaco nella lista
+            for farmaco_data in farmaci_data:
+                codice_farmaco = farmaco_data.get('codice')
+                nome_farmaco = farmaco_data.get('nome')
+                principio_attivo = farmaco_data.get('principio', '')
+                cod_aic = farmaco_data.get('aic', '')
+                cod_atc = farmaco_data.get('atc', '')
+                dosaggio = farmaco_data.get('dosaggio', '')
+                apparato = farmaco_data.get('apparato', '')
+                data_inizio = farmaco_data.get('data_inizio', oggi)
+                data_fine = farmaco_data.get('data_fine', None)
+                posologia = farmaco_data.get('posologia', '')
+                note = farmaco_data.get('note', '')
+                diagnosi = farmaco_data.get('diagnosi', '')
+
+                if not codice_farmaco:
+                    continue  # Salta farmaci senza codice
+
+                # Crea o ottieni il farmaco
+                farmaco, created = Farmaco.objects.get_or_create(
+                    codice_univoco_farmaco=codice_farmaco,
+                    defaults={
+                        'nome_farmaco': nome_farmaco,
+                        'principio_attivo': principio_attivo,
+                        'cod_aic': cod_aic,
+                        'cod_atc': cod_atc,
+                        'dosaggio': dosaggio,
+                        'apparato_sistemi': apparato,
+                    }
+                )
+
+                # Controlla se già prescritto oggi
+                prescrizione_esistente = PrescrizioneFarmaco.objects.filter(
+                    paziente=paziente,
+                    farmaco=farmaco,
+                    data_prescrizione__date=oggi
+                ).exists()
+
+                if prescrizione_esistente:
+                    continue  # Salta farmaci già prescritti oggi
+
+                # Crea la prescrizione
+                prescrizione = PrescrizioneFarmaco.objects.create(
+                    paziente=paziente,
+                    medico=medico,
+                    farmaco=farmaco,
+                    data_inizio=data_inizio if isinstance(data_inizio, str) else data_inizio,
+                    data_fine=datetime.strptime(data_fine, '%Y-%m-%d').date() if data_fine else None,
+                    posologia_personalizzata=posologia,
+                    note_medico=note,
+                    diagnosi=diagnosi,
+                    stato='attiva'
+                )
+                prescrizioni_create.append(prescrizione)
+
+            if not prescrizioni_create:
+                return JsonResponse({'success': False, 'error': 'Nessun farmaco è stato aggiunto (potrebbero essere già prescritti)'}, status=400)
+
+            return JsonResponse({
+                'success': True,
+                'message': f'{len(prescrizioni_create)} farmaco/i aggiunto/i con successo',
+                'prescrizioni_create': len(prescrizioni_create)
+            })
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Formato JSON non valido'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Errore interno: {str(e)}'}, status=500)
+
+# RIMUOVI FARMACO
+@method_decorator(csrf_exempt, name='dispatch')
+class RimuoviFarmacoView(LoginRequiredMixin, View):
+    def post(self, request, prescrizione_id):
+        try:
+            prescrizione = get_object_or_404(PrescrizioneFarmaco, id=prescrizione_id)
+            if prescrizione.medico != request.user:
+                return JsonResponse({'success': False, 'error': 'Non hai i permessi per modificare questa prescrizione'}, status=403)
+            prescrizione.stato = 'sospesa'
+            prescrizione.data_fine = timezone.now().date()
+            prescrizione.save()
+            return JsonResponse({'success': True, 'message': 'Prescrizione sospesa con successo'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Errore: {str(e)}'}, status=500)
+
+# GET FARMACI PRESCRITTI
+class GetFarmaciPazienteView(LoginRequiredMixin, View):
+    def get(self, request, paziente_id):
+        try:
+            paziente = get_object_or_404(User, id=paziente_id)
+            prescrizioni = PrescrizioneFarmaco.objects.filter(
+                paziente=paziente,
+                stato='attiva'
+            ).select_related('farmaco', 'medico').order_by('-data_prescrizione')
+            farmaci_data = []
+            for prescrizione in prescrizioni:
+                farmaci_data.append({
+                    'id': prescrizione.id,
+                    'nome_farmaco': prescrizione.farmaco.nome_farmaco,
+                    'dosaggio': prescrizione.farmaco.dosaggio,
+                    'principio_attivo': prescrizione.farmaco.principio_attivo,
+                    'data_prescrizione': prescrizione.data_prescrizione.strftime('%d/%m/%Y'),
+                    'data_inizio': prescrizione.data_inizio.strftime('%d/%m/%Y'),
+                    'posologia': prescrizione.posologia_personalizzata or prescrizione.farmaco.posologia_adulto,
+                    'note': prescrizione.note_medico,
+                    'diagnosi': prescrizione.diagnosi,
+                    'medico': f"{prescrizione.medico.first_name} {prescrizione.medico.last_name}",
+                    'stato': prescrizione.get_stato_display()
+                })
+            return JsonResponse({'success': True, 'farmaci': farmaci_data})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Errore: {str(e)}'}, status=500)
+
+# VIEW NOTA
 @method_decorator(catch_exceptions, name='dispatch')
 class CartellaPazienteNote(LoginRequiredMixin,View):
 
@@ -1573,6 +1734,50 @@ class CartellaPazienteNote(LoginRequiredMixin,View):
         persona.save()
 
         return redirect('cartella_paziente', id=id)
+
+from django.http import JsonResponse
+
+from django.utils import timezone
+
+class CartellaPazienteProblemi(LoginRequiredMixin, View):
+    def post(self, request, id):
+        """
+        Riceve una richiesta POST dal front-end per aggiornare il campo 'problemi'
+        del model Diagnosi relativo al paziente specificato.
+        Ora renderizza la tabella delle diagnosi aggiornata.
+        """
+        persona = get_object_or_404(TabellaPazienti, id=id)
+        problema_request = request.POST.get('problemi', '').strip()
+
+        if not problema_request:
+            # Puoi anche mostrare un messaggio di errore nella tabella
+            diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
+            context = {
+                'persona': persona,
+                'diagnosi_list': diagnosi_list,
+                'errore': 'Nessun problema fornito.'
+            }
+            return render(request, "cartella_paziente/sezioni_storico/diagnosi.html", context)
+
+        # Recupera la diagnosi più recente o ne crea una nuova se non esiste
+        diagnosi = Diagnosi.objects.filter(paziente=persona).order_by('-id').first()
+        if not diagnosi:
+            diagnosi = Diagnosi(paziente=persona, data_diagnosi=timezone.now().date())
+        elif not diagnosi.data_diagnosi:
+            diagnosi.data_diagnosi = timezone.now().date()
+
+        diagnosi.problemi = problema_request
+        diagnosi.save()
+
+        # Recupera tutte le diagnosi aggiornate per la tabella
+        diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
+
+        context = {
+            'persona': persona,
+            'diagnosi_list': diagnosi_list,
+            'success': True,
+        }
+        return render(request, "cartella_paziente/sezioni_storico/diagnosi.html", context)
 
 
 # VIEW NOTA

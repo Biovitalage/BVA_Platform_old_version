@@ -7,6 +7,7 @@
 <html lang="en">
 
     <head>
+
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -30,8 +31,44 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+        <!-- JS Import -->
+        <!-- Modale Prescrizioni -->
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+            const openBtn = document.getElementById("openPrescrizioniBtn");
+            const closeBtn = document.querySelector("#ModaleInserimento .close");
+            const backdrop = document.getElementById("backdropModale");
+            const modal = document.getElementById("ModaleInserimento");
         
-        <!-- CDN IMPORT -->
+            function openModal() {
+                backdrop.style.display = "block";
+                modal.style.display = "block";
+                document.body.style.overflow = "hidden";
+                gsap.fromTo(modal, { opacity: 0, y: -50 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" });
+            }
+        
+            function closeModal() {
+                gsap.to(modal, {
+                opacity: 0,
+                y: -50,
+                duration: 0.3,
+                ease: "power2.in",
+                onComplete: () => {
+                    modal.style.display = "none";
+                    backdrop.style.display = "none";
+                    document.body.style.overflow = "auto";
+                },
+                });
+            }
+        
+            if (openBtn) openBtn.addEventListener("click", openModal);
+            if (closeBtn) closeBtn.addEventListener("click", closeModal);
+            if (backdrop) backdrop.addEventListener("click", closeModal); // click fuori per chiudere
+            });
+        </script> 
+        <script src="{% static 'js/cartella_paziente/prescrizioni/PrescrizioniFarmaci.js' %}" defer type="module"></script>
+
     </head>
 
     <body>
@@ -51,7 +88,7 @@
                         <a id="back" href="{% url 'HomePage' %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
                     </div>
                     <button title="Prescrione esami"><img src="{% static 'image/Esame_grey.png' %}" alt=""></button> <!-- esami -->
-                    <button title="Prescrione farmaci"><img src="{% static 'image/Farmaci.png' %}" alt=""></button> <!-- farmaci -->
+                    <button title="Prescrione farmaci" id="openPrescrizioniBtn"><img src="{% static 'image/Farmaci.png' %}" alt=""></button> <!-- farmaci -->
                     <button title="Prescrione libera"><img src="{% static 'image/Foglio.png' %}" alt=""></button> <!-- libera -->
                     <button title="Prescrione certificati"><img src="{% static 'image/Certificato.png' %}" alt=""></button> <!-- certificati -->
                 </div>
@@ -61,7 +98,7 @@
                     <div class="tools-menu-trace">   
                         <button title="Anamnesi"><img src="{% static 'image/Anamnesi_gray.png' %}" alt=""></button> 
                         <button title="Esame Obbiettivo"><img src="{% static 'image/EsameObbiettivo.png' %}" alt=""></button> 
-                        <button title="Problemi"><img src="{% static 'image/Problemi.png' %}" alt=""></button> 
+                        <button title="Problemi"><img src="{% static 'image/Problemi.png' %}" alt=""></button>
                     </div>
 
                     <div class="main-menu-trace">
@@ -161,6 +198,108 @@
                     </div>
                 </form>
             </div>
+
+            <!-- Backdrop -->
+            <div class="backdrop-modale-problemi" id="backdropModaleProblemi"></div>
+
+            <!-- MODALE PROBLEMI -->
+            <div class="modale-problemi" id="modale_problemi">
+                <form method="POST" action="{% url 'cartellaPaziente_problemi' persona.id %}">
+                    {% csrf_token %}
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin-bottom: 0;">Problemi Paziente</h3>
+                        <button type="button" class="close" id="close-problemi-x" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
+                    </div>
+
+                    <!-- Step 1: Selezione diagnosi -->
+                    <div class="step-diagnosi">
+                        <label for="diagnosi_select">Seleziona una diagnosi:</label>
+                        <select id="diagnosi_select" name="diagnosi_id" required>
+                            <option value="" selected disabled>-- Scegli diagnosi --</option>
+                            {% for diagnosi in diagnosi_list %}
+                                <option value="{{ diagnosi.id }}">{{ diagnosi.data_diagnosi|date:"d/m/Y" }} - {{ diagnosi.descrizione|default:"(senza titolo)" }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Step 2: Appaiono solo dopo selezione diagnosi -->
+                    <div id="problemi_step" style="display: none;">
+                        <label for="text_area_problemi">Problemi associati</label>
+                        <textarea name="problemi" id="text_area_problemi" placeholder="Inserisci qui i problemi oppure seleziona dalla lista"></textarea>
+
+                        <div class="lista-ec10">
+                            <h3>Lista Problemi ICD10</h3>
+                            <div class="lista-problemi">
+                                {% if icd10_list %}
+                                    <select id="icd10_select" name="icd10_code">
+                                        <option value="" selected disabled>-- Seleziona problema ICD10 --</option>
+                                        {% for icd in icd10_list %}
+                                            <option value="{{ icd.Code }}">{{ icd.Code }} - {{ icd.Description }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <p>Nessun problema ICD10 disponibile.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="modale-button">
+                            <div class="sub-div-button">
+                                <button type="submit" class="button" id="save-problemi">Salva</button>
+                                <button type="button" class="button" id="close-problemi">Chiudi</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ********************************************************** -->
+            <!-- CODICE DA PULIRE -->
+            <!-- ********************************************************** -->
+            <script>
+                // Gestione chiusura modale con la X
+                document.addEventListener('DOMContentLoaded', function() {
+                    var closeX = document.getElementById('close-problemi-x');
+                    var modaleProblemi = document.getElementById('modale_problemi');
+                    var backdropProblemi = document.getElementById('backdropModaleProblemi');
+                    if (closeX) {
+                        closeX.addEventListener('click', function() {
+                            if (modaleProblemi) modaleProblemi.style.display = 'none';
+                            if (backdropProblemi) backdropProblemi.style.display = 'none';
+                            document.body.style.overflow = 'auto';
+                        });
+                    }
+                });
+            </script>
+
+            <script>
+                // Mostra la sezione problemi solo dopo selezione diagnosi
+                document.addEventListener('DOMContentLoaded', function() {
+                    var diagnosiSelect = document.getElementById('diagnosi_select');
+                    var problemiStep = document.getElementById('problemi_step');
+                    if (diagnosiSelect) {
+                        diagnosiSelect.addEventListener('change', function() {
+                            if (this.value) {
+                                problemiStep.style.display = '';
+                            } else {
+                                problemiStep.style.display = 'none';
+                            }
+                        });
+                    }
+                    // Opzionale: inserisci descrizione ICD10 nella textarea al cambio select
+                    var icd10Select = document.getElementById('icd10_select');
+                    var textAreaProblemi = document.getElementById('text_area_problemi');
+                    if (icd10Select && textAreaProblemi) {
+                        icd10Select.addEventListener('change', function() {
+                            var selected = this.options[this.selectedIndex];
+                            if (selected && selected.value) {
+                                // Inserisci codice e descrizione nel textarea (append o replace)
+                                textAreaProblemi.value = selected.value + " - " + selected.text.replace(selected.value + " - ", "");
+                            }
+                        });
+                    }
+                });
+            </script>
 
             <!-- MODALE INFORMAZIONI PERSONALI -->  
             <div class="container-informazioni-personali">
@@ -391,11 +530,12 @@
                             <button class="button active">Diario</button>
                             <button class="button">Farmaci</button>
                             <button class="button">Accertamenti</button>
-                            <button class="button">Certificati</button>
+                            <button class="button">Visite</button>
                         </div>
                     </div>
-                       
-                    <div class="container-content">
+                    
+                    <!-- DIARIO CLINICO -->
+                    <div class="container-content diario-clinico" style="display: block;">
                         <div class="header-table">
                             <div class="header-cella">
                                 <p>Data</p>
@@ -410,9 +550,9 @@
                                 <p>Nota</p>
                             </div>
                         </div>
-
+                    
                         <div class="container-table">
-
+                    
                             <div class="row-table">
                                 <div class="row-cella">
                                     <p>02/07/2025</p>
@@ -427,7 +567,7 @@
                                     <p>nota testuale</p>
                                 </div>
                             </div>
-
+                    
                             <div class="row-table">
                                 <div class="row-cella">
                                     <p>02/07/2025</p>
@@ -442,7 +582,7 @@
                                     <p>nota testuale</p>
                                 </div>
                             </div>
-
+                    
                             <div class="row-table">
                                 <div class="row-cella">
                                     <p>02/07/2025</p>
@@ -456,11 +596,11 @@
                                 <div class="row-cella">
                                     <p>nota testuale</p>
                                 </div>
-                            </div>                          
+                            </div>
                         </div>
-                        
+                    
                         <div class="pagination_tabella">
-                        
+                    
                             {% if storico_page.has_previous %}
                             <a class="previous" href="?page={{ storico_page.previous_page_number }}">Previous</a>
                             {% else %}
@@ -483,15 +623,94 @@
                     
                         </div>
                     </div>
+                    
+                    <!-- FARMACI -->
+                    <div class="container-content farmaci" style="display: none;">
+                        <div class="header-table">
+                            <div class="header-cella">
+                                <p>Data</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Farmaco</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Dose</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Frequenza</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Durata</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Note</p>
+                            </div>
+                        </div>
+                    
+                        <div class="container-table">
+                            {% for farmaco in farmaci_page %}
+                            <div class="row-table">
+                                <div class="row-cella">
+                                    <p>{{ farmaco.created_at|date:"d/m/Y" }}</p>
+                                </div>
+                                <div class="row-cella">
+                                    <p>{{ farmaco.nome_farmaco }}</p>
+                                </div>
+                                <div class="row-cella">
+                                    <p>{{ farmaco.dosaggio }}</p>
+                                </div>
+                                <div class="row-cella">
+                                    <p>{{ farmaco.posologia_personalizzata }}</p>
+                                </div>
+                                <div class="row-cella">
+                                    <p>{{ farmaco.data_inizio|date:"d/m/Y" }} - {{ farmaco.data_fine|date:"d/m/Y" }}</p>
+                                </div>
+                                <div class="row-cella">
+                                    <p>{{ farmaco.note_medico }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="pagination_tabella">
+                    
+                            {% if farmaci_page.has_previous %}
+                            <a class="previous" href="?page={{ farmaci_page.previous_page_number }}">Previous</a>
+                            {% else %}
+                            <span class="previous disabled">Previous</span>
+                            {% endif %}
+                    
+                            {% for num in farmaci_page.paginator.page_range %}
+                            {% if farmaci_page.number == num %}
+                            <span class="current">{{ num }}</span>
+                            {% else %}
+                            <a href="?page={{ num }}">{{ num }}</a>
+                            {% endif %}
+                            {% endfor %}
+                    
+                            {% if farmaci_page.has_next %}
+                            <a class="next" href="?page={{ farmaci_page.next_page_number }}">Next</a>
+                            {% else %}
+                            <span class="next disabled">Next</span>
+                            {% endif %}
+                    
+                        </div>
+                    </div>
                 </div>
 
                 <div class="container-tabella" style="width: 50%;">
 
-                    <div class="spacer-second-table">
-
+                    <div class="container-header-diario-second">
+                        <button class="button" id="modale-problemi">Aggiungi Problema</button>
+                        <!--
+                        <div>
+                            <h3 style="color: red;">DEBUG DATI ICD10</h3>
+                            {{ icd10 }}
+                        </div>
+                        -->
                     </div>
                        
-                    <div class="container-content">
+                    <div class="container-content-second">
                         <div class="second-table header-table">
                             <div class="header-cella">
                                 <p>Fattori di Rischio Prevenzione</p>
@@ -502,33 +721,16 @@
                         </div>
 
                         <div class="container-table">
-
+                            {% for diagnosi in diagnosi_list %}
                             <div class="second-row row-table">
                                 <div class="row-cella">
-                                    <p>Allergie</p>
+                                    <p>{{ diagnosi.descrizione|default:"Nessun rischio riscontrato." }}</p>
                                 </div>
                                 <div class="row-cella">
-                                    <p>Nessun problema riscontrato</p>
+                                    <p>{{ diagnosi.problemi|default:"Nessun problema riscontrato." }}</p>
                                 </div>
                             </div>
-
-                            <div class="second-row row-table">
-                                <div class="row-cella">
-                                    <p>emocromo e urino cultura</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>Nessun problema riscontrato</p>
-                                </div>
-                            </div>
-
-                            <div class="second-row row-table">
-                                <div class="row-cella">
-                                    <p>Reazione avverse ai farmaci</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>Nessun problema riscontrato</p>
-                                </div>
-                            </div>
+                            {% endfor %}
                         </div>
                         
                         <div class="pagination_tabella">
@@ -932,6 +1134,98 @@
             </div> 
         </main>
 
+        <!-- Mostra messaggi -->
+        {% if messages %}
+        {% for message in messages %}
+            <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Mostra modale -->
+        {% if mostra_modale %}
+        <script>
+            const modal = new bootstrap.Modal(document.getElementById('studioModal'));
+            modal.show();
+        </script>
+        {% endif %}
+        <!-- BACKDROP -->
+        <div id="backdropModale" style="display: none;"></div>
+
+        <!-- MODALE PRESCRIZIONE FARMACO -->
+        <div id="ModaleInserimento" style="display: none;">
+            <div class="title-header-container">
+                <h3>Aggiungi Prescrizione Farmaco</h3>
+                <button class="close" onclick="closeModal()" style="margin-top: -0.5rem;">X</button>
+            </div>
+        
+            <div class="ModaleHeader">
+                <select name="filtri" id="filtri">
+                    <option value="0">Tutti</option>
+                    <option value="1">Nome Farmaco crescente</option>
+                    <option value="2">Nome Farmaco decrescente</option>
+                    <option value="3">Principio Attivo</option>
+                    <option value="4">Codice AIC</option>
+                    <option value="5">Codice ATC</option>
+                    <option value="6">Dosaggio</option>
+                </select>
+        
+                <div class="barra-ricercaModale">
+                    <input type="text" class="input" id="Email" name="inputField"
+                        placeholder="Cerca farmaco, principio attivo, codice..." required />
+                    <button class="button button--submit" type="submit">
+                        <span class="button__icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="15"
+                                class="button__icon-svg">
+                                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                                <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round"></line>
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="15"
+                                class="button__icon-svg button__icon-svg--copy">
+                                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                                <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round"></line>
+                            </svg>
+                        </span>
+                        Cerca
+                    </button>
+                </div>
+        
+                <select name="" id="menu_tendina_prescrizioni" class="tendinaPrescrizioni">
+                    <!-- DINAMICAMENTE POPOLATO CON JS -->
+                </select>
+            </div>
+        
+            <div class="Modale-Result-content">
+                <!-- RISULTATI DINAMICI -->
+            </div>
+
+            <!-- QUESTA È LA CODA DEI FARMACI SELEZIONATI -->
+            <div class="table-content"></div>
+
+            <div class="Modal-result-button">
+                <button class="button" id="conferma-prescrizione-farmaci"> 
+                    <span class="button__icon-wrapper">
+
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg" width="14" height="14">
+                            <path d="M5 3H19L21 7V21H3V3H5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M17 21V14H7V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7 3V8H13V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg button__icon-svg--copy" width="14" height="14">
+                            <path d="M5 3H19L21 7V21H3V3H5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M17 21V14H7V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7 3V8H13V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>                            
+
+                    </span>
+
+                    Salva Prescrizioni
+              </button>            
+            </div>
+        </div>
+
 
         <!-- SCRIPT SCORE -->
         <script>
@@ -1061,6 +1355,10 @@
                 const modale = document.getElementById('modal_message');
                 modale.style.display = 'none';
             }
+        </script>
+
+        <script>
+            window.PAZIENTE_ID = "{{ persona.id }}";
         </script>
 
         <!-- CDN import -->

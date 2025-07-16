@@ -90,6 +90,7 @@ window.addEventListener('keydown', (e) => {
 /*  -----------------------------------------------------------------------------------------------
   Funzione animazione shrunk della card informazioni personale
   --------------------------------------------------------------------------------------------------- */
+/* 
 document.addEventListener('DOMContentLoaded', () => {
   const header      = document.querySelector('.container-informazioni-personali');
   const main        = document.querySelector('.container-flex-layout');
@@ -154,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+*/
 
 
 
@@ -162,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /*  -----------------------------------------------------------------------------------------------
   Funzione edita dati personali
   --------------------------------------------------------------------------------------------------- */
+/*
 document.addEventListener('DOMContentLoaded', function() {
   const form      = document.getElementById('personaForm');
   const editBtn   = document.getElementById('edit_btn');
@@ -224,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+*/
 
 
 
@@ -251,7 +255,55 @@ modifyButton.addEventListener('click', ()=>{
   textArea.removeAttribute('disabled');
 })
 
-  
+
+
+
+
+/*  -----------------------------------------------------------------------------------------------
+  Funzione modale problemi
+  --------------------------------------------------------------------------------------------------- */
+const modaleProblemi = document.getElementById('modale_problemi');
+const buttonModaleProblemi = document.getElementById('modale-problemi');
+const buttonCloseModaleProblemi = document.getElementById('close-problemi')
+const backdropModaleProblemi = document.getElementById('backdropModaleProblemi')
+const textAreaProblemi = document.getElementById('text_area')
+const modifyButtonProblemi = document.getElementById('modify-btn-problemi')
+
+// Apertura della modale
+buttonModaleProblemi.addEventListener('click', ()=>{
+  modaleProblemi.style.display = 'block';
+  backdropModaleProblemi.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+})
+
+// Chiusura con il bottone “×”
+buttonCloseModaleProblemi.addEventListener('click', ()=>{
+  modaleProblemi.style.display = 'none';
+  backdropModaleProblemi.style.display = 'none';
+  document.body.style.overflow = 'auto';
+})
+
+// Alla selezione del problema nella lista deve autocompilarsi la textarea con il problema selezionato
+
+// Trova la lista dei problemi (assumendo che sia una lista di <p> dentro .lista-problemi)
+// Usa event delegation per assicurarti che il click venga rilevato anche se i <p> vengono generati dinamicamente
+document.addEventListener('DOMContentLoaded', function() {
+  const listaProblemiContainer = document.querySelector('.lista-problemi');
+  const textAreaProblemi = document.getElementById('text_area_problemi');
+  if (listaProblemiContainer && textAreaProblemi) {
+    listaProblemiContainer.addEventListener('click', function(e) {
+      // Verifica che il click sia su un <p> diretto dentro .lista-problemi
+      if (e.target && e.target.tagName === 'P') {
+        if (textAreaProblemi.hasAttribute('disabled')) {
+          textAreaProblemi.removeAttribute('disabled');
+        }
+        textAreaProblemi.value = e.target.textContent;
+      }
+    });
+  }
+});
+
+
 
 
 /*  -----------------------------------------------------------------------------------------------
@@ -395,6 +447,159 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+
+
+
+
+
+
+
+
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          // Cookie string starts with name=
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+          }
+      }
+  }
+  return cookieValue;
+}
+
+
+// E aggiungi solo questo per confermare:
+document.getElementById("conferma-prescrizione-farmaci").addEventListener("click", function() {
+  // Debug: vediamo cosa trova
+  console.log("Elementi .coda-item trovati:", document.querySelectorAll('.coda-item'));
+  
+  const codaFarmaci = Array.from(document.querySelectorAll('.coda-item')).map(row => {
+      console.log("Riga trovata:", row); // Debug
+      return {
+          codice: row.querySelector('[name="codiceFarmaco"]').textContent,
+          nome: row.querySelector('.nomeFarmaco').textContent,
+          aic: row.querySelector('.codici')?.textContent || "",
+          atc: row.querySelectorAll('.codici')[1]?.textContent || "",
+          dosaggio: row.querySelector('.dosaggio')?.textContent || "",
+          apparato: row.querySelector('.apparati')?.textContent || "",
+      };
+  });
+
+  console.log("Farmaci in coda:", codaFarmaci); // Debug
+
+  if (codaFarmaci.length === 0) {
+      alert("Nessun farmaco selezionato!");
+      return;
+  }
+
+  // Invia tutti i farmaci della coda al backend
+  fetch('/aggiungi-farmaco/', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+      },
+      body: JSON.stringify({
+          paziente_id: window.pazienteId || PAZIENTE_ID,
+          farmaci: codaFarmaci
+      })
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.success) {
+          alert("Prescrizione salvata!");
+          closeModal();
+          // Svuota la coda
+          document.querySelectorAll('.coda-item').forEach(row => row.remove());
+          // Aggiorna la tabella se sei nella sezione farmaci
+          if (typeof caricaTabellaFarmaci === 'function') {
+              caricaTabellaFarmaci();
+          }
+      } else {
+          alert(data.error || "Errore");
+      }
+  });
+});
+
+
+/*  -----------------------------------------------------------------------------------------------
+  Funzione di aggiunta farmaco
+--------------------------------------------------------------------------------------------------- */
+// Funzione per switchare tra le tabelle Diario Clinico e Farmaci
+document.addEventListener("DOMContentLoaded", function () {
+    const tabButtons = document.querySelectorAll('.container-header-diario .header-container .button');
+    const tabContents = document.querySelectorAll('.container-content');
+
+    tabButtons.forEach((btn, idx) => {
+        btn.addEventListener('click', function () {
+            // Rimuovi la classe active da tutti i bottoni
+            tabButtons.forEach(b => b.classList.remove('active'));
+            // Aggiungi la classe active al bottone cliccato
+            btn.classList.add('active');
+            // Nascondi tutti i contenuti
+            tabContents.forEach(content => content.style.display = 'none');
+            // Mostra il contenuto corrispondente al bottone cliccato
+            if (tabContents[idx]) {
+                tabContents[idx].style.display = 'block';
+            }
+        });
+    });
+});
+
+// Funzione per la paginazione AJAX delle tabelle Farmaci e Diagnosi
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Paginazione Farmaci
+    document.querySelectorAll('.pagination_tabella').forEach(function(pagination) {
+        pagination.addEventListener('click', function(e) {
+            const target = e.target;
+            if (target.tagName === 'A' && target.closest('.container-content.farmaci')) {
+                e.preventDefault();
+                const url = target.getAttribute('href');
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Estrai solo la tabella farmaci dal response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const nuovaTabella = doc.querySelector('.container-content.farmaci');
+                    if (nuovaTabella) {
+                        document.querySelector('.container-content.farmaci').innerHTML = nuovaTabella.innerHTML;
+                    }
+                });
+            }
+            // Paginazione Diagnosi (Problemi)
+            if (target.tagName === 'A' && target.closest('.container-content-second')) {
+                e.preventDefault();
+                const url = target.getAttribute('href');
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Estrai solo la tabella diagnosi dal response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const nuovaTabella = doc.querySelector('.container-content-second');
+                    if (nuovaTabella) {
+                        document.querySelector('.container-content-second').innerHTML = nuovaTabella.innerHTML;
+                    }
+                });
+            }
+        });
+    });
+});
 
 
 

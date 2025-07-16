@@ -137,126 +137,6 @@
   background-color: #f8f8f8;
 }
 
-/* STILE MODALE PRESCRIZIONE  */
-#backdropPrescrizioni {
-  display: none;
-  background-color: rgba(0, 0, 0, 0.5);
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 4;
-}
-#modalePrescrizioni {
-  display: none;
-  position: absolute;
-  top: 20%;
-  left: 50%;
-  transform: translate(-50%, 0%);
-  z-index: 5;
-  width: 1100px;
-  height: 520px;
-  background-color: var(--card-color);
-}
-
-.title-container {
-  width: 100%;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-}
-.title-container h3 {
-  color: var(--contrast-color);
-  font-size: 22px;
-  font-weight: bold;
-}
-.close {
-  height: 2rem;
-  width: 3rem;
-  border-radius: 8px;
-  border: none;
-  background-color: red;
-  color: white;
-  transition: transform 0.3s ease-in-out;
-}
-.close:hover {
-  transform: scale(1.1);
-  color: var(--card-color);
-}
-.ModalPrescrizioni-content {
-  width: 98%;
-  margin: auto;
-  border-radius: 0px 0px 8px 8px;
-  height: 365px;
-  overflow: auto;
-}
-.prescrizioniTable-header {
-  height: 3rem;
-  background-color: var(--contrast-color);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 98%;
-  margin: auto;
-}
-.prescrizioniTable-header p {
-  color: white;
-  width: 15%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 15px;
-}
-#last {
-  width: 25%;
-}
-.prescrizoniRow {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid #ddd;
-  height: 5.5rem;
-}
-.prescrizoniRow:nth-child(odd) {
-  background-color: #e5e5e5;
-}
-.prescrizoniRow:nth-child(even) {
-  background-color: white;
-}
-.prescrizoniRow p {
-  padding-top: 10px;
-  width: 15%;
-  height: 100%;
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.prescrizoniRow .apparati {
-  width: 25% !important;
-}
-
-/* {% if elencoPrescrizioni %}{% endif %} */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--dark2);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--contrast-color);
-  border-radius: 8px;
-  transition: background 0.3s;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--contrast-color2);
-}
-
 /* Stile Modale */
 #backdropModale {
   background-color: rgba(0, 0, 0, 0.5);
@@ -415,6 +295,142 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.5); 
 }
+
+/* Tabella contenuto */
+.tabella-prescrizioni{
+  width: 98%;
+  margin: auto;
+  height: 550px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+.header-table-prescrizioni{
+  background-color: var(--contrast-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  width: 100%;
+  height: 60px;
+  border-radius: 8px 8px 0px 0px;
+}
+.header-table-prescrizioni p{
+  font-weight: bold;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+.header-table-prescrizioni p:last-of-type{
+  width: 40%;
+}
+.table-content{
+  width: 100%;
+  background-color: white;
+  height: 500px;
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.add-btn,
+.delete-button,
+.remove-btn{
+  border: none;
+  background: none;
+  transition: transform 0.3s ease-in-out;
+}
+#cellaButton{
+  width: 30%;
+}
+.Message{
+  width: 100%;
+}
+.Message p{
+  padding: 40px 0px;
+  text-align: center;
+}
+.add-btn:hover,
+.delete-button:hover,
+.remove-btn:hover{
+  transform: scale(1.2);
+}
+.table-content{
+  border-radius: 0px;
+  border: none;
+}
+.table-content .rowModale{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 5rem;
+  border-bottom: 1px solid #ddd;
+}
+.colModale{
+  width: 5%;
+  text-align: center;
+  padding: 10px 20px;
+  height: 5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.colModale span{
+  display: block;
+}
+.colModale.nomeEsame{
+  width: 35%;
+}
+.colModale.apparato{
+  width: 25%;
+}
+.colModale.metodica{
+  width: 15%;
+}
+.colModale.codici{
+  width: 7.5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+
+.tabella-prescrizioni .colModale{
+  width: 6%;
+}
+.tabella-prescrizioni .colModale:first-of-type{
+  width: 14%;
+}
+.tabella-prescrizioni .colModale.nomeEsame{
+  width: 18%;
+  width: 18%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.tabella-prescrizioni .colModale.apparati{
+  width: 16%;
+}
+.tabella-prescrizioni .colModale.metodica{
+  width: 16%;
+}
+.tabella-prescrizioni .colModale.codici{
+  width: 15%;
+}
+
 
 
 .recent-patients{

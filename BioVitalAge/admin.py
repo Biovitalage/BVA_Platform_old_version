@@ -12,6 +12,7 @@ from .models import (
     DatiEstesiRefertiEtaBiologica,
     RefertiEtaMetabolica,
     PrescrizioniEsami,
+    PrescrizioneFarmaco,
     Appointment,
     Resilienza,
     ValutazioneMS,
@@ -99,6 +100,12 @@ class PrescrizioniEsamiInline(admin.TabularInline):
     fields = ("data_visita", "esami_prescritti")
     readonly_fields = ("data_visita",)
 
+class PrescrizioniFarmaciInline(admin.TabularInline):
+    model = PrescrizioneFarmaco
+    extra = 0
+    fields = ("data_prescrizione", "data_inizio", "data_fine", "posologia_personalizzata", "note_medico", "diagnosi", "stato")
+    readonly_fields = ("data_prescrizione", "data_inizio", "data_fine", "posologia_personalizzata", "note_medico", "diagnosi", "stato")
+
 class TerapiaDomiciliareInline(admin.TabularInline):
     model = TerapiaDomiciliare
     extra = 0
@@ -147,6 +154,7 @@ class TabellaPazientiAdmin(admin.ModelAdmin):
     ordering      = ("surname", "name")
     inlines       = [
         PrescrizioniEsamiInline,
+        PrescrizioniFarmaciInline,
         TerapiaDomiciliareInline,
         TerapiaInStudioInline,
         RefertiCapacitaVitaleInline,
