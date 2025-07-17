@@ -7,6 +7,7 @@ from django.utils import timezone # type: ignore
 from django.db import models # type: ignore
 from django.contrib.auth.models import User # type: ignore
 from django.contrib.auth.hashers import make_password # type: ignore
+from django.conf import settings
 
 
 # TABELLA DOTTORI REGISTRATI
@@ -932,3 +933,12 @@ class PrescrizioneFarmaco(models.Model):
 
     def __str__(self):
         return f"{self.farmaco.nome_farmaco} - {self.paziente} ({self.data_prescrizione.strftime('%d/%m/%Y')})"
+
+# --- MODELLO PRESCRIZIONE LIBERA ---
+class PrescrizioneLibera(models.Model):
+    persona = models.ForeignKey('TabellaPazienti', on_delete=models.CASCADE, related_name='prescrizioni_libere')
+    testo = models.TextField()
+    data_creazione = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Prescrizione libera per {self.persona} del {self.data_creazione.strftime('%d/%m/%Y %H:%M')}"

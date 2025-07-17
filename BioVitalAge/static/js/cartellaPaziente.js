@@ -26,12 +26,11 @@ function unlockBodyScroll() {
 // Apertura dinamica di ogni modale in base a dict-value
 cards.forEach(card => {
   card.addEventListener('click', () => {
-    // Scroll in alto (facoltativo)
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    const titleText = card.getAttribute('card-name');   // es. "Salute del Cuore"
-    const imgPath   = card.getAttribute('img-card');    // es. "/static/image/Heart_Colorato.png"
-    const modalId   = card.getAttribute('dict-value');  // es. "Cuore"
+    const titleText = card.getAttribute('card-name');   
+    const imgPath   = card.getAttribute('img-card');   
+    const modalId   = card.getAttribute('dict-value');  
     const modal     = document.getElementById(modalId);
 
     if (!modal) {

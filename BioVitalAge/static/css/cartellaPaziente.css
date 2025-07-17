@@ -1963,3 +1963,120 @@ strong {
 .tabella-prescrizioni .colModale.codici{
   width: 15%;
 }
+
+
+
+
+
+/* STILE MODALE PRESCRIZIONE LIBERA */
+.backdrop-modale-prescrizione-libera {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: none;
+}
+.modale-prescrizione-libera{
+  background-color: var(--card-color);
+  width: 900px;
+  height: 540px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  z-index: 9999;
+  border-radius: 8px;
+  padding: 20px;
+  display: none;
+}
+.header-title{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header-title h3{
+  color: var(--contrast-color);
+  margin: 0;
+}
+.header-title button{
+  background-color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 10px 20px;
+  box-shadow: 1px 1px 8px 2px rgba(0, 0, 0, 0.05);
+  transition: color 0.2s;
+}
+.header-title button:hover{
+  background-color: var(--contrast-color2);
+  color: white;
+}
+.header-button{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  margin-top: 1rem;
+}
+.header-button button{
+  border-radius: 4px;
+}
+.header-button button.active{
+  background-color: var(--contrast-color);
+}
+.header-button button.active:hover{
+  background-color: var(--contrast-color2);
+}
+.content-prescrione{
+  margin-top: 1rem;
+  box-shadow: 1px 1px 8px 2px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  width: 100%;
+  height: 320px;
+  border-radius: 8px;
+  border: none;
+  padding: 20px;
+  border: 1.5px solid var(--contrast-color);
+}
+.footer-button{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+.footer-button button{
+  border-radius: 4px;
+}
+.footer-button button:last-of-type{
+  border-radius: 4px;
+  background-color: var(--positive-color);
+}
+.footer-button button:last-of-type:hover{
+  background-color: #1b8249;
+}
+.modale-prescrizione-libera textarea.content-prescrione:focus {
+  border: 1.5px solid var(--contrast-color2);
+  outline: none;
+}
+.modale-prescrizione-libera .header-button select,
+#farmacoSelectPrescrizioneLibera {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1.5px solid var(--contrast-color);
+    background: #f8f6fa url('data:image/svg+xml;utf8,<svg fill="%233a255d" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 0.7rem center/1.2em;
+    color: var(--contrast-color);
+    min-width: 160px;
+    margin:0 !important;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+.modale-prescrizione-libera .header-button select:focus,
+#farmacoSelectPrescrizioneLibera:focus {
+    border: 1.5px solid var(--contrast-color2);
+    outline: none;
+    margin: 0;
+}
+
+
+

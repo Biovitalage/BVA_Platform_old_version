@@ -89,7 +89,7 @@
                     </div>
                     <button title="Prescrione esami"><img src="{% static 'image/Esame_grey.png' %}" alt=""></button> <!-- esami -->
                     <button title="Prescrione farmaci" id="openPrescrizioniBtn"><img src="{% static 'image/Farmaci.png' %}" alt=""></button> <!-- farmaci -->
-                    <button title="Prescrione libera"><img src="{% static 'image/Foglio.png' %}" alt=""></button> <!-- libera -->
+                    <button title="Prescrione libera" id="openPrescrizioneLiberaBtn"><img src="{% static 'image/Foglio.png' %}" alt=""></button> <!-- libera -->
                     <button title="Prescrione certificati"><img src="{% static 'image/Certificato.png' %}" alt=""></button> <!-- certificati -->
                 </div>
             
@@ -198,6 +198,26 @@
                     </div>
                 </form>
             </div>
+
+            <!-- MODALE PRESCRIZIONE LIBERA -->
+            <div class="modale-prescrizione-libera" id="modalePrescrizioneLibera">
+                <div class="header-title">
+                    <h3>Prescrizione libera</h3>
+                    <button type="button" id="closePrescrizioneLiberaBtn">x</button>
+                </div>
+                <div class="header-button">
+                    <button class="button active" id="btnManuale">Manuale</button>
+                    <button class="button" id="btnPrecompilata">Pre-compilata</button>
+                    <select id="selectPrecompilata" style="display:none; margin-left: 1rem;"></select>
+                </div>
+                <textarea class="content-prescrione" id="textareaPrescrizioneLibera" placeholder="Scrivi qui il testo..."></textarea>
+                <div class="footer-button">
+                    <button class="button">Elenco Prescrizioni</button>
+                    <button class="button" id="savePrescrizioneLibera">Save</button>
+                </div>
+            </div>
+            <div class="backdrop-modale-prescrizione-libera" id="backdropPrescrizioneLibera"></div>
+
 
             <!-- Backdrop -->
             <div class="backdrop-modale-problemi" id="backdropModaleProblemi"></div>
@@ -1366,6 +1386,213 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.0.2/docx.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script>
+        // --- PRESCRIZIONE LIBERA MODALE LOGIC ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // JSON dati farmaci/categorie
+            const prescrizioniData = [
+                {
+                    categoria: "TERAPIA ORALE",
+                    farmaci: [
+                        { nome: "NMN capsule lisosomiali Purovitalis 125 mg", posologia: "Una capsula a colazione ed una a pranzo" },
+                        { nome: "Resveratrolo Yamamoto cps da 150 mg", posologia: "Una capsula al giorno" },
+                        { nome: "Advanced Omega D3 perle soft gels", posologia: "Una perla dopo pranzo e una perla dopo cena" }
+                    ]
+                },
+                {
+                    categoria: "TERAPIA ORALE",
+                    farmaci: [
+                        { nome: "NEVRIDOL 800 cpr", posologia: "Una compressa al giorno" },
+                        { nome: "MELAFLOR cps", posologia: "Una capsula due volte al giorno, preferibilmente a stomaco vuoto" },
+                        { nome: "CARDIOLIPID 10 cpr", posologia: "Una compressa al giorno" }
+                    ]
+                },
+                {
+                    categoria: "IV THERAPY",
+                    farmaci: [
+                        { nome: "L-acetilcarnitina 500 mg in fiale IV", posologia: "Somministrare in fisiologica 250 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
+                        { nome: "Fosfolipidi ipotalamici 28 mg fiale IV", posologia: "Somministrare in fisiologica 250 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
+                        { nome: "Glutatione 600 mg fiale IV", posologia: "Somministrare in fisiologica 100 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
+                        { nome: "Vitamina C1 1 g fiale IV", posologia: "Somministrare in fisiologica 100 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" }
+                    ]
+                }
+            ];
+
+            // Elementi
+            const openBtn = document.getElementById('openPrescrizioneLiberaBtn');
+            const closeBtn = document.getElementById('closePrescrizioneLiberaBtn');
+            const modal = document.getElementById('modalePrescrizioneLibera');
+            const backdrop = document.getElementById('backdropPrescrizioneLibera');
+            const btnManuale = document.getElementById('btnManuale');
+            const btnPrecompilata = document.getElementById('btnPrecompilata');
+            const selectPrecompilata = document.getElementById('selectPrecompilata');
+            const textarea = document.getElementById('textareaPrescrizioneLibera');
+
+            // Unifica tutte le categorie (senza duplicati)
+            const categorie = [...new Set(prescrizioniData.map(d => d.categoria))];
+
+            // Mappa categoria -> farmaci
+            const farmaciByCategoria = {};
+            prescrizioniData.forEach(d => {
+                if (!farmaciByCategoria[d.categoria]) farmaciByCategoria[d.categoria] = [];
+                farmaciByCategoria[d.categoria].push(...d.farmaci);
+            });
+
+            // --- Apertura modale ---
+            if (openBtn) openBtn.addEventListener('click', function() {
+                modal.style.display = 'block';
+                backdrop.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                // Default: manuale attivo
+                btnManuale.classList.add('active');
+                btnPrecompilata.classList.remove('active');
+                selectPrecompilata.style.display = 'none';
+                textarea.value = '';
+            });
+            // --- Chiusura modale ---
+            if (closeBtn) closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                backdrop.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            if (backdrop) backdrop.addEventListener('click', function() {
+                modal.style.display = 'none';
+                backdrop.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            // --- Bottoni Manuale/Precompilata ---
+            if (btnManuale) btnManuale.addEventListener('click', function() {
+                btnManuale.classList.add('active');
+                btnPrecompilata.classList.remove('active');
+                selectPrecompilata.style.display = 'none';
+                textarea.value = '';
+                // Nascondi e svuota la select dei farmaci se presente
+                let farmacoSelect = document.getElementById('farmacoSelectPrescrizioneLibera');
+                if (farmacoSelect) {
+                    farmacoSelect.style.display = 'none';
+                    farmacoSelect.innerHTML = '';
+                }
+            });
+            if (btnPrecompilata) btnPrecompilata.addEventListener('click', function() {
+                btnManuale.classList.remove('active');
+                btnPrecompilata.classList.add('active');
+                // Popola select con tutte le categorie (senza duplicati)
+                selectPrecompilata.innerHTML = '<option value="">-- Scegli categoria --</option>';
+                categorie.forEach(cat => {
+                    selectPrecompilata.innerHTML += `<option value="${cat}">${cat}</option>`;
+                });
+                selectPrecompilata.style.display = 'inline-block';
+                textarea.value = '';
+            });
+            // --- Cambio categoria nella select ---
+            if (selectPrecompilata) selectPrecompilata.addEventListener('change', function() {
+                const categoria = selectPrecompilata.value;
+                if (!categoria) {
+                    textarea.value = '';
+                    // Nascondi la select farmaci se presente
+                    let farmacoSelect = document.getElementById('farmacoSelectPrescrizioneLibera');
+                    if (farmacoSelect) {
+                        farmacoSelect.style.display = 'none';
+                        farmacoSelect.innerHTML = '';
+                    }
+                    return;
+                }
+                // Mostra una seconda select per i farmaci della categoria
+                let farmaci = farmaciByCategoria[categoria] || [];
+                if (farmaci.length === 0) {
+                    textarea.value = '';
+                    // Nascondi la select farmaci se presente
+                    let farmacoSelect = document.getElementById('farmacoSelectPrescrizioneLibera');
+                    if (farmacoSelect) {
+                        farmacoSelect.style.display = 'none';
+                        farmacoSelect.innerHTML = '';
+                    }
+                    return;
+                }
+                // Se c'è più di un farmaco, mostra una select temporanea
+                let farmacoSelect = document.getElementById('farmacoSelectPrescrizioneLibera');
+                if (!farmacoSelect) {
+                    farmacoSelect = document.createElement('select');
+                    farmacoSelect.id = 'farmacoSelectPrescrizioneLibera';
+                    farmacoSelect.style.marginLeft = '1rem';
+                    selectPrecompilata.parentNode.insertBefore(farmacoSelect, selectPrecompilata.nextSibling);
+                }
+                // Rendi la select a selezione singola
+                farmacoSelect.removeAttribute('multiple');
+                farmacoSelect.size = 1;
+                farmacoSelect.innerHTML = '<option value="">-- Scegli farmaco --</option>';
+                farmaci.forEach((f, idx) => {
+                    farmacoSelect.innerHTML += `<option value="${idx}">${f.nome}</option>`;
+                });
+                farmacoSelect.style.display = 'inline-block';
+                // Non azzerare la textarea qui!
+                farmacoSelect.onchange = function() {
+                    const idx = this.value;
+                    if (idx === '') {
+                        return;
+                    }
+                    const f = farmaci[idx];
+                    // Se la textarea è vuota, aggiungi solo il farmaco, altrimenti aggiungi una riga vuota prima
+                    if (textarea.value.trim() === '') {
+                        textarea.value = `${f.nome}\n${f.posologia}`;
+                    } else {
+                        textarea.value += `\n\n${f.nome}\n${f.posologia}`;
+                    }
+                    // Reimposta la select sul placeholder
+                    this.value = '';
+                };
+            });
+        });
+        // ... existing code ...
+        </script>
+
+        <!-- Popup successo prescrizione libera -->
+        <div id="popup-success-prescrizione-libera" style="display:none; position:fixed; left:2rem; bottom:2rem; z-index:9999; background:#3bb77e; color:white; padding:1rem 2rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); font-size:1.1rem; font-weight:500;">
+          Prescrizione salvata con successo!
+        </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const saveBtn = document.getElementById('savePrescrizioneLibera');
+            const textarea = document.getElementById('textareaPrescrizioneLibera');
+            const popup = document.getElementById('popup-success-prescrizione-libera');
+            if (saveBtn && textarea) {
+                saveBtn.addEventListener('click', function() {
+                    const testo = textarea.value.trim();
+                    if (!testo) {
+                        alert('Inserisci una prescrizione prima di salvare.');
+                        return;
+                    }
+                    fetch('/api/salva-prescrizione-libera/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
+                        },
+                        body: JSON.stringify({
+                            persona_id: window.PAZIENTE_ID,
+                            testo: testo
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            textarea.value = '';
+                            if (popup) {
+                                popup.style.display = 'block';
+                                popup.textContent = 'Prescrizione salvata con successo!';
+                                setTimeout(() => { popup.style.display = 'none'; }, 3500);
+                            }
+                        } else {
+                            alert('Errore nel salvataggio: ' + (data.error || 'Errore generico.'));
+                        }
+                    })
+                    .catch(() => alert('Errore di rete nel salvataggio.'));
+                });
+            }
+        });
+        </script>
 
     </body>
 </html>

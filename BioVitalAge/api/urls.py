@@ -11,3 +11,7 @@ router.register(r'pazienti', PazienteViewSet, basename='paziente')
 # extra_urls = []
 
 urlpatterns = router.urls  #+ extra_urls
+
+urlpatterns += [
+    path('salva-prescrizione-libera/', salva_prescrizione_libera, name='salva_prescrizione_libera'),
+]
