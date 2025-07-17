@@ -7,6 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 from BioVitalAge.models import *
 from .serializers import PazienteSerializer
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.utils import timezone
+import json
 
 class PazienteViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -108,6 +112,29 @@ class PazienteViewSet(viewsets.ReadOnlyModelViewSet):
         immunitario = last_referto_datiEstesi.get_fields_by_help_text('Salute del sistema immunitario')
 
         return [cuore, reni, epatica, cerebrale, ormonale, sangue, immunitario]
+
+
+@csrf_exempt
+def salva_prescrizione_libera(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            persona_id = data.get('persona_id')
+            testo = data.get('testo')
+            if not persona_id or not testo:
+                return JsonResponse({'success': False, 'error': 'Dati mancanti.'}, status=400)
+            persona = TabellaPazienti.objects.get(id=persona_id)
+            prescrizione = PrescrizioneLibera.objects.create(
+                persona=persona,
+                testo=testo,
+                data_creazione=timezone.now()
+            )
+            return JsonResponse({'success': True, 'data_creazione': prescrizione.data_creazione.strftime('%d/%m/%Y %H:%M')})
+        except TabellaPazienti.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Paziente non trovato.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    return JsonResponse({'success': False, 'error': 'Metodo non consentito.'}, status=405)
 
 
 
