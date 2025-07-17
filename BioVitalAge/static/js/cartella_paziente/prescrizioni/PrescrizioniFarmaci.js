@@ -1,4 +1,11 @@
+import showAlert from "../../components/showAlert.js";
 import { renderingRisultati } from "./fetchDatiArchivioFarmaci.js";
+
+
+/*  -----------------------------------------------------------------------------------------------
+  Funzione di apertura e chiusura della modale
+--------------------------------------------------------------------------------------------------- */
+
 
 /*  FUNZIONE DI PAGINAZIONE DELLA TABELLA */
 function updatePagination() {
@@ -118,7 +125,11 @@ async function populateResults(filteredData = null) {
           );
 
           if (alreadyExists) {
-              alert("Il farmaco è già stato aggiunto!");
+              showAlert({
+                type: "warning",
+                message: "Il farmaco è già stato aggiunto!",
+                borderColor: "#f97316",
+              });
               return;
           }
 

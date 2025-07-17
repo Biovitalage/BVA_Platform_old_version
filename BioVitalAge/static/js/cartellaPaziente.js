@@ -83,6 +83,41 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+  const openBtn = document.getElementById("openPrescrizioniBtn");
+  const closeBtn = document.querySelector("#ModaleInserimento .close");
+  const backdrop = document.getElementById("backdropModale");
+  const modal = document.getElementById("ModaleInserimento");
+
+  function openModal() {
+    backdrop.style.display = "block";
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";
+    gsap.fromTo(
+      modal,
+      { opacity: 0, y: -50 },
+      { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }
+    );
+  }
+
+  function closeModal() {
+    gsap.to(modal, {
+      opacity: 0,
+      y: -50,
+      duration: 0.3,
+      ease: "power2.in",
+      onComplete: () => {
+        modal.style.display = "none";
+        backdrop.style.display = "none";
+        document.body.style.overflow = "auto";
+      },
+    });
+  }
+
+  if (openBtn) openBtn.addEventListener("click", openModal);
+  if (closeBtn) closeBtn.addEventListener("click", closeModal);
+  if (backdrop) backdrop.addEventListener("click", closeModal);
+});
 
 
 
@@ -493,7 +528,12 @@ document.getElementById("conferma-prescrizione-farmaci").addEventListener("click
   console.log("Farmaci in coda:", codaFarmaci); // Debug
 
   if (codaFarmaci.length === 0) {
-      alert("Nessun farmaco selezionato!");
+      showAlert({
+        type: "warning",
+        message: "Nessun farmaco selezionato!",
+        extraMessage: "Seleziona almeno un farmaco per procedere.",
+        borderColor: "#f97316",
+      });
       return;
   }
 
@@ -512,7 +552,11 @@ document.getElementById("conferma-prescrizione-farmaci").addEventListener("click
   .then(response => response.json())
   .then(data => {
       if (data.success) {
-          alert("Prescrizione salvata!");
+          showAlert({
+            type: "success",
+            message: "Prescrizione salvata!",
+            borderColor: "#10b981",
+          });
           closeModal();
           // Svuota la coda
           document.querySelectorAll('.coda-item').forEach(row => row.remove());
@@ -521,7 +565,11 @@ document.getElementById("conferma-prescrizione-farmaci").addEventListener("click
               caricaTabellaFarmaci();
           }
       } else {
-          alert(data.error || "Errore");
+          showAlert({
+            type: "error",
+            message: data.error || "Errore",
+            borderColor: "#ef4444",
+          });
       }
   });
 });
