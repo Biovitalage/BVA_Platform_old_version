@@ -682,6 +682,9 @@
 .second-table{
   grid-template-columns: 50% 50%;
 }
+.diario-clinico-header{
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
 .container-header-diario-second{
   display: flex;
   justify-content: flex-end;
@@ -719,6 +722,10 @@
   align-items: center;
   padding: 10px;
   border: 1px solid #ddd;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .row-cella p{
   margin: 0!important;

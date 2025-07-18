@@ -318,7 +318,7 @@ class StatisticheView(LoginRequiredMixin, View):
         for it in monthly_qs:
             monthly_counts[it['mese']-1] = it['count']
 
-        # Fasce d’età per mese
+        # Fasce d'età per mese
         age_groups = [(0,5),(6,15),(16,25),(26,45),(46,200)]
         colors = ["#6a2dcc","#8041e0","#9666e4","#ad8be8","#c3b0ec"]
         today = date.today()
@@ -450,7 +450,7 @@ class EmailNotificationsView(LoginRequiredMixin, View):
     redirect_field_name = 'next'
 
     def get(self, request, *args, **kwargs):
-        # 1) recupera l’account Google collegato
+        # 1) recupera l'account Google collegato
         try:
             social = request.user.social_auth.get(provider='google-oauth2')
         except UserSocialAuth.DoesNotExist:
@@ -719,7 +719,7 @@ class AppuntamentiSalvaView(LoginRequiredMixin, View):
         # Normalizza se esiste
         if prezzo_raw is not None:
             prezzo_raw = str(prezzo_raw).strip()
-            prezzo_raw = prezzo_raw.replace("“", "").replace("”", "").strip()
+            prezzo_raw = prezzo_raw.replace(""", "").replace(""", "").strip()
         else:
             prezzo_raw = ""
 
@@ -735,7 +735,7 @@ class AppuntamentiSalvaView(LoginRequiredMixin, View):
                     "error": f"Prezzo non valido: {prezzo_raw}"
                 }, status=400)
 
-        # Adesso creo l’appuntamento passando il dottore corretto:
+        # Adesso creo l'appuntamento passando il dottore corretto:
         appt = Appointment.objects.create(
             tipologia_visita   = data.get("tipologia_visita"),
             paziente_id        = data.get("pazienteId"),
@@ -1273,6 +1273,52 @@ class CartellaPazienteView(LoginRequiredMixin,View):
         ultimo_appuntamento = storico_appuntamenti.filter(data__lt=today).last() or None
         prossimo_appuntamento = storico_appuntamenti.filter(data__gte=today).first() or None
 
+        # --- INIZIO LOGICA DIARIO CLINICO (da DiarioCLinicoView) ---
+        # Farmaci prescritti
+        farmaci_prescritti = PrescrizioneFarmaco.objects.filter(paziente=persona).order_by('-data_prescrizione')
+        # Accertamenti (PrescrizioniEsami)
+        accertamenti = PrescrizioniEsami.objects.filter(paziente=persona).order_by('-data_visita')
+        # Prescrizioni libere
+        prescrizioni_libere = PrescrizioneLibera.objects.filter(persona=persona).order_by('-data_creazione')
+        # Visite/Appuntamenti
+        visite = Appointment.objects.filter(paziente=persona).order_by('-data')
+        # Unifica tutto in un'unica lista/dizionario per il diario
+        diario = []
+        for f in farmaci_prescritti:
+            diario.append({
+                'tipo': 'Farmaco',
+                'data': f.data_prescrizione,
+                'descrizione': f.farmaco.nome_farmaco,
+                'diagnosi': f.diagnosi,
+                'nota': f.note_medico,
+            })
+        for a in accertamenti:
+            diario.append({
+                'tipo': 'Accertamento',
+                'data': a.data_visita,
+                'descrizione': a.esami_prescritti,
+                'diagnosi': '',
+                'nota': '',
+            })
+        for pl in prescrizioni_libere:
+            diario.append({
+                'tipo': 'PrescrizioneLibera',
+                'data': pl.data_creazione,
+                'descrizione': pl.testo,
+                'diagnosi': '',
+                'nota': '',
+            })
+        for v in visite:
+            diario.append({
+                'tipo': 'Visita',
+                'data': v.data,
+                'descrizione': v.tipologia_visita,
+                'diagnosi': '',
+                'nota': v.note,
+            })
+        diario.sort(key=lambda x: x['data'], reverse=True)
+        # --- FINE LOGICA DIARIO CLINICO ---
+
         # CALCOLO DELLO SCORE DEGLI ORGANI
         punteggi_organi = {}
         dettagli_organi = {}
@@ -1281,7 +1327,6 @@ class CartellaPazienteView(LoginRequiredMixin,View):
 
         ultimo_referto = persona.referti.order_by('-data_ora_creazione').first()
         if ultimo_referto:
-            
             try:
                 dati = ultimo_referto.dati_estesi
                 # Configurazione esami per organo
@@ -1482,6 +1527,8 @@ class CartellaPazienteView(LoginRequiredMixin,View):
             # Problemi Paziente
             'problemi': problemi,
             'rischi': rischi,
+            # Diario clinico
+            'diario': diario,
         }
 
         return render(request, "includes/cartellaPaziente.html", context)
@@ -1817,46 +1864,67 @@ class NotaRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 @method_decorator(catch_exceptions, name='dispatch')
 class DiarioCLinicoView(LoginRequiredMixin,View):
     def get(self, request, id):
-
-        dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
+        dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user) 
         persona = get_object_or_404(TabellaPazienti, id=id)
-        today = timezone.now().date()
 
-        storico_appuntamenti = Appointment.objects.filter(
-            Q(nome_paziente__icontains=persona.name.strip()) &
-            Q(cognome_paziente__icontains=persona.surname.strip()) &
-            Q(dottore=dottore)
-        ).order_by('data', 'orario')
+        # Farmaci prescritti
+        farmaci = PrescrizioneFarmaco.objects.filter(paziente=persona).order_by('-data_prescrizione')
 
-        paginator = Paginator(storico_appuntamenti, 4)
-        page_number = request.GET.get('page')
-        storico_page = paginator.get_page(page_number)
+        # Accertamenti (PrescrizioniEsami)
+        accertamenti = PrescrizioniEsami.objects.filter(paziente=persona).order_by('-data_visita')
 
-        totale_appuntamenti = storico_appuntamenti.count()
-        appuntamenti_confermati = storico_appuntamenti.filter(confermato=True).count()
-        appuntamenti_per_mese = storico_appuntamenti.annotate(month=ExtractMonth('data')).values('month').annotate(count=Count('id')).order_by('month')
-        appuntamenti_per_mese_count = [0] * 12  
-        prossimo_appuntamento = storico_appuntamenti.filter(data__gte=today).order_by('data').first()
-        appuntamenti_passati = storico_appuntamenti.filter(data__lt=today).count()
-        ultimo_appuntamento = storico_appuntamenti.filter(data__lt=today).last()
+        # Prescrizioni libere
+        prescrizioni_libere = PrescrizioneLibera.objects.filter(persona=persona).order_by('-data_creazione')
 
-        for item in appuntamenti_per_mese:
-            appuntamenti_per_mese_count[item['month'] - 1] = item['count']
+        # Visite/Appuntamenti
+        visite = Appointment.objects.filter(paziente=persona).order_by('-data')
+
+        # Unifica tutto in un'unica lista/dizionario per il diario
+        diario = []
+        for f in farmaci:
+            diario.append({
+                'tipo': 'Farmaco',
+                'data': f.data_prescrizione,
+                'descrizione': f.farmaco.nome_farmaco,
+                'diagnosi': f.diagnosi,
+                'nota': f.note_medico,
+            })
+        for a in accertamenti:
+            diario.append({
+                'tipo': 'Accertamento',
+                'data': a.data_visita,
+                'descrizione': a.esami_prescritti,
+                'diagnosi': '',
+                'nota': '',
+            })
+        for pl in prescrizioni_libere:
+            diario.append({
+                'tipo': 'PrescrizioneLibera',
+                'data': pl.data_creazione,
+                'descrizione': pl.testo,
+                'diagnosi': '',
+                'nota': '',
+            })
+        for v in visite:
+            diario.append({
+                'tipo': 'Visita',
+                'data': v.data,
+                'descrizione': v.tipologia_visita,
+                'diagnosi': '',
+                'nota': v.note,
+            })
+        
+
+        # Ordina per data decrescente
+        diario.sort(key=lambda x: x['data'], reverse=True)
+        print(diario)
 
         context = {
-            'dottore': dottore,
             'persona': persona,
-            'storico_appuntamenti': storico_appuntamenti,
-            'totale_appuntamenti': totale_appuntamenti,
-            'appuntamenti_confermati': appuntamenti_confermati,
-            'prossimo_appuntamento': prossimo_appuntamento,
-            'appuntamenti_passati': appuntamenti_passati,
-            'ultimo_appuntamento': ultimo_appuntamento,
-            'storico_page': storico_page,
-            'appuntamenti_per_mese': appuntamenti_per_mese_count,
+            'diario': diario,
+            # ... altri dati già presenti
         }
-
-        return render(request, 'cartella_paziente/diario_clinico/diarioClinico.html', context)
+        return render(request, 'includes/cartellaPaziente.html', context)
 
 
 
@@ -3332,7 +3400,7 @@ class RefertoQuizView(LoginRequiredMixin,View):
                                 Ottima capacità vitale: Stato di salute eccellente sia a livello
                                 fisico che mentale. La forza muscolare, la funzionalità
                                 respiratoria e la mobilità sono ottimali. Il soggetto mostra
-                                un’ottima capacità cognitiva, un buon benessere psicologico e
+                                un'ottima capacità cognitiva, un buon benessere psicologico e
                                 una bassa vulnerabilità allo stress. Il rischio di declino
                                 funzionale e mentale è minimo.
                             """
@@ -3353,7 +3421,7 @@ class RefertoQuizView(LoginRequiredMixin,View):
                                 moderate, minore forza muscolare e resistenza. Potrebbero
                                 esserci segni di declino cognitivo o un aumento di ansia e
                                 stress, con possibili difficoltà nella gestione emotiva. Il rischio
-                                di cadute, affaticamento mentale e riduzione dell’autonomia
+                                di cadute, affaticamento mentale e riduzione dell'autonomia
                                 cresce. È consigliato un supporto medico e strategie di
                                 miglioramento.
                             """
@@ -3433,7 +3501,7 @@ class StampaRefertoView(LoginRequiredMixin,View):
                                 Ottima capacità vitale: Stato di salute eccellente sia a livello
                                 fisico che mentale. La forza muscolare, la funzionalità
                                 respiratoria e la mobilità sono ottimali. Il soggetto mostra
-                                un’ottima capacità cognitiva, un buon benessere psicologico e
+                                un'ottima capacità cognitiva, un buon benessere psicologico e
                                 una bassa vulnerabilità allo stress. Il rischio di declino
                                 funzionale e mentale è minimo.
                             """
@@ -3454,7 +3522,7 @@ class StampaRefertoView(LoginRequiredMixin,View):
                                 moderate, minore forza muscolare e resistenza. Potrebbero
                                 esserci segni di declino cognitivo o un aumento di ansia e
                                 stress, con possibili difficoltà nella gestione emotiva. Il rischio
-                                di cadute, affaticamento mentale e riduzione dell’autonomia
+                                di cadute, affaticamento mentale e riduzione dell'autonomia
                                 cresce. È consigliato un supporto medico e strategie di
                                 miglioramento.
                             """
@@ -4225,7 +4293,7 @@ class CalcolatoreRender(LoginRequiredMixin,View):
                         v_b12=v_b12,
                         v_d=v_d,
                         ves2=ves2,
-
+                        
                         telotest=telotest,
 
                         biological_age= biological_age,

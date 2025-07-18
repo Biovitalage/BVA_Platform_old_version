@@ -56,7 +56,6 @@ urlpatterns = [
     path("CartellaPaziente/requestSaveProblemi/<int:id>",       views.CartellaPazienteProblemi.as_view(),             name="cartellaPaziente_problemi"),
 
     ## URL SEZIONE DIARIO CLINICO
-    path("CartellaPaziente/<int:id>/Diario_Clinico",            views.DiarioCLinicoView.as_view(),                    name="diario_clinico"),
     path('aggiungi-farmaco/',                                   AggiungiFarmacoView.as_view(),                        name='aggiungi_farmaco'),
     path('rimuovi-farmaco/<int:prescrizione_id>/',              RimuoviFarmacoView.as_view(),                         name='rimuovi_farmaco'),
     path('get-farmaci-paziente/<int:paziente_id>/',             GetFarmaciPazienteView.as_view(),                     name='get_farmaci_paziente'),
