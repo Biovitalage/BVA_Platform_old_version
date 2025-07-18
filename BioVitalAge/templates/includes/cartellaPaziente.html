@@ -526,91 +526,27 @@
                     
                     <!-- DIARIO CLINICO -->
                     <div class="container-content diario-clinico" style="display: block;">
-                        <div class="header-table">
-                            <div class="header-cella">
-                                <p>Data</p>
-                            </div>
-                            <div class="header-cella">
-                                <p>Descrizione</p>
-                            </div>
-                            <div class="header-cella">
-                                <p>Diagnosi</p>
-                            </div>
-                            <div class="header-cella">
-                                <p>Nota</p>
-                            </div>
+                        <div class="header-table diario-clinico-header">
+                            <div class="header-cella"><p>Data</p></div>
+                            <div class="header-cella"><p>Tipo</p></div>
+                            <div class="header-cella"><p>Descrizione</p></div>
+                            <div class="header-cella"><p>Diagnosi</p></div>
+                            <div class="header-cella"><p>Nota</p></div>
                         </div>
-                    
                         <div class="container-table">
-                    
-                            <div class="row-table">
-                                <div class="row-cella">
-                                    <p>02/07/2025</p>
+                            {% for entry in diario %}
+                                <div class="row-table">
+                                    <div class="row-cella"><p>{{ entry.data|date:"d/m/Y H:i" }}</p></div>
+                                    <div class="row-cella"><p>{{ entry.tipo }}</p></div>
+                                    <div class="row-cella"><p>{{ entry.descrizione }}</p></div>
+                                    <div class="row-cella"><p>{{ entry.diagnosi }}</p></div>
+                                    <div class="row-cella"><p>{{ entry.nota }}</p></div>
                                 </div>
-                                <div class="row-cella">
-                                    <p>Xanax</p>
+                            {% empty %}
+                                <div class="row-table" style="grid-template-columns: 1fr;">
+                                    <div class="row-cella" colspan="5"><p>Nessun evento nel diario clinico.</p></div>
                                 </div>
-                                <div class="row-cella">
-                                    <p>depressione</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>nota testuale</p>
-                                </div>
-                            </div>
-                    
-                            <div class="row-table">
-                                <div class="row-cella">
-                                    <p>02/07/2025</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>emocromo e urino cultura</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>infezione</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>nota testuale</p>
-                                </div>
-                            </div>
-                    
-                            <div class="row-table">
-                                <div class="row-cella">
-                                    <p>02/07/2025</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>buona salute</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>costituzione</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>nota testuale</p>
-                                </div>
-                            </div>
-                        </div>
-                    
-                        <div class="pagination_tabella">
-                    
-                            {% if storico_page.has_previous %}
-                            <a class="previous" href="?page={{ storico_page.previous_page_number }}">Previous</a>
-                            {% else %}
-                            <span class="previous disabled">Previous</span>
-                            {% endif %}
-                    
-                            {% for num in storico_page.paginator.page_range %}
-                            {% if storico_page.number == num %}
-                            <span class="current">{{ num }}</span>
-                            {% else %}
-                            <a href="?page={{ num }}">{{ num }}</a>
-                            {% endif %}
                             {% endfor %}
-                    
-                            {% if storico_page.has_next %}
-                            <a class="next" href="?page={{ storico_page.next_page_number }}">Next</a>
-                            {% else %}
-                            <span class="next disabled">Next</span>
-                            {% endif %}
-                    
                         </div>
                     </div>
                     
