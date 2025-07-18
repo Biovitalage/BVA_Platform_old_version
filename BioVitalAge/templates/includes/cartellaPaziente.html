@@ -62,6 +62,13 @@
                     <button title="Prescrione libera" id="openPrescrizioneLiberaBtn"><img src="{% static 'image/Foglio.png' %}" alt=""></button> <!-- libera -->
                     <button title="Prescrione certificati"><img src="{% static 'image/Certificato.png' %}" alt=""></button> <!-- certificati -->
                 </div>
+
+                <div class="informazioni-personali">
+                    <h3>{{ persona.name }} {{ persona.surname }}</h3> 
+                    <h3>{{ persona.codice_fiscale }}</h3>
+                    <h3>{{ persona.dob }}, {{ persona.residence }} </h3> 
+                    <h3>{{ persona.gender }} - {{ persona.chronological_age }}</h3> 
+                </div>
             
                 <div class="tools-container-left-side" style="display: flex; justify-content: center; align-items: center; width: 28rem">
 
@@ -80,8 +87,7 @@
                     </div>
 
                 </div>
-
-                
+ 
             </div>  
 
             <!-- MESSAGGIO DI SUCCESSO CON PUNTEGGIO -->

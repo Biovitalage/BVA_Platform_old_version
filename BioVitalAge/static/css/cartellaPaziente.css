@@ -2087,3 +2087,29 @@ strong {
 
 
 
+
+
+
+/* INFORMAZIONI PERSONALI */
+
+.main-title-nav{
+  height: 8rem !important;
+}
+
+
+
+
+.informazioni-personali{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.informazioni-personali h3{
+  color: white;
+  font-size: 16px !important;
+}
+.informazioni-personali h3:first-of-type{
+  color: var(--contrast-color2);
+  font-weight: bold;
+}
