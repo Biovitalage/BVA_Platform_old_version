@@ -34,40 +34,10 @@
 
         <!-- JS Import -->
         <!-- Modale Prescrizioni -->
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-            const openBtn = document.getElementById("openPrescrizioniBtn");
-            const closeBtn = document.querySelector("#ModaleInserimento .close");
-            const backdrop = document.getElementById("backdropModale");
-            const modal = document.getElementById("ModaleInserimento");
-        
-            function openModal() {
-                backdrop.style.display = "block";
-                modal.style.display = "block";
-                document.body.style.overflow = "hidden";
-                gsap.fromTo(modal, { opacity: 0, y: -50 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" });
-            }
-        
-            function closeModal() {
-                gsap.to(modal, {
-                opacity: 0,
-                y: -50,
-                duration: 0.3,
-                ease: "power2.in",
-                onComplete: () => {
-                    modal.style.display = "none";
-                    backdrop.style.display = "none";
-                    document.body.style.overflow = "auto";
-                },
-                });
-            }
-        
-            if (openBtn) openBtn.addEventListener("click", openModal);
-            if (closeBtn) closeBtn.addEventListener("click", closeModal);
-            if (backdrop) backdrop.addEventListener("click", closeModal); // click fuori per chiudere
-            });
-        </script> 
         <script src="{% static 'js/cartella_paziente/prescrizioni/PrescrizioniFarmaci.js' %}" defer type="module"></script>
+        <script>
+
+        </script>
 
     </head>
 
@@ -1375,13 +1345,6 @@
         <!-- IMPORT JS PRE DOBY CLOSE TAG -->
         <script src="{% static 'js/cartellaPaziente.js' %}" type="module"></script>
         
-        <!--  CLOSE MODALE MESSAGE SUCCESS -->
-        <script>
-            function closeModal(){
-                const modale = document.getElementById('modal_message');
-                modale.style.display = 'none';
-            }
-        </script>
 
         <script>
             window.PAZIENTE_ID = "{{ persona.id }}";
