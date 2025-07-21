@@ -45,7 +45,11 @@
                 {% if dottore.isSecretary %}
                     Segr. {{ dottore.cognome }}
                 {% elif dottore.user %}
-                    Dottor. {{ dottore.cognome }}
+                    {% if dottore.gender == "female" %}
+                        Dott.ssa {{ dottore.cognome }}
+                    {% else %}
+                        Dr. {{ dottore.cognome }}
+                    {% endif %}
                 {% else %}
                     Account Demo
                 {% endif %}

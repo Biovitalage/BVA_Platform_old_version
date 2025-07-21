@@ -39,6 +39,30 @@
 
         </script>
 
+        <style>
+        .custom-modal {
+          position: fixed;
+          z-index: 99999;
+          left: 0; top: 0; width: 100vw; height: 100vh;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .custom-modal-content {
+          background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+          padding: 2rem; min-width: 350px; max-width: 95vw; min-height: 120px; position: relative;
+        }
+        .custom-modal-close {
+          position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; color: #c74b5b;
+        }
+        .custom-modal-backdrop {
+          position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.25); z-index: 99998;
+        }
+        .custom-modal-content textarea { width: 100%; min-height: 80px; margin-top: 1rem; }
+        .custom-modal-content select, .custom-modal-content input { width: 100%; margin-top: 1rem; }
+        .custom-modal-content .farmaco-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+        .custom-modal-content .farmaco-row span { flex: 1; }
+        .custom-modal-content .farmaco-row button { margin-left: 1rem; }
+        </style>
+
     </head>
 
     <body>
@@ -588,7 +612,7 @@
                         </div>
                         <div class="container-table">
                             {% for entry in diario_page %}
-                                <div class="row-table diario-clinico-row">
+                                <div class="row-table diario-clinico-row" data-type="diario" data-data="{{ entry.data|date:'d/m/Y H:i' }}" data-diariotipo="{{ entry.tipo }}" data-descrizione="{{ entry.descrizione }}" data-diagnosi="{{ entry.diagnosi }}" data-nota="{{ entry.nota }}">
                                     <div class="row-cella" title="{{ entry.data|date:"d/m/Y H:i" }}"><p>{{ entry.data|date:"d/m/Y H:i" }}</p></div>
                                     <div class="row-cella" title="{{ entry.tipo|default:"non inserito" }}"><p>{{ entry.tipo|default:"non inserito" }}</p></div>
                                     <div class="row-cella" title="{{ entry.descrizione|default:"non inserito" }}"><p>{{ entry.descrizione|default:"non inserito" }}</p></div>
@@ -645,7 +669,7 @@
                                 </div>
                             {% else %}
                                 {% for farmaco in farmaci_page %}
-                                <div class="row-table">
+                                <div class="row-table" data-type="farmaco" data-nome="{{ farmaco.nome_farmaco }}" data-posologia="{{ farmaco.dosaggio }}">
                                     <div class="row-cella">
                                         <p>{{ farmaco.created_at|date:"d/m/Y" }}</p>
                                     </div>
@@ -1458,67 +1482,219 @@
         });
         </script>
 
+        <!-- MODALE DINAMICA GENERICA -->
+        <div id="dynamicModal" class="custom-modal" style="display:none;">
+          <div class="custom-modal-content">
+            <span class="custom-modal-close" id="closeDynamicModal">&times;</span>
+            <h3 id="dynamicModalTitle"></h3>
+            <div id="dynamicModalBody"></div>
+          </div>
+        </div>
+        <div id="dynamicModalBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
+
         <script>
-            // Gestione chiusura modale con la X
-            document.addEventListener('DOMContentLoaded', function() {
-                // ... (codice esistente) ...
-                
-                // --- LOGICA MODALE NOTE ---
-                const modaleNote = document.getElementById('modale_note');
-                const backdropNote = document.getElementById('backdropModaleNote');
-                const openNoteBtn = document.getElementById('modale-note');
-                const closeNoteBtn = document.getElementById('close-note-btn');
+        document.addEventListener('DOMContentLoaded', function() {
+          // Utility: dati farmaci dal JSON (puoi sostituire con fetch se vuoi AJAX)
+          const farmaciJSON = [
+            { nome: "NMN capsule lisosomiali Purovitalis 125 mg", posologia: "Una capsula a colazione ed una a pranzo" },
+            { nome: "Resveratrolo Yamamoto cps da 150 mg", posologia: "Una capsula al giorno" },
+            { nome: "Advanced Omega D3 perle soft gels", posologia: "Una perla dopo pranzo e una perla dopo cena" },
+            { nome: "NEVRIDOL 800 cpr", posologia: "Una compressa al giorno" },
+            { nome: "MELAFLOR cps", posologia: "Una capsula due volte al giorno, preferibilmente a stomaco vuoto" },
+            { nome: "CARDIOLIPID 10 cpr", posologia: "Una compressa al giorno" },
+            { nome: "L-acetilcarnitina 500 mg in fiale IV", posologia: "Somministrare in fisiologica 250 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
+            { nome: "Fosfolipidi ipotalamici 28 mg fiale IV", posologia: "Somministrare in fisiologica 250 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
+            { nome: "Glutatione 600 mg fiale IV", posologia: "Somministrare in fisiologica 100 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
+            { nome: "Vitamina C1 1 g fiale IV", posologia: "Somministrare in fisiologica 100 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" }
+          ];
 
-                const noteForm = document.getElementById('note-form');
-                const formTitle = document.getElementById('note-form-title');
-                const notaIdField = document.getElementById('nota_id_field');
-                const titoloField = document.getElementById('titolo_nota_field');
-                const contenutoField = document.getElementById('contenuto_nota_field');
-                const newNoteBtn = document.getElementById('new-note-btn');
-                const noteItems = document.querySelectorAll('.note-item');
+          // --- MODALE DINAMICA ---
+          const modal = document.getElementById('dynamicModal');
+          const modalBackdrop = document.getElementById('dynamicModalBackdrop');
+          const modalTitle = document.getElementById('dynamicModalTitle');
+          const modalBody = document.getElementById('dynamicModalBody');
+          const closeBtn = document.getElementById('closeDynamicModal');
 
-                // Apri modale
-                if(openNoteBtn) {
-                    openNoteBtn.addEventListener('click', () => {
-                        modaleNote.style.display = 'block';
-                        backdropNote.style.display = 'block';
-                        document.body.style.overflow = 'hidden';
-                    });
-                }
+          function openDynamicModal({ title, content, onSave }) {
+            modalTitle.textContent = title;
+            modalBody.innerHTML = '';
+            if (typeof content === 'string') {
+              modalBody.innerHTML = content;
+            } else if (content instanceof HTMLElement) {
+              modalBody.appendChild(content);
+            }
+            modal.style.display = 'flex';
+            modalBackdrop.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            // Salva callback per uso futuro
+            modalBody._onSave = onSave;
+          }
+          function closeDynamicModal() {
+            modal.style.display = 'none';
+            modalBackdrop.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            modalBody.innerHTML = '';
+            modalBody._onSave = null;
+          }
+          if (closeBtn) closeBtn.onclick = closeDynamicModal;
+          if (modalBackdrop) modalBackdrop.onclick = closeDynamicModal;
 
-                // Chiudi modale
-                function closeModalNote() {
-                    modaleNote.style.display = 'none';
-                    backdropNote.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-                if(closeNoteBtn) closeNoteBtn.addEventListener('click', closeModalNote);
-                if(backdropNote) backdropNote.addEventListener('click', closeModalNote);
+          // --- LISTENER SU TUTTE LE ROW-TABLE ---
+          document.querySelectorAll('.row-table').forEach(row => {
+            // Aggiungi data-type e data-info in base al contesto (puoi personalizzare lato backend)
+            // Esempio: <div class="row-table" data-type="prescrizione_libera" data-id="..." data-testo="...">
+            row.addEventListener('click', function(e) {
+              // Evita click su bottoni interni
+              if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+              const type = row.dataset.type;
+              if (!type) return;
+              if (type === 'prescrizione_libera') {
+                // Mostra textarea con testo
+                const testo = row.dataset.testo || '';
+                const textarea = document.createElement('textarea');
+                textarea.value = testo;
+                textarea.placeholder = 'Modifica prescrizione libera...';
+                textarea.style.marginTop = '1rem';
+                // Bottone salva (solo frontend, puoi aggiungere AJAX)
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = 'Salva';
+                saveBtn.className = 'button';
+                saveBtn.style.marginTop = '1rem';
+                saveBtn.onclick = function() {
+                  // Qui puoi fare una chiamata AJAX per salvare
+                  row.dataset.testo = textarea.value;
+                  // Aggiorna la cella visibile se serve
+                  closeDynamicModal();
+                };
+                const container = document.createElement('div');
+                container.appendChild(textarea);
+                container.appendChild(saveBtn);
+                openDynamicModal({ title: 'Prescrizione Libera', content: container });
+              } else if (type === 'farmaco') {
+                // Mostra elenco farmaco e bottone modifica
+                const nome = row.dataset.nome || '';
+                const posologia = row.dataset.posologia || '';
+                const farmacoDiv = document.createElement('div');
+                farmacoDiv.className = 'farmaco-row';
+                farmacoDiv.innerHTML = `<span><b>${nome}</b><br><small>${posologia}</small></span>`;
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Modifica Farmaco';
+                editBtn.className = 'button';
+                farmacoDiv.appendChild(editBtn);
+                // Select nascosta
+                const select = document.createElement('select');
+                select.style.display = 'none';
+                select.innerHTML = '<option value="">-- Scegli farmaco --</option>' + farmaciJSON.map((f, i) => `<option value="${i}">${f.nome}</option>`).join('');
+                farmacoDiv.appendChild(select);
+                editBtn.onclick = function() {
+                  select.style.display = 'inline-block';
+                };
+                select.onchange = function() {
+                  const idx = select.value;
+                  if (idx === '') return;
+                  const f = farmaciJSON[idx];
+                  farmacoDiv.querySelector('span').innerHTML = `<b>${f.nome}</b><br><small>${f.posologia}</small>`;
+                  // Aggiorna la riga nella tabella
+                  row.dataset.nome = f.nome;
+                  row.dataset.posologia = f.posologia;
+                  row.querySelector('.row-cella:nth-child(2) p').textContent = f.nome;
+                  row.querySelector('.row-cella:nth-child(3) p').textContent = f.posologia;
+                  select.style.display = 'none';
+                  closeDynamicModal();
+                };
+                openDynamicModal({ title: 'Farmaco Prescritto', content: farmacoDiv });
+              } else if (type === 'diario') {
+                // Modale modificabile per diario clinico
+                const data = row.dataset.data || '';
+                const tipo = row.dataset.diariotipo || '';
+                const descrizione = row.dataset.descrizione || '';
+                const diagnosi = row.dataset.diagnosi || '';
+                const nota = row.dataset.nota || '';
+                // Crea form con input/textarea disabilitati
+                const form = document.createElement('form');
+                form.innerHTML = `
+                  <label>Data:<br><input type="text" name="data" value="${data}" disabled></label><br>
+                  <label>Tipo:<br><input type="text" name="tipo" value="${tipo}" disabled></label><br>
+                  <label>Descrizione:<br><textarea name="descrizione" disabled>${descrizione}</textarea></label><br>
+                  <label>Diagnosi:<br><input type="text" name="diagnosi" value="${diagnosi}" disabled></label><br>
+                  <label>Nota:<br><textarea name="nota" disabled>${nota}</textarea></label>
+                `;
+                // Pulsante Modifica
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.textContent = 'Modifica';
+                editBtn.className = 'button';
+                editBtn.style.marginTop = '1rem';
+                // Pulsante Salva (inizialmente nascosto)
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.textContent = 'Salva';
+                saveBtn.className = 'button';
+                saveBtn.style.marginTop = '1rem';
+                saveBtn.style.display = 'none';
+                // Logica Modifica
+                editBtn.onclick = function() {
+                  Array.from(form.elements).forEach(el => el.disabled = false);
+                  editBtn.style.display = 'none';
+                  saveBtn.style.display = 'inline-block';
+                };
+                // Logica Salva
+                saveBtn.onclick = function(e) {
+                  e.preventDefault();
+                  const newData = {
+                    id: row.dataset.id, // assicurati di avere questo attributo nella riga
+                    descrizione: form.elements.descrizione.value,
+                    diagnosi: form.elements.diagnosi.value,
+                    nota: form.elements.nota.value
+                  };
 
-                // Carica nota nel form quando cliccata
-                noteItems.forEach(item => {
-                    item.addEventListener('click', () => {
-                        formTitle.textContent = 'Modifica Nota';
-                        notaIdField.value = item.dataset.id;
-                        titoloField.value = item.dataset.titolo;
-                        contenutoField.value = item.dataset.contenuto;
-                        
-                        // Evidenzia l'elemento selezionato
-                        noteItems.forEach(i => i.classList.remove('active'));
-                        item.classList.add('active');
-                    });
-                });
-
-                // Pulisci form per creare nuova nota
-                if(newNoteBtn) {
-                    newNoteBtn.addEventListener('click', () => {
-                        formTitle.textContent = 'Crea Nuova Nota';
-                        noteForm.reset();
-                        notaIdField.value = '';
-                        noteItems.forEach(i => i.classList.remove('active'));
-                    });
-                }
+                  // Chiamata AJAX per salvare nel backend
+                  fetch('/api/update-diario/', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(newData)
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.success) {
+                      // Aggiorna la riga nella tabella (frontend)
+                      row.dataset.descrizione = newData.descrizione;
+                      row.dataset.diagnosi = newData.diagnosi;
+                      row.dataset.nota = newData.nota;
+                      // Aggiorna le celle visibili
+                      row.querySelector('.row-cella:nth-child(3) p').textContent = newData.descrizione;
+                      row.querySelector('.row-cella:nth-child(4) p').textContent = newData.diagnosi;
+                      row.querySelector('.row-cella:nth-child(5) p').textContent = newData.nota;
+                      
+                      // Mostra messaggio di successo
+                      const successPopup = document.createElement('div');
+                      successPopup.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#4CAF50; color:white; padding:15px; border-radius:5px; z-index:9999;';
+                      successPopup.textContent = 'Modifiche salvate con successo!';
+                      document.body.appendChild(successPopup);
+                      setTimeout(() => successPopup.remove(), 3000);
+                      
+                      closeDynamicModal();
+                    } else {
+                      alert('Errore durante il salvataggio: ' + (data.error || 'Errore sconosciuto'));
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Errore:', error);
+                    alert('Errore durante il salvataggio. Riprova più tardi.');
+                  });
+                };
+                const container = document.createElement('div');
+                container.appendChild(form);
+                container.appendChild(editBtn);
+                container.appendChild(saveBtn);
+                openDynamicModal({ title: 'Dettaglio Diario Clinico', content: container });
+              }
             });
+          });
+        });
         </script>
 
     </body>
