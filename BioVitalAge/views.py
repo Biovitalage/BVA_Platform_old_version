@@ -1242,6 +1242,10 @@ class CartellaPazienteView(LoginRequiredMixin, View):
 
         # Fetch dottore e paziente
         persona = ViewSetResult.get_patient_info(id)
+
+        note_text = persona.note_patologie
+        note_list = Nota.objects.filter(paziente=persona).order_by('-created_at')
+
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         dottori = UtentiRegistratiCredenziali.objects.all() if role else None
         farmaci = Farmaco.objects.all()
@@ -1525,7 +1529,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'score': score_js,
 
             # Note paziente
-            'note_text': note_text,
+            'note_list': note_list,
 
             # Score dettagliati
             'punteggi_organi': punteggi_organi,
@@ -1937,14 +1941,32 @@ class GetFarmaciPazienteView(LoginRequiredMixin, View):
 @method_decorator(catch_exceptions, name='dispatch')
 class CartellaPazienteNote(LoginRequiredMixin,View):
 
-    def post(self, request, id):
+        def post(self, request, id):
 
-        note_request = request.POST.get('note_patologie')
-        persona = get_object_or_404(TabellaPazienti, id=id)
-        persona.note_patologie = note_request
-        persona.save()
+            role = get_user_role(request)
+            persona = get_object_or_404(TabellaPazienti, id=id)
+            nota_id = request.POST.get('nota_id')
+            titolo_nota = request.POST.get('titolo_nota')
+            contenuto_nota = request.POST.get('contenuto_nota')
 
-        return redirect('cartella_paziente', id=id)
+            # Se il form delle note è stato inviato (identificato dalla presenza del titolo o del contenuto)
+            if titolo_nota or contenuto_nota:
+                if nota_id:
+                    nota = get_object_or_404(Nota, id=nota_id, paziente=persona)
+                    nota.titolo = titolo_nota
+                    nota.contenuto = contenuto_nota
+                    nota.save()
+                    messages.success(request, 'Nota aggiornata con successo!')
+                else:
+                    Nota.objects.create(
+                        paziente=persona,
+                        titolo=titolo_nota,
+                        contenuto=contenuto_nota
+                    )
+                    messages.success(request, 'Nota creata con successo!')
+                    return redirect('cartella_paziente', id=id)
+
+            return redirect('cartella_paziente', id=id)
 
 from django.http import JsonResponse
 

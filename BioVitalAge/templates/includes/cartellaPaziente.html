@@ -100,7 +100,7 @@
                 </div>
 
                 <div class="informazioni-personali">
-                    <h3>{{ persona.name }} {{ persona.surname }}</h3> 
+                    <h3>{{ persona.surname }} {{ persona.name }}</h3> 
                     <h3>{{ persona.codice_fiscale }}</h3>
                     <h3>{{ persona.dob|date:'d/m/Y' }} - {{ persona.residence }} - {{ persona.gender }} - {{ persona.chronological_age }} </h3> 
                     <h3>{{ persona.email }}</h3> 
@@ -212,23 +212,44 @@
 
             <!-- MODALE NOTE -->
             <div class="modale-note" id="modale_note">
-                <form method="POST" action="{% url 'cartella_paziente' persona.id %}">
-                    {% csrf_token %}
-                    <h3>Note Patologie Paziente</h3>
-
-                    <textarea name="note_patologie" id="text_area" placeholder="{{ persona.note_patologie | default:'Inserisci qui la nota testuale' }}"></textarea>
-
-                    <div class="modale-button">
-
-                        <button type="button" class="button" id="modify-btn-note">modify</button>
-
-                        <div class="sub-div-button">
-                            <button type="submit" class="button" id="save">save</button>
-                            <button type="button" class="button" id="close">close</button>
+                <div class="note-container">
+                    <!-- Elenco Note -->
+                    <div class="note-list-container">
+                        <h4>Elenco Note</h4>
+                        <div class="note-list">
+                            {% for nota in note_list %}
+                                <div class="note-item" data-id="{{ nota.id }}" data-titolo="{{ nota.titolo }}" data-contenuto="{{ nota.contenuto }}">
+                                    <strong>{{ nota.titolo }}</strong>
+                                    <small>{{ nota.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                            {% empty %}
+                                <p>Nessuna nota presente.</p>
+                            {% endfor %}
                         </div>
-
+                        <button type="button" class="button" id="new-note-btn">+ Nuova Nota</button>
                     </div>
-                </form>
+
+                    <!-- Form Modifica/Creazione -->
+                    <div class="note-form-container">
+                        <form id="note-form" method="POST" action="{% url 'cartellaPaziente_note' persona.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="nota_id" id="nota_id_field">
+                            
+                            <h3 id="note-form-title">Crea Nuova Nota</h3>
+                            
+                            <label for="titolo_nota_field">Titolo</label>
+                            <input type="text" name="titolo_nota" id="titolo_nota_field" placeholder="Inserisci il titolo della nota" required>
+                            
+                            <label for="contenuto_nota_field">Contenuto</label>
+                            <textarea name="contenuto_nota" id="contenuto_nota_field" placeholder="Inserisci qui il testo della nota..." required></textarea>
+
+                            <div class="modale-button">
+                                <button type="submit" class="button" id="save-note-btn">Salva Nota</button>
+                                <button type="button" class="button" id="close-note-btn">Chiudi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- MODALE PRESCRIZIONE LIBERA -->

@@ -20,7 +20,8 @@ from .models import (
     TerapiaInStudio,
     AllegatiLaboratorio,
     AllegatiStrumentale,
-    MicrobiotaReport
+    MicrobiotaReport,
+    Nota
 )
 
 @admin.register(MicrobiotaReport)
@@ -235,3 +236,9 @@ class AllegatiStrumentaleAdmin(admin.ModelAdmin):
     list_filter   = ("data_referto",)
     search_fields = ("paziente__name", "paziente__surname")
     readonly_fields = ("created_at",)
+
+@admin.register(Nota)
+class NotaAdmin(admin.ModelAdmin):
+    list_display  = ("paziente", "titolo", "created_at", "updated_at")
+    list_filter   = ("created_at",)
+    search_fields = ("paziente__name", "titolo", "contenuto")
