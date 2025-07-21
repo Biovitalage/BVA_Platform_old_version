@@ -188,7 +188,7 @@
 
             <!-- MODALE NOTE -->
             <div class="modale-note" id="modale_note">
-                <form method="POST" action="{% url 'cartellaPaziente_note' persona.id %}">
+                <form method="POST" action="{% url 'cartella_paziente' persona.id %}">
                     {% csrf_token %}
                     <h3>Note Patologie Paziente</h3>
 
@@ -230,27 +230,37 @@
             <!-- Backdrop -->
             <div class="backdrop-modale-problemi" id="backdropModaleProblemi"></div>
 
-            <!-- MODALE PROBLEMI -->
+            <!-- MODALE DIAGNOSI + PROBLEMI -->
             <div class="modale-problemi" id="modale_problemi">
-                <form method="POST" action="{% url 'cartellaPaziente_problemi' persona.id %}">
+                <form method="POST" action="{% url 'cartella_paziente' persona.id %}">
                     {% csrf_token %}
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="margin-bottom: 0;">Problemi Paziente</h3>
+                        <h3 style="margin-bottom: 0;">Aggiungi Diagnosi e Problema</h3>
                         <button type="button" class="close" id="close-problemi-x" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
                     </div>
 
-                    <!-- Step 1: Selezione diagnosi -->
+                    <!-- Step 1: Selezione diagnosi esistente o aggiunta nuova -->
                     <div class="step-diagnosi">
                         <label for="diagnosi_select">Seleziona una diagnosi:</label>
-                        <select id="diagnosi_select" name="diagnosi_id" required>
-                            <option value="" selected disabled>-- Scegli diagnosi --</option>
+                        <select id="diagnosi_select" name="diagnosi_id">
+                            <option value="" selected>-- Scegli diagnosi --</option>
                             {% for diagnosi in diagnosi_list %}
                                 <option value="{{ diagnosi.id }}">{{ diagnosi.data_diagnosi|date:"d/m/Y" }} - {{ diagnosi.descrizione|default:"(senza titolo)" }}</option>
                             {% endfor %}
+                            <option value="__new__">+ Aggiungi nuova diagnosi</option>
                         </select>
                     </div>
 
-                    <!-- Step 2: Appaiono solo dopo selezione diagnosi -->
+                    <!-- Step 1b: Form nuova diagnosi, appare solo se selezionato "nuova" -->
+                    <div id="nuova_diagnosi_form" style="display: none; margin-top: 1rem;">
+                        <label for="data_nuova_diagnosi">Data diagnosi:</label>
+                        <input type="date" id="data_nuova_diagnosi" name="data_nuova_diagnosi" />
+
+                        <label for="descrizione_nuova_diagnosi">Descrizione diagnosi:</label>
+                        <input type="text" id="descrizione_nuova_diagnosi" name="descrizione_nuova_diagnosi" placeholder="Inserisci descrizione diagnosi" />
+                    </div>
+
+                    <!-- Step 2: Appaiono solo dopo selezione diagnosi o inserimento nuova -->
                     <div id="problemi_step" style="display: none;">
                         <label for="text_area_problemi">Problemi associati</label>
                         <textarea name="problemi" id="text_area_problemi" placeholder="Inserisci qui i problemi oppure seleziona dalla lista"></textarea>
@@ -281,9 +291,6 @@
                 </form>
             </div>
 
-            <!-- ********************************************************** -->
-            <!-- CODICE DA PULIRE -->
-            <!-- ********************************************************** -->
             <script>
                 // Gestione chiusura modale con la X
                 document.addEventListener('DOMContentLoaded', function() {
@@ -301,16 +308,22 @@
             </script>
 
             <script>
-                // Mostra la sezione problemi solo dopo selezione diagnosi
+                // Mostra la sezione problemi solo dopo selezione diagnosi o inserimento nuova
                 document.addEventListener('DOMContentLoaded', function() {
                     var diagnosiSelect = document.getElementById('diagnosi_select');
                     var problemiStep = document.getElementById('problemi_step');
+                    var nuovaDiagnosiForm = document.getElementById('nuova_diagnosi_form');
                     if (diagnosiSelect) {
                         diagnosiSelect.addEventListener('change', function() {
-                            if (this.value) {
-                                problemiStep.style.display = '';
+                            if (this.value === "__new__") {
+                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = '';
+                                if (problemiStep) problemiStep.style.display = '';
+                            } else if (this.value) {
+                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+                                if (problemiStep) problemiStep.style.display = '';
                             } else {
-                                problemiStep.style.display = 'none';
+                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+                                if (problemiStep) problemiStep.style.display = 'none';
                             }
                         });
                     }
@@ -321,7 +334,6 @@
                         icd10Select.addEventListener('change', function() {
                             var selected = this.options[this.selectedIndex];
                             if (selected && selected.value) {
-                                // Inserisci codice e descrizione nel textarea (append o replace)
                                 textAreaProblemi.value = selected.value + " - " + selected.text.replace(selected.value + " - ", "");
                             }
                         });
@@ -554,19 +566,38 @@
                             <div class="header-cella"><p>Nota</p></div>
                         </div>
                         <div class="container-table">
-                            {% for entry in diario %}
-                                <div class="row-table">
-                                    <div class="row-cella"><p>{{ entry.data|date:"d/m/Y H:i" }}</p></div>
-                                    <div class="row-cella"><p>{{ entry.tipo }}</p></div>
-                                    <div class="row-cella"><p>{{ entry.descrizione }}</p></div>
-                                    <div class="row-cella"><p>{{ entry.diagnosi }}</p></div>
-                                    <div class="row-cella"><p>{{ entry.nota }}</p></div>
+                            {% for entry in diario_page %}
+                                <div class="row-table diario-clinico-row">
+                                    <div class="row-cella" title="{{ entry.data|date:"d/m/Y H:i" }}"><p>{{ entry.data|date:"d/m/Y H:i" }}</p></div>
+                                    <div class="row-cella" title="{{ entry.tipo|default:"non inserito" }}"><p>{{ entry.tipo|default:"non inserito" }}</p></div>
+                                    <div class="row-cella" title="{{ entry.descrizione|default:"non inserito" }}"><p>{{ entry.descrizione|default:"non inserito" }}</p></div>
+                                    <div class="row-cella" title="{{ entry.diagnosi|default:"non inserito" }}"><p>{{ entry.diagnosi|default:"non inserito" }}</p></div>
+                                    <div class="row-cella" title="{{ entry.nota|default:"non inserito" }}"><p>{{ entry.nota|default:"non inserito" }}</p></div>
                                 </div>
                             {% empty %}
                                 <div class="row-table" style="grid-template-columns: 1fr;">
                                     <div class="row-cella" colspan="5"><p>Nessun evento nel diario clinico.</p></div>
                                 </div>
                             {% endfor %}
+                        </div>
+                        <div class="pagination_tabella">
+                            {% if diario_page.has_previous %}
+                                <a class="previous" href="?diario_page={{ diario_page.previous_page_number }}">Previous</a>
+                            {% else %}
+                                <span class="previous disabled">Previous</span>
+                            {% endif %}
+                            {% for num in diario_page.paginator.page_range %}
+                                {% if diario_page.number == num %}
+                                    <span class="current">{{ num }}</span>
+                                {% else %}
+                                    <a href="?diario_page={{ num }}">{{ num }}</a>
+                                {% endif %}
+                            {% endfor %}
+                            {% if diario_page.has_next %}
+                                <a class="next" href="?diario_page={{ diario_page.next_page_number }}">Next</a>
+                            {% else %}
+                                <span class="next disabled">Next</span>
+                            {% endif %}
                         </div>
                     </div>
                     
@@ -582,44 +613,33 @@
                             <div class="header-cella">
                                 <p>Dose</p>
                             </div>
-                            <div class="header-cella">
-                                <p>Frequenza</p>
-                            </div>
-                            <div class="header-cella">
-                                <p>Durata</p>
-                            </div>
-                            <div class="header-cella">
-                                <p>Note</p>
-                            </div>
                         </div>
                     
                         <div class="container-table">
-                            {% for farmaco in farmaci_page %}
-                            <div class="row-table">
-                                <div class="row-cella">
-                                    <p>{{ farmaco.created_at|date:"d/m/Y" }}</p>
+                            {% if farmaci_page|length == 0 %}
+                                <div class="row-table" style="grid-template-columns: 1fr;">
+                                    <div class="row-cella" colspan="3">
+                                        <p>Nessun farmaco presente.</p>
+                                    </div>
                                 </div>
-                                <div class="row-cella">
-                                    <p>{{ farmaco.nome_farmaco }}</p>
+                            {% else %}
+                                {% for farmaco in farmaci_page %}
+                                <div class="row-table">
+                                    <div class="row-cella">
+                                        <p>{{ farmaco.created_at|date:"d/m/Y" }}</p>
+                                    </div>
+                                    <div class="row-cella">
+                                        <p>{{ farmaco.nome_farmaco }}</p>
+                                    </div>
+                                    <div class="row-cella">
+                                        <p>{{ farmaco.dosaggio }}</p>
+                                    </div>
                                 </div>
-                                <div class="row-cella">
-                                    <p>{{ farmaco.dosaggio }}</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>{{ farmaco.posologia_personalizzata }}</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>{{ farmaco.data_inizio|date:"d/m/Y" }} - {{ farmaco.data_fine|date:"d/m/Y" }}</p>
-                                </div>
-                                <div class="row-cella">
-                                    <p>{{ farmaco.note_medico }}</p>
-                                </div>
-                            </div>
-                            {% endfor %}
+                                {% endfor %}
+                            {% endif %}
                         </div>
 
                         <div class="pagination_tabella">
-                    
                             {% if farmaci_page.has_previous %}
                             <a class="previous" href="?page={{ farmaci_page.previous_page_number }}">Previous</a>
                             {% else %}
@@ -639,7 +659,6 @@
                             {% else %}
                             <span class="next disabled">Next</span>
                             {% endif %}
-                    
                         </div>
                     </div>
                 </div>

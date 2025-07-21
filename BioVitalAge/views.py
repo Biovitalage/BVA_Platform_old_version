@@ -1209,7 +1209,7 @@ class InserisciPazienteView(LoginRequiredMixin,View):
 
 # VIEW CARTELLA PAZIENTE
 @method_decorator(catch_exceptions, name='dispatch')
-class CartellaPazienteView(LoginRequiredMixin,View):
+class CartellaPazienteView(LoginRequiredMixin, View):
 
     ICD10_ENDPOINT = 'http://www.icd10api.com/'
 
@@ -1319,6 +1319,11 @@ class CartellaPazienteView(LoginRequiredMixin,View):
         diario.sort(key=lambda x: x['data'], reverse=True)
         # --- FINE LOGICA DIARIO CLINICO ---
 
+        # PAGINAZIONE DIARIO CLINICO
+        diario_paginator = Paginator(diario, 3)
+        diario_page_number = request.GET.get('diario_page')
+        diario_page = diario_paginator.get_page(diario_page_number)
+
         # CALCOLO DELLO SCORE DEGLI ORGANI
         score, organi_problematici = self.calcola_score(esami_recenti, persona)
 
@@ -1381,15 +1386,13 @@ class CartellaPazienteView(LoginRequiredMixin,View):
             # Problemi Paziente
             'problemi': problemi,
             'rischi': rischi,
-            # Diario clinico
-            'diario': diario,
+            # Diario clinico paginato
+            'diario_page': diario_page,
         }
 
         return render(request, "includes/cartellaPaziente.html", context)
 
-
     def post(self, request, id):
-        
         role = get_user_role(request)
 
         def parse_italian_date(value):
@@ -1399,7 +1402,6 @@ class CartellaPazienteView(LoginRequiredMixin,View):
                 return None
 
         # ---- DATI NECESSARI AL RENDERING DELLA CARTELLA ----
-        
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         persona = get_object_or_404(TabellaPazienti, id=id)
         dati_diagnosi = Diagnosi.objects.filter(paziente=persona)
@@ -1408,7 +1410,36 @@ class CartellaPazienteView(LoginRequiredMixin,View):
         paginator = Paginator(farmaci, 3)
         page_number = request.GET.get('page')
         farmaci_page = paginator.get_page(page_number)
-    
+
+        # --- INIZIO LOGICA DIAGNOSI VIEW (POST) ---
+        # Se il form contiene dati di diagnosi, processali
+        diagnosi_id = request.POST.get('diagnosi_id')
+        problemi = request.POST.get('problemi')
+        rischi = request.POST.get('rischi')
+        data_diagnosi = request.POST.get('data_diagnosi')
+        note_diagnosi = request.POST.get('note_diagnosi')
+
+        # Se almeno uno dei campi di diagnosi è presente, salva/aggiorna la diagnosi
+        if problemi or rischi or data_diagnosi or note_diagnosi:
+            if diagnosi_id:
+                diagnosi_obj = get_object_or_404(Diagnosi, id=diagnosi_id, paziente=persona)
+            else:
+                diagnosi_obj = Diagnosi(paziente=persona)
+            if problemi is not None:
+                diagnosi_obj.problemi = problemi
+            if rischi is not None:
+                diagnosi_obj.rischi = rischi
+            if data_diagnosi:
+                try:
+                    diagnosi_obj.data_diagnosi = parse_italian_date(data_diagnosi)
+                except Exception:
+                    pass
+            if note_diagnosi is not None:
+                diagnosi_obj.note = note_diagnosi
+            diagnosi_obj.save()
+        # --- FINE LOGICA DIAGNOSI VIEW (POST) ---
+
+        # Aggiorna i dati anagrafici del paziente
         persona.codice_fiscale = request.POST.get('codice_fiscale')
         persona.dob = parse_date(request.POST.get('dob'))
         persona.residence = request.POST.get('residence')
@@ -1428,7 +1459,7 @@ class CartellaPazienteView(LoginRequiredMixin,View):
                 persona.dottore_id = int(doctor_id)
             else:
                 persona.dottore = None      
-                 
+
         persona.save()
 
         # RI–CALCOLO dei dati che ti servono
@@ -1462,24 +1493,27 @@ class CartellaPazienteView(LoginRequiredMixin,View):
         if ultimo_referto:
             dati_estesi_ultimo_referto = DatiEstesiRefertiEtaBiologica.objects.filter(referto=ultimo_referto).first()
 
+        # Aggiorna la lista diagnosi dopo eventuale inserimento/modifica
+        diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
+
         context = {
             'persona': persona,
             'referti_recenti': referti_recenti,
             'dati_estesi': dati_estesi,
-            
             'dati_estesi_ultimo_referto': dati_estesi_ultimo_referto,
-            'dottore' : dottore,
+            'dottore': dottore,
             'referti_test_recenti': ultimo_referto,
             'ultimo_appuntamento': ultimo_appuntamento,
             'prossimo_appuntamento': prossimo_appuntamento,
             'farmaci_page': farmaci_page,
             'dati_diagnosi': dati_diagnosi,
+            'diagnosi_list': diagnosi_list,  # aggiornata
 
             #ULTIMO REFERTO ETA METABOLICA
             'ultimo_referto_eta_metabolica': ultimo_referto_eta_metabolica,
             #ULTIMO REFERTO CAPACITA' VITALE
             'ultimo_referto_capacita_vitale': ultimo_referto_capacita_vitale,
-            "success" : True,
+            "success": True,
         }
         return render(request, "includes/cartellaPaziente.html", context)
 
@@ -4607,7 +4641,7 @@ class CalcolatoreRender(LoginRequiredMixin,View):
                         tot_bili=tot_bili,
                         direct_bili=direct_bili,
                         indirect_bili=indirect_bili,
-                       
+
                         ves=ves,
                         pcr_c=pcr_c,
 
@@ -4640,22 +4674,22 @@ class CalcolatoreRender(LoginRequiredMixin,View):
                         biological_age= biological_age,
                     )
                     dati_estesi.save()
-                
-                # Context da mostrare nel template
-                context = {
-                    "show_modal": True,
-                    "biological_age": biological_age,
-                    "data": data,
-                    "id_persona": paziente_id,
+
+                    # Context da mostrare nel template
+                    context = {
+                        "show_modal": True,
+                        "biological_age": biological_age,
+                        "data": data,
+                        "id_persona": paziente_id,
                     'dottore' : dottore,
-                }
+                    }
 
-                return render(request, "cartella_paziente/eta_biologica/calcolatore.html", context)
-
+                    return render(request, "cartella_paziente/eta_biologica/calcolatore.html", context)
+                
         except Exception as e:
             error_message = f"System error: {str(e)}\n{traceback.format_exc()}"
             print(error_message)
-
+            
             context = {
                 "error": "Si è verificato un errore di sistema. Controlla di aver inserito tutti i dati corretti nei campi necessari e riprova.",
                 "dettaglio": error_message 
@@ -4701,8 +4735,8 @@ class PersonaDetailView(LoginRequiredMixin,View):
         referto_id = request.GET.get("referto_id")
 
         if referto_id:                     
-            referto = get_object_or_404(RefertiEtaBiologica,id=referto_id,paziente=persona)
-        else:                              
+            referto = get_object_or_404(RefertiEtaBiologica, id=referto_id, paziente=persona)
+        else:
             referto = RefertiEtaBiologica.objects.filter(paziente=persona).order_by("-data_ora_creazione").first()
 
         dati_estesi = DatiEstesiRefertiEtaBiologica.objects.filter(referto=referto).first() if referto else None

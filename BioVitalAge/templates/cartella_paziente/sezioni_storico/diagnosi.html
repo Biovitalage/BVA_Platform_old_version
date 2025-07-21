@@ -308,7 +308,7 @@
       
           <!-- Corpo della modale -->
           <div class="modal-section">
-            <form id="diagnosis-form" method="post" action="{% url 'diagnosi' persona.id %}" class="form-appointment" data-id="{{ diagnosi.id }}" data-mode="create">
+            <form id="diagnosis-form" method="post" action="{% url 'cartella_paziente' persona.id %}" class="form-appointment" data-id="{{ diagnosi.id }}" data-mode="create">
                 {% csrf_token %}
                 <input type="hidden" name="id_diagnosi" id="id_diagnosi">
                 <div class="w-full">

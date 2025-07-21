@@ -114,14 +114,59 @@
   left: 50%;
   transform: translate(-50%, -50%);
   width: 850px;
-  height: 700px;
+  height: 795px;
   z-index: 9999;
   padding: 20px;
   overflow: auto;
   display: none;
 }
-.modale-problemi h3{
-  color: var(--contrast-color);
+/* Input, select e textarea nella modale problemi */
+.modale-problemi input[type="text"],
+.modale-problemi select,
+.modale-problemi textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--contrast-color-shadow);
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 16px;
+  color: var(--dark1);
+  margin-top: 0.5rem;
+  margin-bottom: 5px;
+  box-shadow: 1px 1px 4px 0px rgba(0,0,0,0.04);
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.modale-problemi input[type="date"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--contrast-color-shadow);
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 16px;
+  color: var(--dark1);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 1px 1px 4px 0px rgba(0,0,0,0.04);
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.modale-problemi input[type="text"]:focus,
+.modale-problemi select:focus,
+.modale-problemi textarea:focus {
+  border: 1.5px solid var(--contrast-color2);
+  box-shadow: 0 0 0 2px var(--contrast-color-shadow);
+}
+.modale-problemi input[type="date"]:focus {
+  border: 1.5px solid var(--contrast-color2);
+  box-shadow: 0 0 0 2px var(--contrast-color-shadow);
+}
+.modale-problemi select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: #fff url('data:image/svg+xml;utf8,<svg fill="%233a255d" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 0.7rem center/1.2em;
+  min-width: 160px;
 }
 .modale-problemi textarea{
   width: 100%;
@@ -180,6 +225,21 @@
 }
 #modify-btn-problemi:hover{
   background-color: var(--contrast-color);
+}
+#close-problemi-x{
+  background-color: var(--contrast-color2);
+  transition: all 0.3s ease-in-out;
+  border: 2px solid var(--contrast-color2);
+  color: var(--contrast-color2);
+  border-radius: 8px;
+  padding: 5px 10px;
+  margin-top: -1rem;
+  margin-right: 0.5rem;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+#close-problemi-x:hover{
+  background-color: var(--contrast-color);
+  color: var(--contrast-color);
 }
 
 /* STYLE LISTA PROBLEMI */
@@ -677,7 +737,7 @@
   border-bottom: 1px solid #DDD;
 }
 .farmaci .header-table{
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 .second-table{
   grid-template-columns: 50% 50%;
@@ -685,6 +745,7 @@
 .diario-clinico-header{
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
 }
+
 .container-header-diario-second{
   display: flex;
   justify-content: flex-end;
@@ -710,20 +771,21 @@
   display: grid;
   grid-template-columns: 15% 45% 20% 20%;
 }
+.diario-clinico-row{
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
 .farmaci .row-table{
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 .second-row{
   grid-template-columns: 50% 50%;
 }
 .row-cella{
-  display: flex;
-  justify-content: center;
-  align-items: center;
   padding: 10px;
   border: 1px solid #ddd;
+  text-align: center;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

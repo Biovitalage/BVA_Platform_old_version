@@ -294,45 +294,140 @@ modifyButton.addEventListener('click', ()=>{
 
 
 /*  -----------------------------------------------------------------------------------------------
-  Funzione modale problemi
+  Funzione modale problemi e diagnosi (spostata dal template)
   --------------------------------------------------------------------------------------------------- */
-const modaleProblemi = document.getElementById('modale_problemi');
-const buttonModaleProblemi = document.getElementById('modale-problemi');
-const buttonCloseModaleProblemi = document.getElementById('close-problemi')
-const backdropModaleProblemi = document.getElementById('backdropModaleProblemi')
-const textAreaProblemi = document.getElementById('text_area')
-const modifyButtonProblemi = document.getElementById('modify-btn-problemi')
-
-// Apertura della modale
-buttonModaleProblemi.addEventListener('click', ()=>{
-  modaleProblemi.style.display = 'block';
-  backdropModaleProblemi.style.display = 'block';
-  document.body.style.overflow = 'hidden';
-})
-
-// Chiusura con il bottone “×”
-buttonCloseModaleProblemi.addEventListener('click', ()=>{
-  modaleProblemi.style.display = 'none';
-  backdropModaleProblemi.style.display = 'none';
-  document.body.style.overflow = 'auto';
-})
-
-// Alla selezione del problema nella lista deve autocompilarsi la textarea con il problema selezionato
-
-// Trova la lista dei problemi (assumendo che sia una lista di <p> dentro .lista-problemi)
-// Usa event delegation per assicurarti che il click venga rilevato anche se i <p> vengono generati dinamicamente
 document.addEventListener('DOMContentLoaded', function() {
-  const listaProblemiContainer = document.querySelector('.lista-problemi');
+  const modaleProblemi = document.getElementById('modale_problemi');
+  const buttonModaleProblemi = document.getElementById('modale-problemi');
+  const buttonCloseModaleProblemi = document.getElementById('close-problemi');
+  const buttonCloseXProblemi = document.getElementById('close-problemi-x');
+  const backdropModaleProblemi = document.getElementById('backdropModaleProblemi');
   const textAreaProblemi = document.getElementById('text_area_problemi');
+  const diagnosiSelect = document.getElementById('diagnosi_select');
+  const problemiStep = document.getElementById('problemi_step');
+  const nuovaDiagnosiForm = document.getElementById('nuova_diagnosi_form');
+  const icd10Select = document.getElementById('icd10_select');
+
+  // Apertura modale
+  if (buttonModaleProblemi) {
+    buttonModaleProblemi.addEventListener('click', function() {
+      modaleProblemi.style.display = 'block';
+      backdropModaleProblemi.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    });
+  }
+  // Chiusura modale (bottone "Chiudi" e X)
+  function closeProblemiModal() {
+    modaleProblemi.style.display = 'none';
+    backdropModaleProblemi.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+  if (buttonCloseModaleProblemi) {
+    buttonCloseModaleProblemi.addEventListener('click', closeProblemiModal);
+  }
+  if (buttonCloseXProblemi) {
+    buttonCloseXProblemi.addEventListener('click', closeProblemiModal);
+  }
+  if (backdropModaleProblemi) {
+    backdropModaleProblemi.addEventListener('click', closeProblemiModal);
+  }
+
+  // Step diagnosi/problemi: mostra/nascondi form nuova diagnosi e step problemi
+  if (diagnosiSelect) {
+    diagnosiSelect.addEventListener('change', function() {
+      if (this.value === "__new__") {
+        if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = '';
+        if (problemiStep) problemiStep.style.display = '';
+      } else if (this.value) {
+        if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+        if (problemiStep) problemiStep.style.display = '';
+      } else {
+        if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+        if (problemiStep) problemiStep.style.display = 'none';
+      }
+    });
+  }
+
+  // Autocompletamento textarea problemi da select ICD10
+  if (icd10Select && textAreaProblemi) {
+    icd10Select.addEventListener('change', function() {
+      var selected = this.options[this.selectedIndex];
+      if (selected && selected.value) {
+        textAreaProblemi.value = selected.value + " - " + selected.text.replace(selected.value + " - ", "");
+      }
+    });
+  }
+
+  // Click su problemi ICD10 (lista-problemi) per autocompilare la textarea
+  const listaProblemiContainer = document.querySelector('.lista-problemi');
   if (listaProblemiContainer && textAreaProblemi) {
     listaProblemiContainer.addEventListener('click', function(e) {
-      // Verifica che il click sia su un <p> diretto dentro .lista-problemi
       if (e.target && e.target.tagName === 'P') {
         if (textAreaProblemi.hasAttribute('disabled')) {
           textAreaProblemi.removeAttribute('disabled');
         }
         textAreaProblemi.value = e.target.textContent;
       }
+    });
+  }
+});
+
+// Gestione submit AJAX per la modale problemi/diagnosi
+// (chiude la modale e aggiorna la tabella senza redirect)
+document.addEventListener('DOMContentLoaded', function() {
+  const formProblemi = document.querySelector('#modale_problemi form');
+  const modaleProblemi = document.getElementById('modale_problemi');
+  const backdropModaleProblemi = document.getElementById('backdropModaleProblemi');
+  const problemiTableContainer = document.querySelector('.container-content-second');
+  const saveBtn = document.getElementById('save-problemi');
+
+  if (formProblemi) {
+    formProblemi.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(formProblemi);
+      const url = formProblemi.getAttribute('action');
+      const csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+      saveBtn.disabled = true;
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      })
+      .then(response => response.text())
+      .then(html => {
+        // Aggiorna la tabella problemi (container-content-second)
+        if (problemiTableContainer) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const nuovaTabella = doc.querySelector('.container-content-second');
+          if (nuovaTabella) {
+            problemiTableContainer.innerHTML = nuovaTabella.innerHTML;
+          }
+        }
+        // Chiudi la modale
+        modaleProblemi.style.display = 'none';
+        backdropModaleProblemi.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        // Mostra messaggio di successo
+        showAlert && showAlert({
+          type: 'success',
+          message: 'Diagnosi/problema salvato con successo!',
+          borderColor: '#10b981',
+        });
+      })
+      .catch(() => {
+        showAlert && showAlert({
+          type: 'error',
+          message: 'Errore nel salvataggio del problema/diagnosi.',
+          borderColor: '#ef4444',
+        });
+      })
+      .finally(() => {
+        saveBtn.disabled = false;
+      });
     });
   }
 });
