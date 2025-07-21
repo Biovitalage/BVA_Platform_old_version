@@ -125,7 +125,7 @@ urlpatterns = [
     
     ## URL PIANO TERAPEUTICO
     path('Cartella_Paziente/Piano_Terapeutico/<int:persona_id>/',                                   views.PianoTerapeutico.as_view(),                       name='piano_terapeutico'),
-    path('CartellaPaziente/Piano_Terapeutico/Prescrizioni_Esami/<int:persona_id>/',                 views.PrescrizioniView.as_view(),                       name='prescrizioni'),
+    path("Cartella_Paziente/Piano_Terapeutico/Prescrizioni/<int:persona_id>/",                      views.PrescrizioniView.as_view(),                       name='prescrizioni'),
     
     ## SEZIONE MICROBIOTA
     path('CartellaPaziente/Microbiota/<int:id>/',                      views.MicrobiotaView.as_view(),                name='microbiota_detail'),

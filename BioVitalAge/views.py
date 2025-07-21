@@ -1318,6 +1318,9 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             })
         diario.sort(key=lambda x: x['data'], reverse=True)
         # --- FINE LOGICA DIARIO CLINICO ---
+        for entry in diario:
+            if isinstance(entry['data'], date) and not isinstance(entry['data'], datetime):
+                entry['data'] = datetime.combine(entry['data'], datetime.min.time())
 
         # PAGINAZIONE DIARIO CLINICO
         diario_paginator = Paginator(diario, 3)
