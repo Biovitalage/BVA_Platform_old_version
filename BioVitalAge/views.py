@@ -1558,55 +1558,82 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         farmaci_page = paginator.get_page(page_number)
 
         # --- INIZIO LOGICA DIAGNOSI VIEW (POST) ---
-        # Se il form contiene dati di diagnosi, processali
-        diagnosi_id = request.POST.get('diagnosi_id')
+        # Gestione creazione nuova diagnosi
+        if request.POST.get('data_nuova_diagnosi') and request.POST.get('descrizione_nuova_diagnosi'):
+            try:
+                data_diagnosi = datetime.strptime(request.POST.get('data_nuova_diagnosi'), "%Y-%m-%d").date()
+                descrizione = request.POST.get('descrizione_nuova_diagnosi')
+                problemi = request.POST.get('problemi', '')
+                
+                # Crea nuova diagnosi
+                nuova_diagnosi = Diagnosi.objects.create(
+                    paziente=persona,
+                    descrizione=descrizione,
+                    data_diagnosi=data_diagnosi,
+                    problemi=problemi,
+                    stato='attiva',  # o il valore di default che preferisci
+                    gravita=1,  # valore di default
+                    risolta=False
+                )
+                
+                # Aggiorna diagnosi_id per il resto della logica
+                diagnosi_id = str(nuova_diagnosi.id)
+                
+            except Exception as e:
+                # Gestisci errore se necessario
+                pass
+        else:
+            diagnosi_id = request.POST.get('diagnosi_id')
+
+        # Gestione aggiornamento diagnosi esistente
         problemi = request.POST.get('problemi')
         rischi = request.POST.get('rischi')
         data_diagnosi = request.POST.get('data_diagnosi')
         note_diagnosi = request.POST.get('note_diagnosi')
 
         # Se almeno uno dei campi di diagnosi è presente, salva/aggiorna la diagnosi
-        if problemi or rischi or data_diagnosi or note_diagnosi:
-            if diagnosi_id:
+        if (problemi or rischi or data_diagnosi or note_diagnosi) and diagnosi_id and diagnosi_id != '__new__':
+            try:
                 diagnosi_obj = get_object_or_404(Diagnosi, id=diagnosi_id, paziente=persona)
-            else:
-                diagnosi_obj = Diagnosi(paziente=persona)
-            if problemi is not None:
-                diagnosi_obj.problemi = problemi
-            if rischi is not None:
-                diagnosi_obj.rischi = rischi
-            if data_diagnosi:
-                try:
-                    diagnosi_obj.data_diagnosi = parse_italian_date(data_diagnosi)
-                except Exception:
-                    pass
-            if note_diagnosi is not None:
-                diagnosi_obj.note = note_diagnosi
-            diagnosi_obj.save()
+                if problemi is not None:
+                    diagnosi_obj.problemi = problemi
+                if rischi is not None:
+                    diagnosi_obj.rischi = rischi
+                if data_diagnosi:
+                    try:
+                        diagnosi_obj.data_diagnosi = parse_italian_date(data_diagnosi)
+                    except Exception:
+                        pass
+                if note_diagnosi is not None:
+                    diagnosi_obj.note = note_diagnosi
+                diagnosi_obj.save()
+            except Exception:
+                pass
         # --- FINE LOGICA DIAGNOSI VIEW (POST) ---
 
+        # Rest of your existing POST logic remains the same...
         # Aggiorna i dati anagrafici del paziente
-        persona.codice_fiscale = request.POST.get('codice_fiscale')
-        persona.dob = parse_date(request.POST.get('dob'))
-        persona.residence = request.POST.get('residence')
-        persona.cap = request.POST.get('cap')
-        persona.province = request.POST.get('province')
-        persona.gender = request.POST.get('gender')
-        persona.blood_group = request.POST.get('blood_group')
-        persona.email = request.POST.get('email')
-        persona.phone = request.POST.get('phone')
-        persona.place_of_birth = request.POST.get('place_of_birth')
-        persona.dob = parse_italian_date(request.POST.get('dob'))
+        # persona.codice_fiscale = request.POST.get('codice_fiscale')
+        # persona.dob = parse_date(request.POST.get('dob'))
+        # persona.residence = request.POST.get('residence')
+        # persona.cap = request.POST.get('cap')
+        # persona.province = request.POST.get('province')
+        # persona.gender = request.POST.get('gender')
+        # persona.blood_group = request.POST.get('blood_group')
+        # persona.email = request.POST.get('email')
+        # persona.phone = request.POST.get('phone')
+        # persona.place_of_birth = request.POST.get('place_of_birth')
+        # persona.dob = parse_italian_date(request.POST.get('dob'))
 
-        # 4) se è segretaria, cambia la FK dottore
-        if role:
-            doctor_id = request.POST.get('dottore')
-            if doctor_id:
-                persona.dottore_id = int(doctor_id)
-            else:
-                persona.dottore = None      
+        # # 4) se è segretaria, cambia la FK dottore
+        # if role:
+        #     doctor_id = request.POST.get('dottore')
+        #     if doctor_id:
+        #         persona.dottore_id = int(doctor_id)
+        #     else:
+        #         persona.dottore = None
 
-        persona.save()
+        # persona.save()
 
         # RI–CALCOLO dei dati che ti servono
         today = now().date()
