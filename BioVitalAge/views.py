@@ -1318,6 +1318,9 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             })
         diario.sort(key=lambda x: x['data'], reverse=True)
         # --- FINE LOGICA DIARIO CLINICO ---
+        for entry in diario:
+            if isinstance(entry['data'], date) and not isinstance(entry['data'], datetime):
+                entry['data'] = datetime.combine(entry['data'], datetime.min.time())
 
         # PAGINAZIONE DIARIO CLINICO
         diario_paginator = Paginator(diario, 3)
@@ -1325,7 +1328,151 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         diario_page = diario_paginator.get_page(diario_page_number)
 
         # CALCOLO DELLO SCORE DEGLI ORGANI
-        score, organi_problematici = self.calcola_score(esami_recenti, persona)
+        punteggi_organi = {}
+        dettagli_organi = {}
+        report_testuale = None
+        score_js = {}
+
+        ultimo_referto = persona.referti.order_by('-data_ora_creazione').first()
+        if ultimo_referto:
+            try:
+                dati = ultimo_referto.dati_estesi
+                # Configurazione esami per organo
+                organi_esami = {
+                    "Cuore": ["Colesterolo Totale", "Colesterolo LDL", "Colesterolo HDL", "Trigliceridi",
+                            "PCR", "NT-proBNP", "Omocisteina", "Glicemia", "Insulina",
+                            "HOMA Test", "IR Test", "Creatinina", "Stress Ossidativo", "Omega Screening"],
+                    "Reni": ["Creatinina", "Azotemia", "Sodio", "Potassio", "Cloruri",
+                            "Fosforo", "Calcio", "Esame delle Urine"],
+                    "Fegato": ["Transaminasi GOT", "Transaminasi GPT", "Gamma-GT", "Bilirubina Totale",
+                                "Bilirubina Diretta", "Bilirubina Indiretta", "Fosfatasi Alcalina",
+                                "Albumina", "Proteine Totali"],
+                    "Cervello": ["Omocisteina", "Vitamina B12", "Vitamina D", "DHEA", "TSH", "FT3",
+                                "FT4", "Omega-3 Index", "EPA", "DHA",
+                                "Stress Ossidativo dROMS", "Stress Ossidativo PAT", "Stress Ossidativo OSI REDOX"],
+                    "Sistema Ormonale": ["TSH", "FT3", "FT4", "Insulina", "HOMA Test", "IR Test",
+                                        "Glicemia", "DHEA", "Testosterone", "17B-Estradiolo",
+                                        "Progesterone", "SHBG"],
+                    "Sangue": ["Emocromo - Globuli Rossi", "Emocromo - Emoglobina", "Emocromo - Ematocrito",
+                                "Emocromo - MCV", "Emocromo - MCH", "Emocromo - MCHC", "Emocromo - RDW",
+                                "Emocromo - Globuli Bianchi", "Emocromo - Neutrofili", "Emocromo - Linfociti",
+                                "Emocromo - Monociti", "Emocromo - Eosinofili", "Emocromo - Basofili",
+                                "Emocromo - Piastrine", "Ferritina", "Sideremia", "Transferrina"],
+                    "Sistema Immunitario": ["PCR", "Omocisteina", "TNF-A", "IL-6", "IL-10"],
+                }
+
+                # Mappa dei campi del modello ai nomi degli esami
+                TEST_FIELD_MAP = {
+                    # Cuore e metabolismo
+                    "Colesterolo Totale": "tot_chol",
+                    "Colesterolo LDL": "ldl_chol",
+                    "Colesterolo HDL": "hdl_chol_m",
+                    "Trigliceridi": "trigl",
+                    "PCR": "pcr_c",
+                    "NT-proBNP": "nt_pro",
+                    "Omocisteina": "omocisteina",
+                    "Glicemia": "glicemy",
+                    "Insulina": "insulin",
+                    "HOMA Test": "homa",
+                    "IR Test": "ir",
+                    "Creatinina": "creatinine_m",
+                    "Stress Ossidativo": "osi",
+                    "Omega Screening": "o3o6_fatty_acid_quotient",
+                    # Reni
+                    "Azotemia": "azotemia",
+                    "Sodio": "na",
+                    "Potassio": "k",
+                    "Cloruri": "ci",
+                    "Fosforo": "p",
+                    "Calcio": "ca",
+                    "Esame delle Urine": "uro",
+                    # Fegato
+                    "Transaminasi GOT": "got_m",
+                    "Transaminasi GPT": "gpt_m",
+                    "Gamma-GT": "g_gt_m",
+                    "Bilirubina Totale": "tot_bili",
+                    "Bilirubina Diretta": "direct_bili",
+                    "Bilirubina Indiretta": "indirect_bili",
+                    "Fosfatasi Alcalina": "a_photo_m",
+                    "Albumina": "albuminemia",
+                    "Proteine Totali": "tot_prot",
+                    # Cervello
+                    "Vitamina B12": "v_b12",
+                    "Vitamina D": "v_d",
+                    "DHEA": "dhea_m",
+                    "TSH": "tsh",
+                    "FT3": "ft3",
+                    "FT4": "ft4",
+                    "Omega-3 Index": "o3_index",
+                    "EPA": "aa_epa",
+                    "DHA": "doco_acid",
+                    "Stress Ossidativo dROMS": "d_roms",
+                    "Stress Ossidativo PAT": "pat",
+                    "Stress Ossidativo OSI REDOX": "osi",
+                    # Ormoni
+                    "Testosterone": "testo_m",
+                    "17B-Estradiolo": "beta_es_m",
+                    "Progesterone": "prog_m",
+                    "SHBG": "shbg_m",
+                    # Sangue e ferro
+                    "Emocromo - Globuli Rossi": "rbc",
+                    "Emocromo - Emoglobina": "hemoglobin",
+                    "Emocromo - Ematocrito": "hematocrit",
+                    "Emocromo - MCV": "mcv",
+                    "Emocromo - MCH": "mch",
+                    "Emocromo - MCHC": "mchc",
+                    "Emocromo - RDW": "rdw",
+                    "Emocromo - Globuli Bianchi": "wbc",
+                    "Emocromo - Neutrofili": "neutrophils_pct",
+                    "Emocromo - Linfociti": "lymphocytes_pct",
+                    "Emocromo - Monociti": "monocytes_pct",
+                    "Emocromo - Eosinofili": "eosinophils_pct",
+                    "Emocromo - Basofili": "basophils_pct",
+                    "Emocromo - Piastrine": "platelets",
+                    "Ferritina": "ferritin_m",
+                    "Sideremia": "sideremia",
+                    "Transferrina": "transferrin",
+                    # Immunitario
+                    "TNF-A": "tnf_a",
+                    "IL-6": "inter_6",
+                    "IL-10": "inter_10",
+                }
+
+                # Costruisci dizionario valori grezzi
+                organi_valori = {
+                    organo: {
+                        test: getattr(dati, TEST_FIELD_MAP.get(test), None)
+                        for test in tests
+                    }
+                    for organo, tests in organi_esami.items()
+                }
+                valori_esami_raw = {
+                    test: val
+                    for vals in organi_valori.values()
+                    for test, val in vals.items()
+                    if val is not None
+                }
+
+                # Recupera sesso ("M" o "F") dal modello Paziente
+                sesso_paziente = getattr(persona, 'sesso', None)
+
+                # Calcola punteggi e dettagli
+                punteggi_organi, dettagli_organi = calcola_score_organi(
+                    valori_esami_raw,
+                    sesso_paziente
+                )
+
+                # Prepara dizionario per JS: chiavi con underscore
+                score_js = {organo.replace(' ', '_'): valore for organo, valore in punteggi_organi.items()}
+
+                # Genera report testuale senza dettagli
+                report_testuale = genera_report(punteggi_organi, dettagli_organi, mostrar_dettagli=False)
+
+            except:
+                dati = None
+
+        else:
+            score_js = {}
 
         # ALTRI DATI (ETA' METABOLICA, ETA' BIOLOGICA)
         referti_eta = persona.referti_eta_metabolica.order_by('-data_referto')
@@ -1371,13 +1518,15 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             "Salute_immunitario": lista_filtered_value[6],
 
             # Score per JS con underscore
-            'score': score,
+            'score': score_js,
 
             # Note paziente
             'note_text': note_text,
 
             # Score dettagliati
-            'punteggi_organi': organi_problematici,
+            'punteggi_organi': punteggi_organi,
+            'dettagli_organi': dettagli_organi,
+            'report_testuale': report_testuale,
 
             # Punteggio età metabolica e dati bio
             'punteggio_eta_metabolica': punteggio_eta_metabolica,
@@ -1412,55 +1561,82 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         farmaci_page = paginator.get_page(page_number)
 
         # --- INIZIO LOGICA DIAGNOSI VIEW (POST) ---
-        # Se il form contiene dati di diagnosi, processali
-        diagnosi_id = request.POST.get('diagnosi_id')
+        # Gestione creazione nuova diagnosi
+        if request.POST.get('data_nuova_diagnosi') and request.POST.get('descrizione_nuova_diagnosi'):
+            try:
+                data_diagnosi = datetime.strptime(request.POST.get('data_nuova_diagnosi'), "%Y-%m-%d").date()
+                descrizione = request.POST.get('descrizione_nuova_diagnosi')
+                problemi = request.POST.get('problemi', '')
+                
+                # Crea nuova diagnosi
+                nuova_diagnosi = Diagnosi.objects.create(
+                    paziente=persona,
+                    descrizione=descrizione,
+                    data_diagnosi=data_diagnosi,
+                    problemi=problemi,
+                    stato='attiva',  # o il valore di default che preferisci
+                    gravita=1,  # valore di default
+                    risolta=False
+                )
+                
+                # Aggiorna diagnosi_id per il resto della logica
+                diagnosi_id = str(nuova_diagnosi.id)
+                
+            except Exception as e:
+                # Gestisci errore se necessario
+                pass
+        else:
+            diagnosi_id = request.POST.get('diagnosi_id')
+
+        # Gestione aggiornamento diagnosi esistente
         problemi = request.POST.get('problemi')
         rischi = request.POST.get('rischi')
         data_diagnosi = request.POST.get('data_diagnosi')
         note_diagnosi = request.POST.get('note_diagnosi')
 
         # Se almeno uno dei campi di diagnosi è presente, salva/aggiorna la diagnosi
-        if problemi or rischi or data_diagnosi or note_diagnosi:
-            if diagnosi_id:
+        if (problemi or rischi or data_diagnosi or note_diagnosi) and diagnosi_id and diagnosi_id != '__new__':
+            try:
                 diagnosi_obj = get_object_or_404(Diagnosi, id=diagnosi_id, paziente=persona)
-            else:
-                diagnosi_obj = Diagnosi(paziente=persona)
-            if problemi is not None:
-                diagnosi_obj.problemi = problemi
-            if rischi is not None:
-                diagnosi_obj.rischi = rischi
-            if data_diagnosi:
-                try:
-                    diagnosi_obj.data_diagnosi = parse_italian_date(data_diagnosi)
-                except Exception:
-                    pass
-            if note_diagnosi is not None:
-                diagnosi_obj.note = note_diagnosi
-            diagnosi_obj.save()
+                if problemi is not None:
+                    diagnosi_obj.problemi = problemi
+                if rischi is not None:
+                    diagnosi_obj.rischi = rischi
+                if data_diagnosi:
+                    try:
+                        diagnosi_obj.data_diagnosi = parse_italian_date(data_diagnosi)
+                    except Exception:
+                        pass
+                if note_diagnosi is not None:
+                    diagnosi_obj.note = note_diagnosi
+                diagnosi_obj.save()
+            except Exception:
+                pass
         # --- FINE LOGICA DIAGNOSI VIEW (POST) ---
 
+        # Rest of your existing POST logic remains the same...
         # Aggiorna i dati anagrafici del paziente
-        persona.codice_fiscale = request.POST.get('codice_fiscale')
-        persona.dob = parse_date(request.POST.get('dob'))
-        persona.residence = request.POST.get('residence')
-        persona.cap = request.POST.get('cap')
-        persona.province = request.POST.get('province')
-        persona.gender = request.POST.get('gender')
-        persona.blood_group = request.POST.get('blood_group')
-        persona.email = request.POST.get('email')
-        persona.phone = request.POST.get('phone')
-        persona.place_of_birth = request.POST.get('place_of_birth')
-        persona.dob = parse_italian_date(request.POST.get('dob'))
+        # persona.codice_fiscale = request.POST.get('codice_fiscale')
+        # persona.dob = parse_date(request.POST.get('dob'))
+        # persona.residence = request.POST.get('residence')
+        # persona.cap = request.POST.get('cap')
+        # persona.province = request.POST.get('province')
+        # persona.gender = request.POST.get('gender')
+        # persona.blood_group = request.POST.get('blood_group')
+        # persona.email = request.POST.get('email')
+        # persona.phone = request.POST.get('phone')
+        # persona.place_of_birth = request.POST.get('place_of_birth')
+        # persona.dob = parse_italian_date(request.POST.get('dob'))
 
-        # 4) se è segretaria, cambia la FK dottore
-        if role:
-            doctor_id = request.POST.get('dottore')
-            if doctor_id:
-                persona.dottore_id = int(doctor_id)
-            else:
-                persona.dottore = None      
+        # # 4) se è segretaria, cambia la FK dottore
+        # if role:
+        #     doctor_id = request.POST.get('dottore')
+        #     if doctor_id:
+        #         persona.dottore_id = int(doctor_id)
+        #     else:
+        #         persona.dottore = None
 
-        persona.save()
+        # persona.save()
 
         # RI–CALCOLO dei dati che ti servono
         today = now().date()
