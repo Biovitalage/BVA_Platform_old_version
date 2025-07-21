@@ -76,7 +76,7 @@
                 </div>
 
                 <div class="informazioni-personali">
-                    <h3>{{ persona.name }} {{ persona.surname }}</h3> 
+                    <h3>{{ persona.surname }} {{ persona.name }}</h3> 
                     <h3>{{ persona.codice_fiscale }}</h3>
                     <h3>{{ persona.dob }} - {{ persona.residence }} - {{ persona.gender }} - {{ persona.chronological_age }} </h3> 
                     <h3>{{ persona.email }}</h3> 
@@ -188,23 +188,44 @@
 
             <!-- MODALE NOTE -->
             <div class="modale-note" id="modale_note">
-                <form method="POST" action="{% url 'cartella_paziente' persona.id %}">
-                    {% csrf_token %}
-                    <h3>Note Patologie Paziente</h3>
-
-                    <textarea name="note_patologie" id="text_area" placeholder="{{ persona.note_patologie | default:'Inserisci qui la nota testuale' }}"></textarea>
-
-                    <div class="modale-button">
-
-                        <button type="button" class="button" id="modify-btn-note">modify</button>
-
-                        <div class="sub-div-button">
-                            <button type="submit" class="button" id="save">save</button>
-                            <button type="button" class="button" id="close">close</button>
+                <div class="note-container">
+                    <!-- Elenco Note -->
+                    <div class="note-list-container">
+                        <h4>Elenco Note</h4>
+                        <div class="note-list">
+                            {% for nota in note_list %}
+                                <div class="note-item" data-id="{{ nota.id }}" data-titolo="{{ nota.titolo }}" data-contenuto="{{ nota.contenuto }}">
+                                    <strong>{{ nota.titolo }}</strong>
+                                    <small>{{ nota.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                            {% empty %}
+                                <p>Nessuna nota presente.</p>
+                            {% endfor %}
                         </div>
-
+                        <button type="button" class="button" id="new-note-btn">+ Nuova Nota</button>
                     </div>
-                </form>
+
+                    <!-- Form Modifica/Creazione -->
+                    <div class="note-form-container">
+                        <form id="note-form" method="POST" action="{% url 'cartellaPaziente_note' persona.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="nota_id" id="nota_id_field">
+                            
+                            <h3 id="note-form-title">Crea Nuova Nota</h3>
+                            
+                            <label for="titolo_nota_field">Titolo</label>
+                            <input type="text" name="titolo_nota" id="titolo_nota_field" placeholder="Inserisci il titolo della nota" required>
+                            
+                            <label for="contenuto_nota_field">Contenuto</label>
+                            <textarea name="contenuto_nota" id="contenuto_nota_field" placeholder="Inserisci qui il testo della nota..." required></textarea>
+
+                            <div class="modale-button">
+                                <button type="submit" class="button" id="save-note-btn">Salva Nota</button>
+                                <button type="button" class="button" id="close-note-btn">Chiudi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- MODALE PRESCRIZIONE LIBERA -->
@@ -1435,6 +1456,69 @@
                 });
             }
         });
+        </script>
+
+        <script>
+            // Gestione chiusura modale con la X
+            document.addEventListener('DOMContentLoaded', function() {
+                // ... (codice esistente) ...
+                
+                // --- LOGICA MODALE NOTE ---
+                const modaleNote = document.getElementById('modale_note');
+                const backdropNote = document.getElementById('backdropModaleNote');
+                const openNoteBtn = document.getElementById('modale-note');
+                const closeNoteBtn = document.getElementById('close-note-btn');
+
+                const noteForm = document.getElementById('note-form');
+                const formTitle = document.getElementById('note-form-title');
+                const notaIdField = document.getElementById('nota_id_field');
+                const titoloField = document.getElementById('titolo_nota_field');
+                const contenutoField = document.getElementById('contenuto_nota_field');
+                const newNoteBtn = document.getElementById('new-note-btn');
+                const noteItems = document.querySelectorAll('.note-item');
+
+                // Apri modale
+                if(openNoteBtn) {
+                    openNoteBtn.addEventListener('click', () => {
+                        modaleNote.style.display = 'block';
+                        backdropNote.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    });
+                }
+
+                // Chiudi modale
+                function closeModalNote() {
+                    modaleNote.style.display = 'none';
+                    backdropNote.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+                if(closeNoteBtn) closeNoteBtn.addEventListener('click', closeModalNote);
+                if(backdropNote) backdropNote.addEventListener('click', closeModalNote);
+
+                // Carica nota nel form quando cliccata
+                noteItems.forEach(item => {
+                    item.addEventListener('click', () => {
+                        formTitle.textContent = 'Modifica Nota';
+                        notaIdField.value = item.dataset.id;
+                        titoloField.value = item.dataset.titolo;
+                        contenutoField.value = item.dataset.contenuto;
+                        
+                        // Evidenzia l'elemento selezionato
+                        noteItems.forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                    });
+                });
+
+                // Pulisci form per creare nuova nota
+                if(newNoteBtn) {
+                    newNoteBtn.addEventListener('click', () => {
+                        formTitle.textContent = 'Crea Nuova Nota';
+                        noteForm.reset();
+                        notaIdField.value = '';
+                        noteItems.forEach(i => i.classList.remove('active'));
+                    });
+                }
+            });
         </script>
 
     </body>
