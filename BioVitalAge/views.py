@@ -1320,151 +1320,7 @@ class CartellaPazienteView(LoginRequiredMixin,View):
         # --- FINE LOGICA DIARIO CLINICO ---
 
         # CALCOLO DELLO SCORE DEGLI ORGANI
-        punteggi_organi = {}
-        dettagli_organi = {}
-        report_testuale = None
-        score_js = {}
-
-        ultimo_referto = persona.referti.order_by('-data_ora_creazione').first()
-        if ultimo_referto:
-            try:
-                dati = ultimo_referto.dati_estesi
-                # Configurazione esami per organo
-                organi_esami = {
-                    "Cuore": ["Colesterolo Totale", "Colesterolo LDL", "Colesterolo HDL", "Trigliceridi",
-                            "PCR", "NT-proBNP", "Omocisteina", "Glicemia", "Insulina",
-                            "HOMA Test", "IR Test", "Creatinina", "Stress Ossidativo", "Omega Screening"],
-                    "Reni": ["Creatinina", "Azotemia", "Sodio", "Potassio", "Cloruri",
-                            "Fosforo", "Calcio", "Esame delle Urine"],
-                    "Fegato": ["Transaminasi GOT", "Transaminasi GPT", "Gamma-GT", "Bilirubina Totale",
-                                "Bilirubina Diretta", "Bilirubina Indiretta", "Fosfatasi Alcalina",
-                                "Albumina", "Proteine Totali"],
-                    "Cervello": ["Omocisteina", "Vitamina B12", "Vitamina D", "DHEA", "TSH", "FT3",
-                                "FT4", "Omega-3 Index", "EPA", "DHA",
-                                "Stress Ossidativo dROMS", "Stress Ossidativo PAT", "Stress Ossidativo OSI REDOX"],
-                    "Sistema Ormonale": ["TSH", "FT3", "FT4", "Insulina", "HOMA Test", "IR Test",
-                                        "Glicemia", "DHEA", "Testosterone", "17B-Estradiolo",
-                                        "Progesterone", "SHBG"],
-                    "Sangue": ["Emocromo - Globuli Rossi", "Emocromo - Emoglobina", "Emocromo - Ematocrito",
-                                "Emocromo - MCV", "Emocromo - MCH", "Emocromo - MCHC", "Emocromo - RDW",
-                                "Emocromo - Globuli Bianchi", "Emocromo - Neutrofili", "Emocromo - Linfociti",
-                                "Emocromo - Monociti", "Emocromo - Eosinofili", "Emocromo - Basofili",
-                                "Emocromo - Piastrine", "Ferritina", "Sideremia", "Transferrina"],
-                    "Sistema Immunitario": ["PCR", "Omocisteina", "TNF-A", "IL-6", "IL-10"],
-                }
-
-                # Mappa dei campi del modello ai nomi degli esami
-                TEST_FIELD_MAP = {
-                    # Cuore e metabolismo
-                    "Colesterolo Totale": "tot_chol",
-                    "Colesterolo LDL": "ldl_chol",
-                    "Colesterolo HDL": "hdl_chol_m",
-                    "Trigliceridi": "trigl",
-                    "PCR": "pcr_c",
-                    "NT-proBNP": "nt_pro",
-                    "Omocisteina": "omocisteina",
-                    "Glicemia": "glicemy",
-                    "Insulina": "insulin",
-                    "HOMA Test": "homa",
-                    "IR Test": "ir",
-                    "Creatinina": "creatinine_m",
-                    "Stress Ossidativo": "osi",
-                    "Omega Screening": "o3o6_fatty_acid_quotient",
-                    # Reni
-                    "Azotemia": "azotemia",
-                    "Sodio": "na",
-                    "Potassio": "k",
-                    "Cloruri": "ci",
-                    "Fosforo": "p",
-                    "Calcio": "ca",
-                    "Esame delle Urine": "uro",
-                    # Fegato
-                    "Transaminasi GOT": "got_m",
-                    "Transaminasi GPT": "gpt_m",
-                    "Gamma-GT": "g_gt_m",
-                    "Bilirubina Totale": "tot_bili",
-                    "Bilirubina Diretta": "direct_bili",
-                    "Bilirubina Indiretta": "indirect_bili",
-                    "Fosfatasi Alcalina": "a_photo_m",
-                    "Albumina": "albuminemia",
-                    "Proteine Totali": "tot_prot",
-                    # Cervello
-                    "Vitamina B12": "v_b12",
-                    "Vitamina D": "v_d",
-                    "DHEA": "dhea_m",
-                    "TSH": "tsh",
-                    "FT3": "ft3",
-                    "FT4": "ft4",
-                    "Omega-3 Index": "o3_index",
-                    "EPA": "aa_epa",
-                    "DHA": "doco_acid",
-                    "Stress Ossidativo dROMS": "d_roms",
-                    "Stress Ossidativo PAT": "pat",
-                    "Stress Ossidativo OSI REDOX": "osi",
-                    # Ormoni
-                    "Testosterone": "testo_m",
-                    "17B-Estradiolo": "beta_es_m",
-                    "Progesterone": "prog_m",
-                    "SHBG": "shbg_m",
-                    # Sangue e ferro
-                    "Emocromo - Globuli Rossi": "rbc",
-                    "Emocromo - Emoglobina": "hemoglobin",
-                    "Emocromo - Ematocrito": "hematocrit",
-                    "Emocromo - MCV": "mcv",
-                    "Emocromo - MCH": "mch",
-                    "Emocromo - MCHC": "mchc",
-                    "Emocromo - RDW": "rdw",
-                    "Emocromo - Globuli Bianchi": "wbc",
-                    "Emocromo - Neutrofili": "neutrophils_pct",
-                    "Emocromo - Linfociti": "lymphocytes_pct",
-                    "Emocromo - Monociti": "monocytes_pct",
-                    "Emocromo - Eosinofili": "eosinophils_pct",
-                    "Emocromo - Basofili": "basophils_pct",
-                    "Emocromo - Piastrine": "platelets",
-                    "Ferritina": "ferritin_m",
-                    "Sideremia": "sideremia",
-                    "Transferrina": "transferrin",
-                    # Immunitario
-                    "TNF-A": "tnf_a",
-                    "IL-6": "inter_6",
-                    "IL-10": "inter_10",
-                }
-
-                # Costruisci dizionario valori grezzi
-                organi_valori = {
-                    organo: {
-                        test: getattr(dati, TEST_FIELD_MAP.get(test), None)
-                        for test in tests
-                    }
-                    for organo, tests in organi_esami.items()
-                }
-                valori_esami_raw = {
-                    test: val
-                    for vals in organi_valori.values()
-                    for test, val in vals.items()
-                    if val is not None
-                }
-
-                # Recupera sesso ("M" o "F") dal modello Paziente
-                sesso_paziente = getattr(persona, 'sesso', None)
-
-                # Calcola punteggi e dettagli
-                punteggi_organi, dettagli_organi = calcola_score_organi(
-                    valori_esami_raw,
-                    sesso_paziente
-                )
-
-                # Prepara dizionario per JS: chiavi con underscore
-                score_js = {organo.replace(' ', '_'): valore for organo, valore in punteggi_organi.items()}
-
-                # Genera report testuale senza dettagli
-                report_testuale = genera_report(punteggi_organi, dettagli_organi, mostrar_dettagli=False)
-
-            except:
-                dati = None
-
-        else:
-            score_js = {}
+        score, organi_problematici = self.calcola_score(esami_recenti, persona)
 
         # ALTRI DATI (ETA' METABOLICA, ETA' BIOLOGICA)
         referti_eta = persona.referti_eta_metabolica.order_by('-data_referto')
@@ -1510,15 +1366,13 @@ class CartellaPazienteView(LoginRequiredMixin,View):
             "Salute_immunitario": lista_filtered_value[6],
 
             # Score per JS con underscore
-            'score': score_js,
+            'score': score,
 
             # Note paziente
             'note_text': note_text,
 
             # Score dettagliati
-            'punteggi_organi': punteggi_organi,
-            'dettagli_organi': dettagli_organi,
-            'report_testuale': report_testuale,
+            'punteggi_organi': organi_problematici,
 
             # Punteggio età metabolica e dati bio
             'punteggio_eta_metabolica': punteggio_eta_metabolica,

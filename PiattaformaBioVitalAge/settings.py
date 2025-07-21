@@ -70,7 +70,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'PiattaformaBioVitalAge.wsgi.application'
 
 # Database per testing 
-DATABASES = {
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'Testing',  
@@ -82,10 +82,10 @@ DATABASES = {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
         }
     }
-}
+} """
 
 # Database in produzione
-""" DATABASES = {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'db_produzione',  
@@ -97,7 +97,7 @@ DATABASES = {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
         }
     }
-} """
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
