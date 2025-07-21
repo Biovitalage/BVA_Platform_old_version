@@ -102,7 +102,7 @@
                 <div class="informazioni-personali">
                     <h3>{{ persona.name }} {{ persona.surname }}</h3> 
                     <h3>{{ persona.codice_fiscale }}</h3>
-                    <h3>{{ persona.dob }} - {{ persona.residence }} - {{ persona.gender }} - {{ persona.chronological_age }} </h3> 
+                    <h3>{{ persona.dob|date:'d/m/Y' }} - {{ persona.residence }} - {{ persona.gender }} - {{ persona.chronological_age }} </h3> 
                     <h3>{{ persona.email }}</h3> 
                     <h3>{{ persona.phone }}</h3> 
                 </div>
@@ -591,7 +591,14 @@
                         </div>
                         <div class="container-table">
                             {% for entry in diario_page %}
-                                <div class="row-table diario-clinico-row" data-type="diario" data-data="{{ entry.data|date:'d/m/Y H:i' }}" data-diariotipo="{{ entry.tipo }}" data-descrizione="{{ entry.descrizione }}" data-diagnosi="{{ entry.diagnosi }}" data-nota="{{ entry.nota }}">
+                                <div class="row-table diario-clinico-row" 
+                                    data-id="{{ entry.id }}"
+                                    data-type="{{ entry.tipo|lower }}" 
+                                    data-data="{{ entry.data|date:'d/m/Y H:i' }}" 
+                                    data-diariotipo="{{ entry.tipo }}" 
+                                    data-descrizione="{{ entry.descrizione }}" 
+                                    data-diagnosi="{{ entry.diagnosi }}" 
+                                    data-nota="{{ entry.nota }}">
                                     <div class="row-cella" title="{{ entry.data|date:"d/m/Y H:i" }}"><p>{{ entry.data|date:"d/m/Y H:i" }}</p></div>
                                     <div class="row-cella" title="{{ entry.tipo|default:"non inserito" }}"><p>{{ entry.tipo|default:"non inserito" }}</p></div>
                                     <div class="row-cella" title="{{ entry.descrizione|default:"non inserito" }}"><p>{{ entry.descrizione|default:"non inserito" }}</p></div>
@@ -648,7 +655,7 @@
                                 </div>
                             {% else %}
                                 {% for farmaco in farmaci_page %}
-                                <div class="row-table" data-type="farmaco" data-nome="{{ farmaco.nome_farmaco }}" data-posologia="{{ farmaco.dosaggio }}">
+                                <div class="row-table" data-type="farmaco" data-id="{{ farmaco.id }}" data-nome="{{ farmaco.nome_farmaco }}" data-posologia="{{ farmaco.dosaggio }}">
                                     <div class="row-cella">
                                         <p>{{ farmaco.created_at|date:"d/m/Y" }}</p>
                                     </div>
@@ -1472,208 +1479,174 @@
         <div id="dynamicModalBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
 
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          // Utility: dati farmaci dal JSON (puoi sostituire con fetch se vuoi AJAX)
-          const farmaciJSON = [
-            { nome: "NMN capsule lisosomiali Purovitalis 125 mg", posologia: "Una capsula a colazione ed una a pranzo" },
-            { nome: "Resveratrolo Yamamoto cps da 150 mg", posologia: "Una capsula al giorno" },
-            { nome: "Advanced Omega D3 perle soft gels", posologia: "Una perla dopo pranzo e una perla dopo cena" },
-            { nome: "NEVRIDOL 800 cpr", posologia: "Una compressa al giorno" },
-            { nome: "MELAFLOR cps", posologia: "Una capsula due volte al giorno, preferibilmente a stomaco vuoto" },
-            { nome: "CARDIOLIPID 10 cpr", posologia: "Una compressa al giorno" },
-            { nome: "L-acetilcarnitina 500 mg in fiale IV", posologia: "Somministrare in fisiologica 250 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
-            { nome: "Fosfolipidi ipotalamici 28 mg fiale IV", posologia: "Somministrare in fisiologica 250 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
-            { nome: "Glutatione 600 mg fiale IV", posologia: "Somministrare in fisiologica 100 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
-            { nome: "Vitamina C1 1 g fiale IV", posologia: "Somministrare in fisiologica 100 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" }
-          ];
+            document.addEventListener('DOMContentLoaded', function() {
+            // Utility: dati farmaci dal JSON (puoi sostituire con fetch se vuoi AJAX)
+            // Carica farmaciJSON dal file statico includes/json/ArchivioFarmaci.json
+            let farmaciJSON = [];
+            fetch("{% static 'includes/json/ArchivioFarmaci.json' %}")
+                .then(response => response.json())
+                .then(data => {
+                farmaciJSON = data;
+                })
+                .catch(error => {
+                console.error("Errore nel caricamento del file ArchivioFarmaci.json:", error);
+                });
 
-          // --- MODALE DINAMICA ---
-          const modal = document.getElementById('dynamicModal');
-          const modalBackdrop = document.getElementById('dynamicModalBackdrop');
-          const modalTitle = document.getElementById('dynamicModalTitle');
-          const modalBody = document.getElementById('dynamicModalBody');
-          const closeBtn = document.getElementById('closeDynamicModal');
+            // --- MODALE DINAMICA ---
+            const modal = document.getElementById('dynamicModal');
+            const modalBackdrop = document.getElementById('dynamicModalBackdrop');
+            const modalTitle = document.getElementById('dynamicModalTitle');
+            const modalBody = document.getElementById('dynamicModalBody');
+            const closeBtn = document.getElementById('closeDynamicModal');
 
-          function openDynamicModal({ title, content, onSave }) {
-            modalTitle.textContent = title;
-            modalBody.innerHTML = '';
-            if (typeof content === 'string') {
-              modalBody.innerHTML = content;
-            } else if (content instanceof HTMLElement) {
-              modalBody.appendChild(content);
+            function openDynamicModal({ title, content, onSave }) {
+                modalTitle.textContent = title;
+                modalBody.innerHTML = '';
+                if (typeof content === 'string') {
+                modalBody.innerHTML = content;
+                } else if (content instanceof HTMLElement) {
+                modalBody.appendChild(content);
+                }
+                modal.style.display = 'flex';
+                modalBackdrop.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                // Salva callback per uso futuro
+                modalBody._onSave = onSave;
             }
-            modal.style.display = 'flex';
-            modalBackdrop.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            // Salva callback per uso futuro
-            modalBody._onSave = onSave;
-          }
-          function closeDynamicModal() {
-            modal.style.display = 'none';
-            modalBackdrop.style.display = 'none';
-            document.body.style.overflow = 'auto';
-            modalBody.innerHTML = '';
-            modalBody._onSave = null;
-          }
-          if (closeBtn) closeBtn.onclick = closeDynamicModal;
-          if (modalBackdrop) modalBackdrop.onclick = closeDynamicModal;
+            function closeDynamicModal() {
+                modal.style.display = 'none';
+                modalBackdrop.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                modalBody.innerHTML = '';
+                modalBody._onSave = null;
+            }
+            if (closeBtn) closeBtn.onclick = closeDynamicModal;
+            if (modalBackdrop) modalBackdrop.onclick = closeDynamicModal;
 
-          // --- LISTENER SU TUTTE LE ROW-TABLE ---
-          document.querySelectorAll('.row-table').forEach(row => {
-            // Aggiungi data-type e data-info in base al contesto (puoi personalizzare lato backend)
-            // Esempio: <div class="row-table" data-type="prescrizione_libera" data-id="..." data-testo="...">
-            row.addEventListener('click', function(e) {
-              // Evita click su bottoni interni
-              if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-              const type = row.dataset.type;
-              if (!type) return;
-              if (type === 'prescrizione_libera') {
-                // Mostra textarea con testo
-                const testo = row.dataset.testo || '';
-                const textarea = document.createElement('textarea');
-                textarea.value = testo;
-                textarea.placeholder = 'Modifica prescrizione libera...';
-                textarea.style.marginTop = '1rem';
-                // Bottone salva (solo frontend, puoi aggiungere AJAX)
-                const saveBtn = document.createElement('button');
-                saveBtn.textContent = 'Salva';
-                saveBtn.className = 'button';
-                saveBtn.style.marginTop = '1rem';
-                saveBtn.onclick = function() {
-                  // Qui puoi fare una chiamata AJAX per salvare
-                  row.dataset.testo = textarea.value;
-                  // Aggiorna la cella visibile se serve
-                  closeDynamicModal();
-                };
-                const container = document.createElement('div');
-                container.appendChild(textarea);
-                container.appendChild(saveBtn);
-                openDynamicModal({ title: 'Prescrizione Libera', content: container });
-              } else if (type === 'farmaco') {
-                // Mostra elenco farmaco e bottone modifica
-                const nome = row.dataset.nome || '';
-                const posologia = row.dataset.posologia || '';
-                const farmacoDiv = document.createElement('div');
-                farmacoDiv.className = 'farmaco-row';
-                farmacoDiv.innerHTML = `<span><b>${nome}</b><br><small>${posologia}</small></span>`;
-                const editBtn = document.createElement('button');
-                editBtn.textContent = 'Modifica Farmaco';
-                editBtn.className = 'button';
-                farmacoDiv.appendChild(editBtn);
-                // Select nascosta
-                const select = document.createElement('select');
-                select.style.display = 'none';
-                select.innerHTML = '<option value="">-- Scegli farmaco --</option>' + farmaciJSON.map((f, i) => `<option value="${i}">${f.nome}</option>`).join('');
-                farmacoDiv.appendChild(select);
-                editBtn.onclick = function() {
-                  select.style.display = 'inline-block';
-                };
-                select.onchange = function() {
-                  const idx = select.value;
-                  if (idx === '') return;
-                  const f = farmaciJSON[idx];
-                  farmacoDiv.querySelector('span').innerHTML = `<b>${f.nome}</b><br><small>${f.posologia}</small>`;
-                  // Aggiorna la riga nella tabella
-                  row.dataset.nome = f.nome;
-                  row.dataset.posologia = f.posologia;
-                  row.querySelector('.row-cella:nth-child(2) p').textContent = f.nome;
-                  row.querySelector('.row-cella:nth-child(3) p').textContent = f.posologia;
-                  select.style.display = 'none';
-                  closeDynamicModal();
-                };
-                openDynamicModal({ title: 'Farmaco Prescritto', content: farmacoDiv });
-              } else if (type === 'diario') {
-                // Modale modificabile per diario clinico
-                const data = row.dataset.data || '';
-                const tipo = row.dataset.diariotipo || '';
-                const descrizione = row.dataset.descrizione || '';
-                const diagnosi = row.dataset.diagnosi || '';
-                const nota = row.dataset.nota || '';
-                // Crea form con input/textarea disabilitati
-                const form = document.createElement('form');
-                form.innerHTML = `
-                  <label>Data:<br><input type="text" name="data" value="${data}" disabled></label><br>
-                  <label>Tipo:<br><input type="text" name="tipo" value="${tipo}" disabled></label><br>
-                  <label>Descrizione:<br><textarea name="descrizione" disabled>${descrizione}</textarea></label><br>
-                  <label>Diagnosi:<br><input type="text" name="diagnosi" value="${diagnosi}" disabled></label><br>
-                  <label>Nota:<br><textarea name="nota" disabled>${nota}</textarea></label>
-                `;
-                // Pulsante Modifica
-                const editBtn = document.createElement('button');
-                editBtn.type = 'button';
-                editBtn.textContent = 'Modifica';
-                editBtn.className = 'button';
-                editBtn.style.marginTop = '1rem';
-                // Pulsante Salva (inizialmente nascosto)
-                const saveBtn = document.createElement('button');
-                saveBtn.type = 'button';
-                saveBtn.textContent = 'Salva';
-                saveBtn.className = 'button';
-                saveBtn.style.marginTop = '1rem';
-                saveBtn.style.display = 'none';
-                // Logica Modifica
-                editBtn.onclick = function() {
-                  Array.from(form.elements).forEach(el => el.disabled = false);
-                  editBtn.style.display = 'none';
-                  saveBtn.style.display = 'inline-block';
-                };
-                // Logica Salva
-                saveBtn.onclick = function(e) {
-                  e.preventDefault();
-                  const newData = {
-                    id: row.dataset.id, // assicurati di avere questo attributo nella riga
-                    descrizione: form.elements.descrizione.value,
-                    diagnosi: form.elements.diagnosi.value,
-                    nota: form.elements.nota.value
-                  };
-
-                  // Chiamata AJAX per salvare nel backend
-                  fetch('/api/update-diario/', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify(newData)
-                  })
-                  .then(response => response.json())
-                  .then(data => {
-                    if (data.success) {
-                      // Aggiorna la riga nella tabella (frontend)
-                      row.dataset.descrizione = newData.descrizione;
-                      row.dataset.diagnosi = newData.diagnosi;
-                      row.dataset.nota = newData.nota;
-                      // Aggiorna le celle visibili
-                      row.querySelector('.row-cella:nth-child(3) p').textContent = newData.descrizione;
-                      row.querySelector('.row-cella:nth-child(4) p').textContent = newData.diagnosi;
-                      row.querySelector('.row-cella:nth-child(5) p').textContent = newData.nota;
-                      
-                      // Mostra messaggio di successo
-                      const successPopup = document.createElement('div');
-                      successPopup.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#4CAF50; color:white; padding:15px; border-radius:5px; z-index:9999;';
-                      successPopup.textContent = 'Modifiche salvate con successo!';
-                      document.body.appendChild(successPopup);
-                      setTimeout(() => successPopup.remove(), 3000);
-                      
-                      closeDynamicModal();
-                    } else {
-                      alert('Errore durante il salvataggio: ' + (data.error || 'Errore sconosciuto'));
-                    }
-                  })
-                  .catch(error => {
-                    console.error('Errore:', error);
-                    alert('Errore durante il salvataggio. Riprova più tardi.');
-                  });
-                };
-                const container = document.createElement('div');
-                container.appendChild(form);
-                container.appendChild(editBtn);
-                container.appendChild(saveBtn);
-                openDynamicModal({ title: 'Dettaglio Diario Clinico', content: container });
-              }
+            // --- LISTENER SU TUTTE LE ROW-TABLE ---
+            document.querySelectorAll('.row-table').forEach(row => {
+                row.addEventListener('click', function(e) {
+                // Evita click su bottoni interni
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                const type = row.dataset.type;
+                if (!type) return;
+                if (type === 'prescrizionelibera') {
+                    // Mostra textarea con testo
+                    const testo = row.dataset.descrizione || row.dataset.testo || '';
+                    const textarea = document.createElement('textarea');
+                    textarea.value = testo;
+                    textarea.placeholder = 'Modifica prescrizione libera...';
+                    textarea.style.marginTop = '1rem';
+                    // Bottone salva (solo frontend, puoi aggiungere AJAX)
+                    const saveBtn = document.createElement('button');
+                    saveBtn.textContent = 'Salva';
+                    saveBtn.className = 'button';
+                    saveBtn.style.marginTop = '1rem';
+                    saveBtn.onclick = function() {
+                    // Chiamata PATCH per prescrizione libera
+                    fetch(`/CartellaPaziente/${window.PAZIENTE_ID}/`, {
+                        method: 'PATCH',
+                        headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                        type: 'prescrizione_libera',
+                        id: row.dataset.id,
+                        testo: textarea.value
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                        row.dataset.descrizione = textarea.value;
+                        row.querySelector('.row-cella:nth-child(3) p').textContent = textarea.value;
+                        closeDynamicModal();
+                        } else {
+                        alert('Errore durante il salvataggio: ' + (data.error || 'Errore sconosciuto'));
+                        }
+                    })
+                    .catch(() => alert('Errore di rete nel salvataggio.'));
+                    };
+                    const container = document.createElement('div');
+                    container.appendChild(textarea);
+                    container.appendChild(saveBtn);
+                    openDynamicModal({ title: 'Prescrizione Libera', content: container });
+                } else if (type === 'farmaco') {
+                    // Mostra elenco farmaco e bottone modifica
+                    const nome = row.dataset.nome || '';
+                    const posologia = row.dataset.posologia || '';
+                    const farmacoDiv = document.createElement('div');
+                    farmacoDiv.className = 'farmaco-row';
+                    farmacoDiv.innerHTML = `<span><b>${nome}</b><br><small>${posologia}</small></span>`;
+                    const editBtn = document.createElement('button');
+                    editBtn.textContent = 'Modifica Farmaco';
+                    editBtn.className = 'button';
+                    farmacoDiv.appendChild(editBtn);
+                    // Select nascosta
+                    const select = document.createElement('select');
+                    select.style.display = 'none';
+                    select.innerHTML = '<option value="">-- Scegli farmaco --</option>' + farmaciJSON.map((f, i) => `<option value="${i}">${f.nome}</option>`).join('');
+                    farmacoDiv.appendChild(select);
+                    editBtn.onclick = function() {
+                    select.style.display = 'inline-block';
+                    };
+                    select.onchange = function() {
+                    const idx = select.value;
+                    if (idx === '') return;
+                    const f = farmaciJSON[idx];
+                    // Chiamata PATCH per aggiornare farmaco
+                    fetch(`/CartellaPaziente/${window.PAZIENTE_ID}/`, {
+                        method: 'PATCH',
+                        headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                        type: 'farmaco',
+                        id: row.dataset.id,
+                        nome_farmaco: f.nome,
+                        dosaggio: f.posologia
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                        farmacoDiv.querySelector('span').innerHTML = `<b>${f.nome}</b><br><small>${f.posologia}</small>`;
+                        row.dataset.nome = f.nome;
+                        row.dataset.posologia = f.posologia;
+                        row.querySelector('.row-cella:nth-child(2) p').textContent = f.nome;
+                        row.querySelector('.row-cella:nth-child(3) p').textContent = f.posologia;
+                        const successPopup = document.createElement('div');
+                        successPopup.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#4CAF50; color:white; padding:15px; border-radius:5px; z-index:9999;';
+                        successPopup.textContent = 'Farmaco aggiornato con successo!';
+                        document.body.appendChild(successPopup);
+                        setTimeout(() => successPopup.remove(), 3000);
+                        select.style.display = 'none';
+                        closeDynamicModal();
+                        } else {
+                        alert('Errore durante il salvataggio: ' + (data.error || 'Errore sconosciuto'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Errore:', error);
+                        alert('Errore durante il salvataggio. Riprova più tardi.');
+                    });
+                    };
+                    openDynamicModal({ title: 'Farmaco Prescritto', content: farmacoDiv });
+                } else if (type === 'diario' || type === 'accertamento' || type === 'visita') {
+                    // Mostra dettagli diario clinico (sola lettura)
+                    const data = row.dataset.data || '';
+                    const tipo = row.dataset.diariotipo || '';
+                    const descrizione = row.dataset.descrizione || '';
+                    const diagnosi = row.dataset.diagnosi || '';
+                    const nota = row.dataset.nota || '';
+                    const html = `<div><b>Data:</b> ${data}<br><b>Tipo:</b> ${tipo}<br><b>Descrizione:</b> ${descrizione}<br><b>Diagnosi:</b> ${diagnosi}<br><b>Nota:</b> ${nota}</div>`;
+                    openDynamicModal({ title: 'Dettaglio Diario Clinico', content: html });
+                }
+                });
             });
-          });
-        });
+            });
         </script>
 
     </body>

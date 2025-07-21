@@ -85,7 +85,16 @@
 
 
 
-
+/* STYLE MODALE FARMACI */
+.custom-modal-content{
+  background: #fff !important;
+  border-radius: 12px !important;
+  padding: 20px 30px !important;
+  width: 400px !important;
+  max-width: 90% !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+  position: relative !important;
+}
 
 
 

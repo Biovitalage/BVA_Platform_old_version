@@ -1286,6 +1286,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         diario = []
         for f in farmaci_prescritti:
             diario.append({
+                'id': f.id,
                 'tipo': 'Farmaco',
                 'data': f.data_prescrizione,
                 'descrizione': f.farmaco.nome_farmaco,
@@ -1294,6 +1295,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             })
         for a in accertamenti:
             diario.append({
+                'id': a.id,
                 'tipo': 'Accertamento',
                 'data': a.data_visita,
                 'descrizione': a.esami_prescritti,
@@ -1302,6 +1304,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             })
         for pl in prescrizioni_libere:
             diario.append({
+                'id': pl.id,
                 'tipo': 'PrescrizioneLibera',
                 'data': pl.data_creazione,
                 'descrizione': pl.testo,
@@ -1310,6 +1313,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             })
         for v in visite:
             diario.append({
+                'id': v.id,
                 'tipo': 'Visita',
                 'data': v.data,
                 'descrizione': v.tipologia_visita,
@@ -1541,6 +1545,100 @@ class CartellaPazienteView(LoginRequiredMixin, View):
 
         return render(request, "includes/cartellaPaziente.html", context)
 
+    def patch(self, request, id):
+        """
+        Gestisce le chiamate PATCH per aggiornare diario clinico e farmaci
+        """
+        try:
+            data = json.loads(request.body)
+            update_type = data.get('type')
+            
+            if update_type == 'diario':
+                return self._update_diario(request, id, data)
+            elif update_type == 'farmaco':
+                return self._update_farmaco(request, id, data)
+            elif update_type == 'prescrizione_libera':
+                return self._update_prescrizione_libera(request, id, data)
+            else:
+                return JsonResponse({'success': False, 'error': 'Tipo di aggiornamento non riconosciuto'}, status=400)
+                
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Dati JSON non validi'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    def _update_diario(self, request, id, data):
+        """
+        Aggiorna una voce del diario clinico
+        """
+        try:
+            entry_id = data.get('id')
+            descrizione = data.get('descrizione', '')
+            diagnosi = data.get('diagnosi', '')
+            nota = data.get('nota', '')
+            
+            # Trova la voce del diario in base al tipo e ID
+            # Per ora gestiamo solo PrescrizioneFarmaco, puoi estendere per altri tipi
+            prescrizione = PrescrizioneFarmaco.objects.filter(id=entry_id, paziente_id=id).first()
+            if prescrizione:
+                prescrizione.diagnosi = diagnosi
+                prescrizione.note_medico = nota
+                prescrizione.save()
+                return JsonResponse({'success': True})
+            
+            # Gestisci altri tipi di diario se necessario
+            return JsonResponse({'success': False, 'error': 'Voce diario non trovata'}, status=404)
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    def _update_farmaco(self, request, id, data):
+        """
+        Aggiorna un farmaco prescritto
+        """
+        try:
+            prescrizione_id = data.get('id')
+            nome_farmaco = data.get('nome_farmaco', '')
+            dosaggio = data.get('dosaggio', '')
+            
+            prescrizione = PrescrizioneFarmaco.objects.filter(id=prescrizione_id, paziente_id=id).first()
+            if not prescrizione:
+                return JsonResponse({'success': False, 'error': 'Prescrizione non trovata'}, status=404)
+            
+            # Trova o crea il farmaco
+            farmaco, created = Farmaco.objects.get_or_create(
+                nome_farmaco=nome_farmaco,
+                defaults={'dosaggio': dosaggio}
+            )
+            
+            prescrizione.farmaco = farmaco
+            prescrizione.save()
+            
+            return JsonResponse({'success': True})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    def _update_prescrizione_libera(self, request, id, data):
+        """
+        Aggiorna una prescrizione libera
+        """
+        try:
+            prescrizione_id = data.get('id')
+            testo = data.get('testo', '')
+            
+            prescrizione = PrescrizioneLibera.objects.filter(id=prescrizione_id, persona_id=id).first()
+            if not prescrizione:
+                return JsonResponse({'success': False, 'error': 'Prescrizione libera non trovata'}, status=404)
+            
+            prescrizione.testo = testo
+            prescrizione.save()
+            
+            return JsonResponse({'success': True})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
     def post(self, request, id):
         role = get_user_role(request)
 
@@ -1664,6 +1762,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         referti_recenti = persona.referti.all().order_by('-data_referto')
         dati_estesi = DatiEstesiRefertiEtaBiologica.objects.filter(referto__in=referti_recenti)
         ultimo_referto = referti_recenti.first() if referti_recenti else None
+        farmaci_prescritti = PrescrizioneFarmaco.objects.filter(paziente=persona).order_by('-data_prescrizione')
         
         dati_estesi_ultimo_referto = None
         if ultimo_referto:
@@ -1682,6 +1781,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'ultimo_appuntamento': ultimo_appuntamento,
             'prossimo_appuntamento': prossimo_appuntamento,
             'farmaci_page': farmaci_page,
+            'farmaci_prescritti': farmaci_prescritti,
             'dati_diagnosi': dati_diagnosi,
             'diagnosi_list': diagnosi_list,  # aggiornata
 
