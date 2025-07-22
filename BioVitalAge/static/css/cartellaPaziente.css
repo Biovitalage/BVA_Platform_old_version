@@ -530,6 +530,32 @@
 }
 
 
+
+
+/* MODALE PRESCRIZIONE LIBERA */
+.custom-modal-content{
+  background-color: var(--card-color);
+  border-radius: 8px;
+  width: 800px;
+  z-index: 9999;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.go-print{
+  border: 2px solid #dc3545;
+}
+
+.go-print:hover{
+  background: transparent !important;
+  color: #dc3545 !important;
+}
+
+
+
+
+
+
 /* STYLE CONTAINER INFORMAZIONI PERSONALI */
 .container-informazioni-personali{
   background-color: var(--card-color);

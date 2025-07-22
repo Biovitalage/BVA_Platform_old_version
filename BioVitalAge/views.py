@@ -1280,7 +1280,9 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         # --- INIZIO LOGICA DIARIO CLINICO (da DiarioCLinicoView) ---
         # Farmaci prescritti
         farmaci_prescritti = PrescrizioneFarmaco.objects.filter(paziente=persona).order_by('-data_prescrizione')
-        # Accertamenti (PrescrizioniEsami)
+        paginator = Paginator(farmaci_prescritti, 3)  # 3 prescrizioni per pagina, cambia se vuoi
+        page_number = request.GET.get('farmaci_page')
+        farmaci_prescritti_page = paginator.get_page(page_number)     # Accertamenti (PrescrizioniEsami)
         accertamenti = PrescrizioniEsami.objects.filter(paziente=persona).order_by('-data_visita')
         # Prescrizioni libere
         prescrizioni_libere = PrescrizioneLibera.objects.filter(persona=persona).order_by('-data_creazione')
@@ -1294,6 +1296,8 @@ class CartellaPazienteView(LoginRequiredMixin, View):
                 'tipo': 'Farmaco',
                 'data': f.data_prescrizione,
                 'descrizione': f.farmaco.nome_farmaco,
+                'nome': f.farmaco.nome_farmaco,      # <--- AGGIUNGI QUESTO
+                'posologia': f.farmaco.dosaggio,
                 'diagnosi': f.diagnosi,
                 'nota': f.note_medico,
             })
@@ -1515,6 +1519,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'diagnosi_list': diagnosi_list,
             'icd10': data,
             'farmaci_page': farmaci_page,
+            'farmaci_prescritti_page': farmaci_prescritti_page,
 
             # indicatori 
             "Salute_del_cuore": lista_filtered_value[0],

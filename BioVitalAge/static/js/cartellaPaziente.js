@@ -287,6 +287,458 @@ buttonCloseModaleNote.addEventListener('click', ()=>{
 
 
 
+
+
+
+
+/*  -----------------------------------------------------------------------------------------------
+  Funzione modale per la gestione dei farmaci
+  --------------------------------------------------------------------------------------------------- */
+document.addEventListener("DOMContentLoaded", async function () {
+  // Carica farmaciJSON dal file statico
+  let farmaciJSON = [];
+
+  try {
+    const response = await fetch("/static/includes/json/ArchivioFarmaci.json");
+    const data = await response.json();
+    console.log("Risposta JSON grezza:", data);
+
+    // Prendi l'array giusto
+    if (data && Array.isArray(data.Foglio1)) {
+      farmaciJSON = data.Foglio1;
+    } else {
+      farmaciJSON = [];
+      console.warn("Formato JSON inatteso:", data);
+    }
+    console.log("Farmaci caricati:", farmaciJSON.length);
+  } catch (error) {
+    console.error("Errore nel caricamento del file ArchivioFarmaci.json:", error);
+  }
+
+  // --- MODALE DINAMICA ---
+  const modal = document.getElementById("dynamicModal");
+  const modalBackdrop = document.getElementById("dynamicModalBackdrop");
+  const modalTitle = document.getElementById("dynamicModalTitle");
+  const modalBody = document.getElementById("dynamicModalBody");
+  const closeBtn = document.getElementById("closeDynamicModal");
+
+  function openDynamicModal({ title, content, onSave }) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = "";
+    if (typeof content === "string") {
+      modalBody.innerHTML = content;
+    } else if (content instanceof HTMLElement) {
+      modalBody.appendChild(content);
+    }
+    modal.style.display = "flex";
+    modalBackdrop.style.display = "block";
+    document.body.style.overflow = "hidden";
+    // Salva callback per uso futuro
+    modalBody._onSave = onSave;
+  }
+
+  function closeDynamicModal() {
+    modal.style.display = "none";
+    modalBackdrop.style.display = "none";
+    document.body.style.overflow = "auto";
+    modalBody.innerHTML = "";
+    modalBody._onSave = null;
+  }
+
+  if (closeBtn) closeBtn.onclick = closeDynamicModal;
+  if (modalBackdrop) modalBackdrop.onclick = closeDynamicModal;
+
+  // --- LISTENER SU TUTTE LE ROW-TABLE ---
+  document.querySelectorAll(".row-table").forEach((row) => {
+    row.addEventListener("click", function (e) {
+      // Evita click su bottoni interni
+      if (e.target.tagName === "BUTTON" || e.target.closest("button")) return;
+      const type = row.dataset.type;
+      if (!type) return;
+
+      if (type === "prescrizionelibera") {
+        const testo = row.dataset.descrizione || row.dataset.testo || "";
+        const textarea = document.createElement("textarea");
+        textarea.value = testo;
+        textarea.placeholder = "Modifica prescrizione libera...";
+        textarea.style.marginTop = "1rem";
+        textarea.readOnly = true;
+        textarea.style.background = "#f8f9fa";
+        textarea.style.cursor = "not-allowed";
+      
+        // Bottone abilita modifica
+        const abilitaBtn = document.createElement("button");
+        abilitaBtn.textContent = "Abilita Modifica";
+        abilitaBtn.className = "button";
+        abilitaBtn.style.marginTop = "1rem";
+        abilitaBtn.onclick = function () {
+          textarea.readOnly = false;
+          textarea.style.background = "white";
+          textarea.style.cursor = "text";
+          abilitaBtn.style.display = "none";
+          saveBtn.style.display = "inline-block";
+          annullaBtn.style.display = "inline-block";
+          textarea.focus();
+        };
+      
+        // Bottone salva (inizialmente nascosto)
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "Salva";
+        saveBtn.className = "button";
+        saveBtn.style.marginTop = "1rem";
+        saveBtn.style.display = "none";
+        saveBtn.onclick = function () {
+          fetch(`/CartellaPaziente/${window.PAZIENTE_ID}/`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({
+              type: "prescrizione_libera",
+              id: row.dataset.id,
+              testo: textarea.value,
+            }),
+          })
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.success) {
+                row.dataset.descrizione = textarea.value;
+                row.querySelector(".row-cella:nth-child(3) p").textContent = textarea.value;
+                closeDynamicModal();
+              } else {
+                alert("Errore durante il salvataggio: " + (data.error || "Errore sconosciuto"));
+              }
+            })
+            .catch(() => alert("Errore di rete nel salvataggio."));
+        };
+      
+        // Bottone annulla modifica (inizialmente nascosto)
+        const annullaBtn = document.createElement("button");
+        annullaBtn.textContent = "Annulla";
+        annullaBtn.className = "button";
+        annullaBtn.style.marginTop = "1rem";
+        annullaBtn.style.display = "none";
+        annullaBtn.onclick = function () {
+          textarea.value = testo;
+          textarea.readOnly = true;
+          textarea.style.background = "#f8f9fa";
+          textarea.style.cursor = "not-allowed";
+          abilitaBtn.style.display = "inline-block";
+          saveBtn.style.display = "none";
+          annullaBtn.style.display = "none";
+        };
+      
+        // Bottone scarica PDF
+        const pdfBtn = document.createElement("button");
+        pdfBtn.textContent = "Scarica PDF";
+        pdfBtn.className = "button";
+        pdfBtn.style.marginTop = "1rem";
+        pdfBtn.style.background = "#dc3545";
+        pdfBtn.style.color = "white";
+        pdfBtn.onclick = function () {
+          const testoPdf = textarea.value.trim();
+          if (!testoPdf) {
+            alert("Nessun contenuto da scaricare.");
+            return;
+          }
+          // Funzione per generare PDF (usa print, semplice)
+          const win = window.open("", "_blank");
+          const dataOggi = new Date().toLocaleDateString("it-IT");
+          win.document.write(`
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <title>Prescrizione Libera - ${window.PAZIENTE}</title>
+              <style>
+                body { font-family: Arial; margin: 40px; }
+                #print-button{ transition: all 0.2s ease-in-out; border: 2px solid #6a2dcc; }
+                #print-button:hover { color: #6a2dcc !important; background: transparent !important; }
+                #close-button{ transition: all 0.2s ease-in-out; border: 2px solid #6c757d; }
+                #close-button:hover { color: #6c757d !important; background: transparent !important; }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                .prescription-content { white-space: pre-wrap; border: 1px solid #ddd; padding: 20px; border-radius: 5px; background: #fff; min-height: 200px; }
+                .footer { margin-top: 40px; text-align: right; border-top: 1px solid #ddd; padding-top: 20px; }
+                @media print { .no-print { display: none; } }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h1>PRESCRIZIONE LIBERA</h1>
+                <img src="${window.location.origin}/static/includes/pdfTemplates/logo.png" style="width: 400px; height: auto; margin-bottom: 10px;" alt="Logo Studio Medico">
+                <p>Data: ${dataOggi}</p>
+                <p>Paziente: ${window.PAZIENTE}</p>
+              </div>
+              <div class="prescription-content">
+                <h3>Prescrizione:</h3>
+                ${testoPdf}
+              </div>
+              <div class="footer">
+                <p>Dott. ${window.DOTTORE}</p>
+                <p>Firma: _____________________</p>
+              </div>
+              <div class="no-print" style="text-align: center; margin-top: 20px;">
+                <button onclick="window.print()" style="padding: 10px 20px; background: #6a2dcc; color: white; border-radius: 5px; cursor: pointer;" id="print-button">Stampa/Salva PDF</button>
+                <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border-radius: 5px; cursor: pointer; margin-left: 10px;" id="close-button">Chiudi</button>
+              </div>
+            </body>
+            </html>
+          `);
+          win.document.close();
+          setTimeout(() => win.print(), 500);
+        };
+      
+        // Container bottoni
+        const btnsDiv = document.createElement("div");
+        btnsDiv.style.display = "flex";
+        btnsDiv.style.gap = "10px";
+        btnsDiv.appendChild(abilitaBtn);
+        btnsDiv.appendChild(saveBtn);
+        btnsDiv.appendChild(annullaBtn);
+        btnsDiv.appendChild(pdfBtn);
+      
+        // Container finale
+        const container = document.createElement("div");
+        container.appendChild(textarea);
+        container.appendChild(btnsDiv);
+      
+        openDynamicModal({
+          title: "Prescrizione Libera",
+          content: container,
+        });
+      } else if (type === "farmaco") {
+        const nome = row.dataset.nome || "";
+        const posologia = row.dataset.posologia || "";
+      
+        // Campi visualizzazione
+        const nomeInput = document.createElement("input");
+        nomeInput.value = nome;
+        nomeInput.readOnly = true;
+        nomeInput.style.width = "100%";
+        nomeInput.style.marginBottom = "0.5rem";
+        nomeInput.style.background = "#f8f9fa";
+        nomeInput.style.cursor = "not-allowed";
+      
+        const posologiaInput = document.createElement("textarea");
+        posologiaInput.value = posologia;
+        posologiaInput.readOnly = true;
+        posologiaInput.style.width = "100%";
+        posologiaInput.style.background = "#f8f9fa";
+        posologiaInput.style.cursor = "not-allowed";
+        posologiaInput.style.minHeight = "60px";
+      
+        // Select farmaci (inizialmente nascosta)
+        const select = document.createElement("select");
+        select.style.display = "none";
+        select.style.marginTop = "0.5rem";
+        if (Array.isArray(farmaciJSON) && farmaciJSON.length > 0) {
+          select.innerHTML =
+            '<option value="">-- Scegli farmaco --</option>' +
+            farmaciJSON
+              .map((f, i) => `<option value="${i}">${f.NOME_FARMACO}</option>`)
+              .join("");
+        } else {
+          select.innerHTML = '<option value="">Nessun farmaco disponibile</option>';
+        }
+      
+        // Bottone abilita modifica
+        const abilitaBtn = document.createElement("button");
+        abilitaBtn.textContent = "Abilita Modifica";
+        abilitaBtn.className = "button";
+        abilitaBtn.style.marginTop = "1rem";
+        abilitaBtn.onclick = function () {
+          select.style.display = "inline-block";
+          abilitaBtn.style.display = "none";
+          saveBtn.style.display = "inline-block";
+          annullaBtn.style.display = "inline-block";
+        };
+      
+        // Bottone salva (inizialmente nascosto)
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "Salva";
+        saveBtn.className = "button";
+        saveBtn.style.marginTop = "1rem";
+        saveBtn.style.display = "none";
+        saveBtn.onclick = function () {
+          const idx = select.value;
+          if (idx === "" || !farmaciJSON[idx]) return;
+          const f = farmaciJSON[idx];
+          fetch(`/CartellaPaziente/${window.PAZIENTE_ID}/`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({
+              type: "farmaco",
+              id: row.dataset.id,
+              nome_farmaco: f.NOME_FARMACO,
+              dosaggio: f.DOSAGGIO,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                console.log("Farmaco aggiornato con successo:", data);
+                nomeInput.value = f.NOME_FARMACO;
+                posologiaInput.value = f.DOSAGGIO;
+                row.dataset.nome = f.NOME_FARMACO;
+                row.dataset.posologia = f.DOSAGGIO;
+                row.querySelector(".row-cella:nth-child(2) p").textContent = f.NOME_FARMACO;
+                row.querySelector(".row-cella:nth-child(3) p").textContent = f.DOSAGGIO;
+                closeDynamicModal();
+              } else {
+                alert("Errore durante il salvataggio: " + (data.error || "Errore sconosciuto"));
+              }
+            })
+            .catch((error) => {
+              alert("Errore durante il salvataggio. Riprova più tardi.");
+            });
+        };
+      
+        // Bottone annulla (inizialmente nascosto)
+        const annullaBtn = document.createElement("button");
+        annullaBtn.textContent = "Annulla";
+        annullaBtn.className = "button";
+        annullaBtn.style.marginTop = "1rem";
+        annullaBtn.style.display = "none";
+        annullaBtn.onclick = function () {
+          select.style.display = "none";
+          abilitaBtn.style.display = "inline-block";
+          saveBtn.style.display = "none";
+          annullaBtn.style.display = "none";
+        };
+      
+        // Bottone scarica PDF
+        const pdfBtn = document.createElement("button");
+        pdfBtn.textContent = "Scarica PDF";
+        pdfBtn.className = "button";
+        pdfBtn.style.marginTop = "1rem";
+        pdfBtn.style.background = "#dc3545";
+        pdfBtn.style.color = "white";
+        pdfBtn.classList.add("go-print");
+        pdfBtn.onclick = function () {
+          const nomeFarmaco = nomeInput.value.trim();
+          const posologiaFarmaco = posologiaInput.value.trim();
+          if (!nomeFarmaco && !posologiaFarmaco) {
+            alert("Nessun dato da scaricare.");
+            return;
+          }
+          const dataOggi = new Date().toLocaleDateString("it-IT");
+          const win = window.open("", "_blank");
+          win.document.write(`
+            <html>
+            <head>
+              <title>Farmaco Prescritto - ${window.PAZIENTE}</title>
+              <style>
+                body { font-family: Arial; margin: 40px; }
+                #print-button{ transition: all 0.2s ease-in-out; border: 2px solid #6a2dcc; }
+                #print-button:hover { color: #6a2dcc !important; background: transparent !important; }
+                #close-button{ transition: all 0.2s ease-in-out; border: 2px solid #6c757d; }
+                #close-button:hover { color: #6c757d !important; background: transparent !important; }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                .farmaco-content { border: 1px solid #ddd; padding: 20px; border-radius: 5px; background: #fff; min-height: 100px; }
+                .footer { margin-top: 40px; text-align: right; border-top: 1px solid #ddd; padding-top: 20px; }
+                @media print { .no-print { display: none; } }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h1>FARMACO PRESCRITTO</h1>
+                <img src="${window.location.origin}/static/includes/pdfTemplates/logo.png" style="width: 400px; height: auto; margin-bottom: 10px;" alt="Logo Studio Medico">
+                <p>Paziente: ${window.PAZIENTE}</p>
+                <p>Data: ${dataOggi}</p>
+              </div>
+              <div class="farmaco-content">
+                <b>Nome Farmaco:</b> ${nomeFarmaco}<br>
+                <b>Posologia:</b> ${posologiaFarmaco}
+              </div>
+              <div class="footer">
+                <p>Dott. ${window.DOTTORE}</p>
+                <p>Firma: _____________________</p>
+              </div>
+              <div class="no-print" style="text-align: center; margin-top: 20px;">
+                <button onclick="window.print()" style="padding: 10px 20px; background: #6a2dcc; color: white; border-radius: 10px; cursor: pointer;" id="print-button">Stampa/Salva PDF</button>
+                <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border-radius: 10px; cursor: pointer; margin-left: 10px;" id="close-button">Chiudi</button>
+              </div>
+            </body>
+            </html>
+          `);
+          win.document.close();
+          setTimeout(() => win.print(), 500);
+        };
+      
+        // Event select: aggiorna i campi in anteprima
+        select.onchange = function () {
+          const idx = select.value;
+          if (idx === "" || !farmaciJSON[idx]) return;
+          const f = farmaciJSON[idx];
+          nomeInput.value = f.NOME_FARMACO;
+          posologiaInput.value = f.DOSAGGIO;
+        };
+      
+        // Container bottoni
+        const btnsDiv = document.createElement("div");
+        btnsDiv.style.display = "flex";
+        btnsDiv.style.gap = "10px";
+        btnsDiv.appendChild(abilitaBtn);
+        btnsDiv.appendChild(saveBtn);
+        btnsDiv.appendChild(annullaBtn);
+        btnsDiv.appendChild(pdfBtn);
+      
+        // Container finale
+        const container = document.createElement("div");
+        container.appendChild(nomeInput);
+        container.appendChild(posologiaInput);
+        container.appendChild(select);
+        container.appendChild(btnsDiv);
+      
+        openDynamicModal({
+          title: "Farmaco Prescritto",
+          content: container,
+        });
+      } else if (
+        type === "diario" ||
+        type === "accertamento" ||
+        type === "visita"
+      ) {
+        // Mostra dettagli diario clinico (sola lettura)
+        const data = row.dataset.data || "";
+        const tipo = row.dataset.diariotipo || "";
+        const descrizione = row.dataset.descrizione || "";
+        const diagnosi = row.dataset.diagnosi || "";
+        const nota = row.dataset.nota || "";
+        const html = `<div><b>Data:</b> ${data}<br><b>Tipo:</b> ${tipo}<br><b>Descrizione:</b> ${descrizione}<br><b>Diagnosi:</b> ${diagnosi}<br><b>Nota:</b> ${nota}</div>`;
+        openDynamicModal({
+          title: "Dettaglio Diario Clinico",
+          content: html,
+        });
+      }
+    });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*  -----------------------------------------------------------------------------------------------
   Funzione modale problemi e diagnosi (spostata dal template)
   --------------------------------------------------------------------------------------------------- */
