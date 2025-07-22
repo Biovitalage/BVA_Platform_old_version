@@ -270,10 +270,8 @@ document.addEventListener('DOMContentLoaded', function() {
   --------------------------------------------------------------------------------------------------- */
 const modaleNote = document.getElementById('modale_note');
 const buttonModaleNote = document.getElementById('modale-note');
-const buttonCloseModaleNote = document.getElementById('close')
+const buttonCloseModaleNote = document.getElementById('close-note-btn')
 const backdropModaleNote = document.getElementById('backdropModaleNote')
-const textArea = document.getElementById('text_area')
-const modifyButton = document.getElementById('modify-btn-note')
 
 buttonModaleNote.addEventListener('click', ()=>{
   modaleNote.style.display = 'block';
@@ -283,10 +281,6 @@ buttonModaleNote.addEventListener('click', ()=>{
 buttonCloseModaleNote.addEventListener('click', ()=>{
   modaleNote.style.display = 'none';
   backdropModaleNote.style.display = 'none';
-})
-
-modifyButton.addEventListener('click', ()=>{
-  textArea.removeAttribute('disabled');
 })
 
 
@@ -749,7 +743,105 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+/*  -----------------------------------------------------------------------------------------------
+ funzioni per il funzionamento del menu diario clinico
+--------------------------------------------------------------------------------------------------- */
+// Script per i tab Diario/Farmaci/Accertamenti/Visite
+document.addEventListener('DOMContentLoaded', function() {
+  const tabButtons = document.querySelectorAll('.container-header-diario .header-container .button');
+  const tabContents = document.querySelectorAll('.container-tabella .container-content');
 
+  tabButtons.forEach((btn, idx) => {
+      btn.addEventListener('click', function() {
+          tabButtons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          tabContents.forEach((content, cidx) => {
+              content.style.display = (cidx === idx) ? 'block' : 'none';
+          });
+      });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*  -----------------------------------------------------------------------------------------------
+  Funzioni per il funzionamento della modale problemi e diagnosi
+--------------------------------------------------------------------------------------------------- */
+
+
+// Gestione chiusura modale con la X
+document.addEventListener('DOMContentLoaded', function() {
+    var closeX = document.getElementById('close-problemi-x');
+    var modaleProblemi = document.getElementById('modale_problemi');
+    var backdropProblemi = document.getElementById('backdropModaleProblemi');
+    if (closeX) {
+        closeX.addEventListener('click', function() {
+            if (modaleProblemi) modaleProblemi.style.display = 'none';
+            if (backdropProblemi) backdropProblemi.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+    }
+});
+
+// Mostra la sezione problemi solo dopo selezione diagnosi o inserimento nuova
+document.addEventListener('DOMContentLoaded', function() {
+    var diagnosiSelect = document.getElementById('diagnosi_select');
+    var problemiStep = document.getElementById('problemi_step');
+    var nuovaDiagnosiForm = document.getElementById('nuova_diagnosi_form');
+    if (diagnosiSelect) {
+        diagnosiSelect.addEventListener('change', function() {
+            if (this.value === "__new__") {
+                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = '';
+                if (problemiStep) problemiStep.style.display = '';
+            } else if (this.value) {
+                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+                if (problemiStep) problemiStep.style.display = '';
+            } else {
+                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+                if (problemiStep) problemiStep.style.display = 'none';
+            }
+        });
+    }
+    // Opzionale: inserisci descrizione ICD10 nella textarea al cambio select
+    var icd10Select = document.getElementById('icd10_select');
+    var textAreaProblemi = document.getElementById('text_area_problemi');
+    if (icd10Select && textAreaProblemi) {
+        icd10Select.addEventListener('change', function() {
+            var selected = this.options[this.selectedIndex];
+            if (selected && selected.value) {
+                textAreaProblemi.value = selected.value + " - " + selected.text.replace(selected.value + " - ", "");
+            }
+        });
+    }
+});
 
 
 /* FILTRI TABELLA PRESCRIZIONE */
