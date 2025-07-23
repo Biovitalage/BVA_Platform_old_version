@@ -84,32 +84,31 @@
                     <!-- <div class="back-tittle">
                         <a id="back" href="{% url 'HomePage' %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
                     </div> -->
-                    <button title="Prescrione esami" class="circle-btn">
+                    <button title="Prescrione esami" class="circle-btn" onclick="window.location.href='{% url 'esami' persona.id %}'">
                         <img src="{% static 'image/Prescrizione_color.png' %}" alt="Prescrizione Esami">
-                    </button> 
+                    </button>
                     <button title="Visite" class="circle-btn" onclick="window.location.href='{% url 'visite' persona.id %}'">
                         <img src="{% static 'image/Visite_coloree.png' %}" alt="Prescrione certificati">
-                    </button> 
+                    </button>
                     <button title="Prescrione fermaci" id="openPrescrizioniBtn" class="circle-btn">
                         <img src="{% static 'image/Prescrizione_Fermaci.png' %}" alt="Prescrizione Fermaci">
-                    </button> 
+                    </button>
                     <button title="Prescrione libera" id="openPrescrizioneLiberaBtn" class="circle-btn">
                         <img src="{% static 'image/Prescrizione_colore.png' %}" alt="Prescrizione Libera">
-                    </button> 
-                    
+                    </button>
                     <button title="Prescrione certificati" class="circle-btn">
                         <img src="{% static 'image/certificati.png' %}" alt="Prescrione certificati">
                     </button>
                 </div>
 
                 <div class="informazioni-personali">
-                    <h3>{{ persona.surname }} {{ persona.name }}</h3> 
+                    <h3>{{ persona.surname }} {{ persona.name }}</h3>
                     <h3>{{ persona.codice_fiscale }}</h3>
-                    <h3>{{ persona.dob|date:'d/m/Y' }} - {{ persona.residence }} - {{ persona.gender }} - {{ persona.chronological_age }} </h3> 
-                    <h3>{{ persona.email }}</h3> 
+                    <h3>{{ persona.dob|date:'d/m/Y' }} - {{ persona.residence }} - {{ persona.gender }} - {{ persona.chronological_age }} </h3>
+                    <h3>{{ persona.email }}</h3>
                     <h3>{{ persona.phone }}</h3> 
                 </div>
-            
+
                 <div class="tools-container-left-side">
 
 <!--                     <div class="container-trace">
@@ -129,9 +128,9 @@
                             <img src="{% static 'image/note_color.png' %}" alt="Note" title="Note">
                         </button>
                 
-                        <a href="{% static 'includes/pdfTemplates/Privacy&Policy.pdf' %}" download class="circle-btn" title="Privacy">
+                        <a id="open-privacy-btn" class="circle-btn" title="Privacy">
                             <img src="data:image/png;base64,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" alt="data-protection" title="Privacy & Policy">
-                        </a>  
+                        </a>
 
                         <a href="{% url 'dati_base' persona.id %}" class="circle-btn" title="Dati Pase Paziente">
                             <img src="{% static 'image/Dati_Base_color.png' %}" alt="">
@@ -141,7 +140,7 @@
                             <img src="{% static 'image/Terapie_colore.png' %}" alt="Prescrione certificati">
                         </button> 
 
-                        <a href="{% url 'dati_base' persona.id %}" class="circle-btn" title="Allegati">
+                        <a href="{% url 'allegati' persona.id %}" class="circle-btn" title="Allegati">
                             <img src="{% static 'image/Allegati_color.png' %}" alt="">
                         </a>
 
