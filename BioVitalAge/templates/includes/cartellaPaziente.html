@@ -33,6 +33,9 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
 
+        <!-- CDN IMPORT -->
+        <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js" defer></script>
+
         <!-- JS Import -->
         <!-- Modale Prescrizioni -->
         <script src="{% static 'js/cartella_paziente/prescrizioni/PrescrizioniFarmaci.js' %}" defer type="module"></script>
@@ -41,6 +44,7 @@
             window.DOTTORE = "{{ dottore.nome }} {{ dottore.cognome }}";
             window.PAZIENTE = "{{ persona.name }} {{ persona.surname }}";
         </script>
+
 
         <style>
         .custom-modal {
@@ -143,7 +147,6 @@
                         <a href="{% url 'allegati' persona.id %}" class="circle-btn" title="Allegati">
                             <img src="{% static 'image/Allegati_color.png' %}" alt="">
                         </a>
-
                     </div>
                 </div>
             </div>  
@@ -388,9 +391,65 @@
                 });
             </script>
 
+            <!-- MODALE PRIVACY POLICY -->
+            <!-- Modale Privacy con input e firma -->
+            <div id="privacy-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                <div style="background:white; padding:2rem; border-radius:10px; width:75vw; max-height:90vh; overflow-y:auto; position:relative;">
+                    <!-- Bottone chiudi -->
+                    <button onclick="document.getElementById('privacy-modal').style.display='none'" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
+            
+                    <!-- Titolo -->
+                    <h2 style="margin-top:0;">Privacy Policy</h2>
+            
+                    <!-- PDF della privacy -->
+                    <iframe src="{% static 'includes/pdfTemplates/Privacy&Policy.pdf' %}" width="100%" height="300px" style="border:1px solid #ccc; margin-bottom:1rem;"></iframe>
+            
+                    <!-- Input per i dati -->
+                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Nome e Cognome:</label>
+                            <input type="text" id="privacy-nome" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.name }} {{ persona.surname }}" placeholder="Inserisci nome e cognome">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data Firma:</label>
+                            <input type="date" id="privacy-data" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+                        </div>
+                    </div>
+            
+                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Email:</label>
+                            <input type="email" id="privacy-email" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.email|default:'' }}"  placeholder="email@esempio.com">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Telefono:</label>
+                            <input type="tel" id="privacy-telefono" value="{{ persona.phone|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="123-456-7890">
+                        </div>
+                    </div>
 
-            <div>
-
+                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data di Nascita:</label>
+                            <input type="date" id="privacy-data-nascita" value="{{ persona.dob }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci data di nascita">
+                        </div>
+                    </div>
+            
+                    <!-- Area firma -->
+                    <p style="margin-top:1.5rem; margin-bottom:0.5rem; font-weight:bold;">Firma qui sotto per accettare la privacy
+                        policy:</p>
+                    <canvas id="firma-canvas" width="500" height="150"
+                        style="border:2px solid #007bff; border-radius:4px; touch-action: none; width:100%; max-width:500px; cursor:crosshair;"></canvas>
+            
+                    <!-- Bottoni -->
+                    <div style="margin-top:1rem; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button id="clear-firma"
+                            style="padding:0.7rem 1.5rem; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer;">Cancella
+                            Firma</button>
+                        <button id="save-firma"
+                            style="padding:0.7rem 1.5rem; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer;">Salva
+                            e Scarica PDF</button>
+                    </div>
+                </div>
             </div>
 
 

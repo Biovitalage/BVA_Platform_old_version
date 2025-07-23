@@ -1295,6 +1295,243 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+/*  -----------------------------------------------------------------------------------------------
+  Funzione per mostrare la modale privacy
+--------------------------------------------------------------------------------------------------- */
+/*  -----------------------------------------------------------------------------------------------
+  Funzione per mostrare la modale privacy
+--------------------------------------------------------------------------------------------------- */
+document.getElementById('open-privacy-btn').onclick = function(e) {
+  e.preventDefault();
+  document.getElementById('privacy-modal').style.display = 'flex';
+  
+  // Imposta la data di oggi come default
+  const oggi = new Date().toISOString().split('T')[0];
+  document.getElementById('privacy-data').value = oggi;
+};
+
+/*  -----------------------------------------------------------------------------------------------
+  Gestione firma su canvas
+--------------------------------------------------------------------------------------------------- */
+let canvas = document.getElementById('firma-canvas');
+let ctx = canvas.getContext('2d');
+let drawing = false;
+
+// Configura il canvas per una firma più pulita
+ctx.strokeStyle = '#000';
+ctx.lineWidth = 2;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+
+// Eventi per mouse/touch
+canvas.addEventListener('pointerdown', e => {
+  drawing = true;
+  ctx.beginPath();
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+  ctx.moveTo(x, y);
+});
+
+canvas.addEventListener('pointermove', e => {
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+});
+
+canvas.addEventListener('pointerup', e => {
+  drawing = false;
+});
+
+// Previeni lo scroll su mobile quando si firma
+canvas.addEventListener('touchstart', e => e.preventDefault());
+canvas.addEventListener('touchmove', e => e.preventDefault());
+
+/*  -----------------------------------------------------------------------------------------------
+  Bottone cancella firma
+--------------------------------------------------------------------------------------------------- */
+document.getElementById('clear-firma').onclick = () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+};
+
+/*  -----------------------------------------------------------------------------------------------
+  Salva la firma e i dati nel PDF e scarica il PDF compilato
+--------------------------------------------------------------------------------------------------- */
+document.getElementById('save-firma').onclick = async function() {
+  // Controlla se pdf-lib è caricato
+  if (!window.PDFLib) {
+    alert('Errore: pdf-lib non è caricato. Ricarica la pagina e riprova.');
+    return;
+  }
+
+  // Prendi i dati dagli input
+  const nome = document.getElementById('privacy-nome').value.trim();
+  const data = document.getElementById('privacy-data').value;
+  const email = document.getElementById('privacy-email').value.trim();
+  const telefono = document.getElementById('privacy-telefono').value.trim();
+
+  // Controlla che almeno il nome sia inserito
+  if (!nome) {
+    alert('Inserisci almeno il nome prima di salvare.');
+    return;
+  }
+
+  // Controlla che ci sia una firma
+  const canvas = document.getElementById('firma-canvas');
+  const canvasData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const hasSignature = canvasData.data.some(channel => channel !== 0);
+  
+  if (!hasSignature) {
+    alert('Inserisci la firma prima di salvare.');
+    return;
+  }
+
+  try {
+    // Funzione helper per caricare il PDF come arraybuffer
+    async function fetchPdfAsBytes(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Impossibile caricare il PDF');
+      return await res.arrayBuffer();
+    }
+
+    // Prendi la firma come PNG base64
+    const dataUrl = canvas.toDataURL('image/png');
+
+    // Carica il PDF privacy
+    const pdfBytes = await fetchPdfAsBytes('/static/includes/pdfTemplates/Privacy&Policy.pdf');
+
+    // Usa pdf-lib per modificare il PDF
+    const { PDFDocument } = window.PDFLib;
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+    const secondPage = pages[1];
+    const thirdPage = pages[2];
+    const { width, height } = firstPage.getSize();
+
+    // Scrivi i dati nel PDF (modifica le coordinate x, y per posizionarli dove vuoi)
+    // Le coordinate y partono dal basso del PDF!
+    firstPage.drawText(`${nome}`, { 
+      x: 140, 
+      y: height - 445, // 100px dall'alto
+      size: 10,
+      color: PDFLib.rgb(0, 0, 0)
+    });
+
+    // Formatta la data in italiano se presente
+    if (data) {
+      const dateObj = new Date(data);
+      const giorno = dateObj.getDate();           // giorno (1-31)
+      const mese = dateObj.getMonth() + 1;        // mese (1-12) - aggiungi 1 perché parte da 0
+      const anno = dateObj.getFullYear();         // anno (es: 2025)
+      // Se vuoi sempre due cifre:
+      const giornoStr = String(giorno).padStart(2, '0');
+      const meseStr = String(mese).padStart(2, '0');
+      const annoStr = String(anno);
+
+      thirdPage.drawText(`${giornoStr}`, {
+        x: 123, 
+        y: height - 367,
+        size: 12,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+      thirdPage.drawText(`${meseStr}`, {
+        x: 152, 
+        y: height - 367,
+        size: 12,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+      thirdPage.drawText(`${annoStr}`, {
+        x: 177, 
+        y: height - 367,
+        size: 12,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+      // Ora puoi usare giornoStr, meseStr, annoStr per inserirli dove vuoi!
+    }
+
+    if (email) {
+      firstPage.drawText(`${email}`, { 
+        x: 50, 
+        y: height - 140, 
+        size: 12,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+      secondPage.drawText(`${email}`, { 
+        x: 50, 
+        y: height - 160, 
+        size: 12,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+      secondPage.drawText(`${email}`, { 
+        x: 50, 
+        y: height - 180, 
+        size: 12,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+
+    if (telefono) {
+      firstPage.drawText(`${telefono}`, { 
+        x: 50, 
+        y: height - 160, 
+        size: 12,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+      secondPage.drawText(`${telefono}`, { 
+        x: 50, 
+        y: height - 200, 
+        size: 12,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+
+    // Inserisci la firma come immagine
+    const pngImage = await pdfDoc.embedPng(dataUrl);
+    const signatureWidth = 150;
+    const signatureHeight = 60;
+    
+    thirdPage.drawImage(pngImage, {
+      x: 285,
+      y: height - 400,
+      width: signatureWidth,
+      height: signatureHeight,
+    });
+
+    // Salva il nuovo PDF
+    const pdfWithSignature = await pdfDoc.save();
+
+    // Scarica il PDF firmato e compilato
+    const blob = new Blob([pdfWithSignature], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Privacy_Policy_${nome.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    // Mostra messaggio di successo e chiudi la modale
+    showAlert({
+      type: 'success',
+      message: 'PDF generato e scaricato con successo!',
+      borderColor: '#10b981',
+    });
+    document.getElementById('privacy-modal').style.display = 'none';
+
+    // Opzionale: pulisci i campi
+    document.getElementById('privacy-nome').value = '';
+    document.getElementById('privacy-email').value = '';
+    document.getElementById('privacy-telefono').value = '';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  } catch (error) {
+    console.error('Errore durante la generazione del PDF:', error);
+    alert('Errore durante la generazione del PDF. Riprova.');
+  }
+};
 
 /* FILTRI TABELLA PRESCRIZIONE */
 // document.addEventListener("DOMContentLoaded", function () {
