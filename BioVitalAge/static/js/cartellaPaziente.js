@@ -1295,19 +1295,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-/*  -----------------------------------------------------------------------------------------------
-  Funzione per mostrare la modale privacy
---------------------------------------------------------------------------------------------------- */
+
 /*  -----------------------------------------------------------------------------------------------
   Funzione per mostrare la modale privacy
 --------------------------------------------------------------------------------------------------- */
 document.getElementById('open-privacy-btn').onclick = function(e) {
   e.preventDefault();
   document.getElementById('privacy-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
   
   // Imposta la data di oggi come default
   const oggi = new Date().toISOString().split('T')[0];
   document.getElementById('privacy-data').value = oggi;
+};
+
+/*  -----------------------------------------------------------------------------------------------
+  Funzione per chiudere la modale privacy
+--------------------------------------------------------------------------------------------------- */
+document.getElementById('privacy-modal-close').onclick = function() {
+  document.getElementById('privacy-modal').style.display = 'none';
+  document.body.style.overflow = 'auto';
 };
 
 /*  -----------------------------------------------------------------------------------------------
@@ -1370,12 +1377,29 @@ document.getElementById('save-firma').onclick = async function() {
   // Prendi i dati dagli input
   const nome = document.getElementById('privacy-nome').value.trim();
   const data = document.getElementById('privacy-data').value;
+  const codiceFiscale = document.getElementById('privacy-codice-fiscale').value.trim();
+  const indirizzo = document.getElementById('privacy-address').value.trim();
+  const cap = document.getElementById('privacy-cap').value.trim();
+  const dataNascita = document.getElementById('privacy-data-nascita').value.trim();
+  const luogoNascita = document.getElementById('privacy-place-of-birth').value.trim();
+  const residenza = document.getElementById('privacy-residence').value.trim();
+  const provincia = document.getElementById('privacy-province').value.trim();
   const email = document.getElementById('privacy-email').value.trim();
   const telefono = document.getElementById('privacy-telefono').value.trim();
+  const nomeMedico = window.DOTTORE || 'Dott. Rossi';
+  const documento = document.getElementById('privacy-identity-doc').value.trim();
+  const numeroDocumento = document.getElementById('privacy-nr-identity').value.trim();
+  const dataRilascioDocumento = document.getElementById('privacy-relased-date').value.trim();
+  const luogoRilascioDocumento = document.getElementById('privacy-relased-company').value.trim();
+  const familiari = document.getElementById('privacy-family').value.trim();
 
   // Controlla che almeno il nome sia inserito
   if (!nome) {
-    alert('Inserisci almeno il nome prima di salvare.');
+    showAlert({
+      type: 'warning',
+      message: 'Inserisci almeno il tuo nome prima di salvare.',
+      borderColor: '#EF4444',
+    })
     return;
   }
 
@@ -1385,7 +1409,11 @@ document.getElementById('save-firma').onclick = async function() {
   const hasSignature = canvasData.data.some(channel => channel !== 0);
   
   if (!hasSignature) {
-    alert('Inserisci la firma prima di salvare.');
+    showAlert({
+      type: 'warning',
+      message: 'Inserisci una firma prima di salvare.',
+      borderColor: '#EF4444',
+    });
     return;
   }
 
@@ -1422,6 +1450,94 @@ document.getElementById('save-firma').onclick = async function() {
     });
 
     // Formatta la data in italiano se presente
+
+    let dobFormattata = '';
+    if (dataNascita) {
+      const dateObj = new Date(dataNascita);
+      dobFormattata = dateObj.toLocaleDateString('it-IT');
+    }
+
+    if (dobFormattata) {
+      firstPage.drawText(`${dobFormattata}`, { 
+        x: 130, 
+        y: height - 467, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+
+    if (luogoNascita) {
+      firstPage.drawText(`${luogoNascita}`, { 
+        x: 330, 
+        y: height - 467, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+    
+    if (residenza) {
+      firstPage.drawText(`${residenza}`, {
+        x: 130, 
+        y: height - 492, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+    if (provincia) {
+      firstPage.drawText(`${provincia}`, {
+        x: 260, 
+        y: height - 492, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+
+    if (indirizzo) {
+      firstPage.drawText(`${indirizzo}`, {
+        x: 320, 
+        y: height - 492, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+
+    if (cap) {
+      firstPage.drawText(`${cap}`, {
+        x: 478, 
+        y: height - 492, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+
+    if (documento) {
+      firstPage.drawText(`${documento}`, {
+        x: 190, 
+        y: height - 515, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+
+    if (numeroDocumento) {
+      firstPage.drawText(`${numeroDocumento}`, {
+        x: 380, 
+        y: height - 515, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+    if (dataRilascioDocumento) {
+      const dateObj = new Date(dataRilascioDocumento);
+      const dataRilascioFormattata = dateObj.toLocaleDateString('it-IT');
+      firstPage.drawText(`${dataRilascioFormattata}`, {
+        x: 130, 
+        y: height - 540, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+
     if (data) {
       const dateObj = new Date(data);
       const giorno = dateObj.getDate();           // giorno (1-31)
@@ -1455,40 +1571,49 @@ document.getElementById('save-firma').onclick = async function() {
 
     if (email) {
       firstPage.drawText(`${email}`, { 
-        x: 50, 
-        y: height - 140, 
-        size: 12,
+        x: 330, 
+        y: height - 563,
+        size: 10,
         color: PDFLib.rgb(0, 0, 0)
       });
       secondPage.drawText(`${email}`, { 
-        x: 50, 
-        y: height - 160, 
-        size: 12,
+        x: 130, 
+        y: height - 437, 
+        size: 10,
         color: PDFLib.rgb(0, 0, 0)
       });
       secondPage.drawText(`${email}`, { 
-        x: 50, 
-        y: height - 180, 
-        size: 12,
+        x: 130, 
+        y: height - 579, 
+        size: 10,
         color: PDFLib.rgb(0, 0, 0)
       });
     }
 
     if (telefono) {
       firstPage.drawText(`${telefono}`, { 
-        x: 50, 
-        y: height - 160, 
-        size: 12,
+        x: 140, 
+        y: height - 563, 
+        size: 10,
         color: PDFLib.rgb(0, 0, 0)
       });
       secondPage.drawText(`${telefono}`, { 
-        x: 50, 
-        y: height - 200, 
-        size: 12,
+        x: 140, 
+        y: height - 657, 
+        size: 10,
         color: PDFLib.rgb(0, 0, 0)
       });
     }
 
+
+    if (nomeMedico) {
+      thirdPage.drawText(`${nomeMedico}`, {
+        x: 93, 
+        y: height - 272,
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
     // Inserisci la firma come immagine
     const pngImage = await pdfDoc.embedPng(dataUrl);
     const signatureWidth = 150;
@@ -1521,15 +1646,18 @@ document.getElementById('save-firma').onclick = async function() {
     });
     document.getElementById('privacy-modal').style.display = 'none';
 
-    // Opzionale: pulisci i campi
-    document.getElementById('privacy-nome').value = '';
-    document.getElementById('privacy-email').value = '';
-    document.getElementById('privacy-telefono').value = '';
+    // Reset solo la data e la firma
+    const oggi = new Date().toISOString().split('T')[0];
+    document.getElementById('privacy-data').value = oggi;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   } catch (error) {
     console.error('Errore durante la generazione del PDF:', error);
-    alert('Errore durante la generazione del PDF. Riprova.');
+    showAlert({
+      type: 'error',
+      message: 'Si è verificato un errore durante la generazione del PDF.',
+      borderColor: '#ef4444',
+    });
   }
 };
 

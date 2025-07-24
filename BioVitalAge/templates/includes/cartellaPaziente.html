@@ -396,7 +396,7 @@
             <div id="privacy-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
                 <div style="background:white; padding:2rem; border-radius:10px; width:75vw; max-height:90vh; overflow-y:auto; position:relative;">
                     <!-- Bottone chiudi -->
-                    <button onclick="document.getElementById('privacy-modal').style.display='none'" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
+                    <button id="privacy-modal-close" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
             
                     <!-- Titolo -->
                     <h2 style="margin-top:0;">Privacy Policy</h2>
@@ -405,18 +405,26 @@
                     <iframe src="{% static 'includes/pdfTemplates/Privacy&Policy.pdf' %}" width="100%" height="300px" style="border:1px solid #ccc; margin-bottom:1rem;"></iframe>
             
                     <!-- Input per i dati -->
-                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
                         <div>
                             <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Nome e Cognome:</label>
                             <input type="text" id="privacy-nome" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.name }} {{ persona.surname }}" placeholder="Inserisci nome e cognome">
                         </div>
                         <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data Firma:</label>
-                            <input type="date" id="privacy-data" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data di Nascita:</label>
+                            <input type="date" id="privacy-data-nascita" value="{{ persona.dob|date:'Y-m-d' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Codice Fiscale:</label>
+                            <input type="text" id="privacy-codice-fiscale" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.codice_fiscale|default:'' }}" placeholder="Inserisci codice fiscale">
                         </div>
                     </div>
-            
-                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    
+                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data Firma:</label>
+                            <input type="date" id="privacy-data" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="">
+                        </div>
                         <div>
                             <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Email:</label>
                             <input type="email" id="privacy-email" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.email|default:'' }}"  placeholder="email@esempio.com">
@@ -427,11 +435,54 @@
                         </div>
                     </div>
 
+                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Luogo di Nascita:</label>
+                            <input type="text" id="privacy-place-of-birth" value="{{ persona.place_of_birth|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Luogo di nascita">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Residenza:</label>
+                            <input type="text" id="privacy-residence" value="{{ persona.residence|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Residenza">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Provincia:</label>
+                            <input type="text" id="privacy-province" value="{{ persona.province|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Provincia">
+                        </div>
+                    </div>
+
                     <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
                         <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data di Nascita:</label>
-                            <input type="date" id="privacy-data-nascita" value="{{ persona.dob }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci data di nascita">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">CAP:</label>
+                            <input type="text" id="privacy-cap" value="{{ persona.cap|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="CAP">
                         </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Indirizzo:</label>
+                            <input type="text" id="privacy-address" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci indirizzo">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem;">
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Documento di Identità:</label>
+                            <input type="text" id="privacy-identity-doc" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Documento di Identità">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Nr. :</label>
+                            <input type="text" id="privacy-nr-identity" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci numero documento">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Rilasciato il:</label>
+                            <input type="date" id="privacy-relased-date" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci data rilascio">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Da:</label>
+                            <input type="text" id="privacy-relased-company" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci comune rilasciante">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Familiari (Nome e Cognome):</label>
+                        <textarea id="privacy-family" cols="30" rows="4" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci familiari"></textarea>
                     </div>
             
                     <!-- Area firma -->
