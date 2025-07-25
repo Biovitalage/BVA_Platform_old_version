@@ -1295,7 +1295,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-
 /*  -----------------------------------------------------------------------------------------------
   Funzione per mostrare la modale privacy
 --------------------------------------------------------------------------------------------------- */
@@ -1365,8 +1364,79 @@ document.getElementById('clear-firma').onclick = () => {
 };
 
 /*  -----------------------------------------------------------------------------------------------
+  Funzione per gestire i radio button e restituire X nelle coordinate giuste
+--------------------------------------------------------------------------------------------------- */
+function drawRadioX(page, idTrue, idFalse, coordTrue, coordFalse, height) {
+  const trueChecked = document.getElementById(idTrue)?.checked;
+  const falseChecked = document.getElementById(idFalse)?.checked;
+  
+  if (trueChecked) {
+    page.drawText("X", {
+      x: coordTrue.x,
+      y: height - coordTrue.y,
+      size: 15,
+      color: PDFLib.rgb(0, 0, 0)
+    });
+  } else if (falseChecked) {
+    page.drawText("X", {
+      x: coordFalse.x,
+      y: height - coordFalse.y,
+      size: 15,
+      color: PDFLib.rgb(0, 0, 0)
+    });
+  }
+}
+
+/*  -----------------------------------------------------------------------------------------------
   Salva la firma e i dati nel PDF e scarica il PDF compilato
 --------------------------------------------------------------------------------------------------- */
+// Funzione per validare il form privacy
+function validatePrivacyForm() {
+  // Lista degli id degli input obbligatori
+  const requiredFields = [
+    'privacy-nome',
+    'privacy-data-nascita',
+    'privacy-codice-fiscale',
+    'privacy-data',
+    'privacy-email',
+    'privacy-telefono',
+    'privacy-place-of-birth',
+    'privacy-residence',
+    'privacy-province',
+    'privacy-cap',
+    'privacy-address',
+    'privacy-identity-doc',
+    'privacy-nr-identity',
+    'privacy-relased-date',
+    'privacy-relased-company'
+  ];
+
+  // Controlla i campi di testo
+  for (const id of requiredFields) {
+    const el = document.getElementById(id);
+    if (!el || !el.value.trim()) {
+      return { valid: false, message: 'Compila tutti i campi obbligatori.' };
+    }
+  }
+
+  // Controlla i radio della privacy (tutti devono avere una scelta)
+  const radioGroups = [
+    ['diritti-dati-personali-true', 'diritti-dati-personali-false'],
+    ['materiale-biologico-true', 'materiale-biologico-false'],
+    ['referti-posta-elettronica-true', 'referti-posta-elettronica-false'],
+    ['trasmissione-materiale-pubblicitario-true', 'trasmissione-materiale-pubblicitario-false']
+  ];
+  for (const [idTrue, idFalse] of radioGroups) {
+    const trueChecked = document.getElementById(idTrue)?.checked;
+    const falseChecked = document.getElementById(idFalse)?.checked;
+    if (!trueChecked && !falseChecked) {
+      return { valid: false, message: 'Devi rispondere a tutte le domande sulla privacy.' };
+    }
+  }
+
+  return { valid: true };
+}
+
 document.getElementById('save-firma').onclick = async function() {
   // Controlla se pdf-lib è caricato
   if (!window.PDFLib) {
@@ -1417,6 +1487,17 @@ document.getElementById('save-firma').onclick = async function() {
     return;
   }
 
+  // Controlla la privacy
+  const validation = validatePrivacyForm();
+  if (!validation.valid) {
+    showAlert({
+      type: 'warning',
+      message: validation.message,
+      borderColor: '#EF4444',
+    });
+    return;
+  }
+
   try {
     // Funzione helper per caricare il PDF come arraybuffer
     async function fetchPdfAsBytes(url) {
@@ -1450,7 +1531,6 @@ document.getElementById('save-firma').onclick = async function() {
     });
 
     // Formatta la data in italiano se presente
-
     let dobFormattata = '';
     if (dataNascita) {
       const dateObj = new Date(dataNascita);
@@ -1505,6 +1585,15 @@ document.getElementById('save-firma').onclick = async function() {
       firstPage.drawText(`${cap}`, {
         x: 478, 
         y: height - 492, 
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
+
+    if (codiceFiscale) {
+      firstPage.drawText(`${codiceFiscale}`, {
+        x: 390, 
+        y: height - 540, 
         size: 10,
         color: PDFLib.rgb(0, 0, 0)
       });
@@ -1566,7 +1655,15 @@ document.getElementById('save-firma').onclick = async function() {
         size: 12,
         color: PDFLib.rgb(0, 0, 0)
       });
-      // Ora puoi usare giornoStr, meseStr, annoStr per inserirli dove vuoi!
+    }
+
+    if (luogoRilascioDocumento) {
+      firstPage.drawText(`${luogoRilascioDocumento}`, {
+        x: 250,
+        y: height - 540,
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
     }
 
     if (email) {
@@ -1605,6 +1702,14 @@ document.getElementById('save-firma').onclick = async function() {
       });
     }
 
+    if (familiari) {
+      thirdPage.drawText(`${familiari}`, {
+        x: 93, 
+        y: height - 243,
+        size: 10,
+        color: PDFLib.rgb(0, 0, 0)
+      });
+    }
 
     if (nomeMedico) {
       thirdPage.drawText(`${nomeMedico}`, {
@@ -1614,6 +1719,39 @@ document.getElementById('save-firma').onclick = async function() {
         color: PDFLib.rgb(0, 0, 0)
       });
     }
+
+    // *** GESTIONE RADIO BUTTON CON COORDINATE DIVERSE PER TRUE/FALSE ***
+    // Modifica le coordinate secondo le tue esigenze
+    drawRadioX(firstPage, 'diritti-dati-personali-true', 'diritti-dati-personali-false', 
+      {x: 181, y: 740}, // coordinate per TRUE
+      {x: 344, y: 740}, // coordinate per FALSE
+      height
+    );
+
+    drawRadioX(secondPage, 'materiale-biologico-true', 'materiale-biologico-false', 
+      {x: 181, y: 282}, // coordinate per TRUE
+      {x: 344, y: 282}, // coordinate per FALSE
+      height
+    );
+
+    drawRadioX(secondPage, 'referti-posta-elettronica-true', 'referti-posta-elettronica-false', 
+      {x: 181, y: 398}, // coordinate per TRUE
+      {x: 344, y: 398}, // coordinate per FALSE
+      height
+    );
+
+    drawRadioX(secondPage, 'trasmissione-materiale-pubblicitario-true', 'trasmissione-materiale-pubblicitario-false', 
+      {x: 181, y: 538}, // coordinate per TRUE
+      {x: 344, y: 538}, // coordinate per FALSE
+      height
+    );
+
+    drawRadioX(secondPage, 'trasmissione-materiale-pubblicitario-true', 'trasmissione-materiale-pubblicitario-false', 
+      {x: 181, y: 614}, // coordinate per TRUE
+      {x: 344, y: 614}, // coordinate per FALSE
+      height
+    );
+
     // Inserisci la firma come immagine
     const pngImage = await pdfDoc.embedPng(dataUrl);
     const signatureWidth = 150;
@@ -1649,17 +1787,61 @@ document.getElementById('save-firma').onclick = async function() {
     // Reset solo la data e la firma
     const oggi = new Date().toISOString().split('T')[0];
     document.getElementById('privacy-data').value = oggi;
+    document.getElementById('privacy-address').value = '';
+    document.getElementById('privacy-identity-doc').value = '';
+    document.getElementById('privacy-nr-identity').value = '';
+    document.getElementById('privacy-relased-date').value = '';
+    document.getElementById('privacy-relased-company').value = '';
+    document.getElementById('privacy-family').value = '';
+    // Reset radio button della privacy
+    document.getElementById('diritti-dati-personali-true').checked = false;
+    document.getElementById('diritti-dati-personali-false').checked = false;
+    document.getElementById('materiale-biologico-true').checked = false;
+    document.getElementById('materiale-biologico-false').checked = false;
+    document.getElementById('referti-posta-elettronica-true').checked = false;
+    document.getElementById('referti-posta-elettronica-false').checked = false;
+    document.getElementById('trasmissione-materiale-pubblicitario-true').checked = false;
+    document.getElementById('trasmissione-materiale-pubblicitario-false').checked = false;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   } catch (error) {
     console.error('Errore durante la generazione del PDF:', error);
     showAlert({
       type: 'error',
-      message: 'Si è verificato un errore durante la generazione del PDF.',
+      message: 'Si è verificato un errore durante la generazione del PDF.',
       borderColor: '#ef4444',
     });
   }
 };
+
+/*  -----------------------------------------------------------------------------------------------
+  Funzione per mostrare i menù a tendina di approvazione privacy
+--------------------------------------------------------------------------------------------------- */
+// Gestione apertura/chiusura con GSAP
+document.querySelectorAll('.consenso-header').forEach(header => {
+  header.addEventListener('click', function(e) {
+    // Non aprire/chiudere se clicchi sulla checkbox o label
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+
+    const card = header.parentElement;
+    const desc = card.querySelector('.consenso-desc');
+    const arrow = header.querySelector('.arrow');
+    const isOpen = card.classList.contains('open');
+
+    if (isOpen) {
+      gsap.to(desc, { height: 0, opacity: 0, marginLeft: 0, marginRight: 0, duration: 0.25, ease: "power2.in" });
+      arrow.style.transform = "rotate(0deg)";
+      card.classList.remove('open');
+    } else {
+      desc.style.height = 'auto';
+      const autoHeight = desc.scrollHeight;
+      desc.style.height = '0';
+      gsap.to(desc, { height: autoHeight, opacity: 1, marginLeft: 10, marginRight: 10, padding: 20, duration: 0.3, ease: "power2.out" });
+      arrow.style.transform = "rotate(90deg)";
+      card.classList.add('open');
+    }
+  });
+});
 
 /* FILTRI TABELLA PRESCRIZIONE */
 // document.addEventListener("DOMContentLoaded", function () {

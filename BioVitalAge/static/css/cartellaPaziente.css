@@ -2290,8 +2290,8 @@ strong {
   background-color: white;
 }
 .circle-btn img{
-  width: 40px!important;
-  height: 40px!important;
+  width: 55px!important;
+  height: 55px!important;
   transition: transform 0.3s ease-in-out;
 }
 .circle-btn img:hover{
@@ -2303,3 +2303,7 @@ strong {
 }
 
 
+/* Menù a tendina */
+.card-body{
+  padding: 0 !important;
+}
