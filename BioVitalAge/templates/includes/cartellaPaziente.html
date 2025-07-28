@@ -280,7 +280,7 @@
                 <textarea class="content-prescrione" id="textareaPrescrizioneLibera" placeholder="Scrivi qui il testo..."></textarea>
                 <div class="footer-button">
                     <button class="button">Elenco Prescrizioni</button>
-                    <button class="button">Save</button>
+                    <button class="button" id="savePrescrizioneLibera">Save</button>
                 </div>
             </div>
             <div class="backdrop-modale-prescrizione-libera" id="backdropPrescrizioneLibera"></div>
@@ -849,25 +849,6 @@
                                 </div>
                             {% endfor %}
                         </div>
-                        <div class="pagination_tabella">
-                            {% if diario_page.has_previous %}
-                                <a class="previous" href="?diario_page={{ diario_page.previous_page_number }}">Previous</a>
-                            {% else %}
-                                <span class="previous disabled">Previous</span>
-                            {% endif %}
-                            {% for num in diario_page.paginator.page_range %}
-                                {% if diario_page.number == num %}
-                                    <span class="current">{{ num }}</span>
-                                {% else %}
-                                    <a href="?diario_page={{ num }}">{{ num }}</a>
-                                {% endif %}
-                            {% endfor %}
-                            {% if diario_page.has_next %}
-                                <a class="next" href="?diario_page={{ diario_page.next_page_number }}">Next</a>
-                            {% else %}
-                                <span class="next disabled">Next</span>
-                            {% endif %}
-                        </div>
                     </div>
                     
                     <!-- FARMACI -->
@@ -885,14 +866,14 @@
                         </div>
                     
                         <div class="container-table">
-                            {% if farmaci_prescritti_page|length == 0 %}
+                            {% if farmaci_prescritti|length == 0 %}
                                 <div class="row-table" style="grid-template-columns: 1fr;">
                                     <div class="row-cella" colspan="3">
                                         <p>Nessun farmaco presente.</p>
                                     </div>
                                 </div>
                             {% else %}
-                                {% for prescrizione in farmaci_prescritti_page %}
+                                {% for prescrizione in farmaci_prescritti %}
                                 <div class="row-table"
                                      data-type="farmaco"
                                      data-id="{{ prescrizione.id }}"
@@ -909,28 +890,6 @@
                                     </div>
                                 </div>
                                 {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <div class="pagination_tabella">
-                            {% if farmaci_prescritti_page.has_previous %}
-                            <a class="previous" href="?page={{ farmaci_page.previous_page_number }}">Previous</a>
-                            {% else %}
-                            <span class="previous disabled">Previous</span>
-                            {% endif %}
-                    
-                            {% for num in farmaci_page.paginator.page_range %}
-                            {% if farmaci_page.number == num %}
-                            <span class="current">{{ num }}</span>
-                            {% else %}
-                            <a href="?page={{ num }}">{{ num }}</a>
-                            {% endif %}
-                            {% endfor %}
-                    
-                            {% if farmaci_page.has_next %}
-                            <a class="next" href="?page={{ farmaci_page.next_page_number }}">Next</a>
-                            {% else %}
-                            <span class="next disabled">Next</span>
                             {% endif %}
                         </div>
                     </div>
@@ -1670,48 +1629,6 @@
 
         <!-- Bootstrap 5 CDN -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const saveBtn = document.getElementById('savePrescrizioneLibera');
-            const textarea = document.getElementById('textareaPrescrizioneLibera');
-            const popup = document.getElementById('popup-success-prescrizione-libera');
-            if (saveBtn && textarea) {
-                saveBtn.addEventListener('click', function() {
-                    const testo = textarea.value.trim();
-                    if (!testo) {
-                        alert('Inserisci una prescrizione prima di salvare.');
-                        return;
-                    }
-                    fetch('/api/salva-prescrizione-libera/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
-                        },
-                        body: JSON.stringify({
-                            persona_id: window.PAZIENTE_ID,
-                            testo: testo
-                        })
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
-                            textarea.value = '';
-                            if (popup) {
-                                popup.style.display = 'block';
-                                popup.textContent = 'Prescrizione salvata con successo!';
-                                setTimeout(() => { popup.style.display = 'none'; }, 3500);
-                            }
-                        } else {
-                            alert('Errore nel salvataggio: ' + (data.error || 'Errore generico.'));
-                        }
-                    })
-                    .catch(() => alert('Errore di rete nel salvataggio.'));
-                });
-            }
-        });
-        </script>
 
         <!-- MODALE DINAMICA GENERICA -->
         <div id="dynamicModal" class="custom-modal" style="display:none;">

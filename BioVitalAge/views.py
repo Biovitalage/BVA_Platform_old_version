@@ -1280,9 +1280,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         # --- INIZIO LOGICA DIARIO CLINICO (da DiarioCLinicoView) ---
         # Farmaci prescritti
         farmaci_prescritti = PrescrizioneFarmaco.objects.filter(paziente=persona).order_by('-data_prescrizione')
-        paginator = Paginator(farmaci_prescritti, 3)  # 3 prescrizioni per pagina, cambia se vuoi
-        page_number = request.GET.get('farmaci_page')
-        farmaci_prescritti_page = paginator.get_page(page_number)     # Accertamenti (PrescrizioniEsami)
+        # Accertamenti (PrescrizioniEsami)
         accertamenti = PrescrizioniEsami.objects.filter(paziente=persona).order_by('-data_visita')
         # Prescrizioni libere
         prescrizioni_libere = PrescrizioneLibera.objects.filter(persona=persona).order_by('-data_creazione')
@@ -1335,9 +1333,9 @@ class CartellaPazienteView(LoginRequiredMixin, View):
                 entry['data'] = datetime.combine(entry['data'], datetime.min.time())
 
         # PAGINAZIONE DIARIO CLINICO
-        diario_paginator = Paginator(diario, 3)
-        diario_page_number = request.GET.get('diario_page')
-        diario_page = diario_paginator.get_page(diario_page_number)
+        # diario_paginator = Paginator(diario, 3)
+        # diario_page_number = request.GET.get('diario_page')
+        # diario_page = diario_paginator.get_page(diario_page_number)
 
         # CALCOLO DELLO SCORE DEGLI ORGANI
         punteggi_organi = {}
@@ -1519,7 +1517,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'diagnosi_list': diagnosi_list,
             'icd10': data,
             'farmaci_page': farmaci_page,
-            'farmaci_prescritti_page': farmaci_prescritti_page,
+            'farmaci_prescritti': farmaci_prescritti,
 
             # indicatori 
             "Salute_del_cuore": lista_filtered_value[0],
@@ -1549,7 +1547,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'problemi': problemi,
             'rischi': rischi,
             # Diario clinico paginato
-            'diario_page': diario_page,
+            'diario_page': diario,
         }
 
         return render(request, "includes/cartellaPaziente.html", context)

@@ -814,6 +814,8 @@
   margin-top: 1rem;
   box-shadow: 1px 1px 8px 4px rgba(0,0,0,0.05);
   border: 1px solid #DDD;
+  max-height: 245px;
+  overflow: auto;
   display: grid;
 }
 /* STYLE CONTENUTO SECONDO */
@@ -834,6 +836,7 @@
 .container-table{
   display: grid;
   grid-template-rows: repeat(3, 1fr);
+  overflow: auto;
 }
 .header-table{
   display: grid;

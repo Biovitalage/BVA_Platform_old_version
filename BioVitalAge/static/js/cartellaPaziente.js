@@ -1723,32 +1723,32 @@ document.getElementById('save-firma').onclick = async function() {
     // *** GESTIONE RADIO BUTTON CON COORDINATE DIVERSE PER TRUE/FALSE ***
     // Modifica le coordinate secondo le tue esigenze
     drawRadioX(firstPage, 'diritti-dati-personali-true', 'diritti-dati-personali-false', 
-      {x: 181, y: 740}, // coordinate per TRUE
-      {x: 344, y: 740}, // coordinate per FALSE
+      {x: 181, y: 740},
+      {x: 342, y: 740},
       height
     );
 
     drawRadioX(secondPage, 'materiale-biologico-true', 'materiale-biologico-false', 
-      {x: 181, y: 282}, // coordinate per TRUE
-      {x: 344, y: 282}, // coordinate per FALSE
+      {x: 181, y: 282},
+      {x: 342, y: 282},
       height
     );
 
     drawRadioX(secondPage, 'referti-posta-elettronica-true', 'referti-posta-elettronica-false', 
-      {x: 181, y: 398}, // coordinate per TRUE
-      {x: 344, y: 398}, // coordinate per FALSE
+      {x: 181, y: 398},
+      {x: 342, y: 398},
       height
     );
 
     drawRadioX(secondPage, 'trasmissione-materiale-pubblicitario-true', 'trasmissione-materiale-pubblicitario-false', 
-      {x: 181, y: 538}, // coordinate per TRUE
-      {x: 344, y: 538}, // coordinate per FALSE
+      {x: 181, y: 538},
+      {x: 380, y: 538},
       height
     );
 
     drawRadioX(secondPage, 'trasmissione-materiale-pubblicitario-true', 'trasmissione-materiale-pubblicitario-false', 
-      {x: 181, y: 614}, // coordinate per TRUE
-      {x: 344, y: 614}, // coordinate per FALSE
+      {x: 181, y: 614},
+      {x: 380, y: 614},
       height
     );
 
@@ -1783,6 +1783,7 @@ document.getElementById('save-firma').onclick = async function() {
       borderColor: '#10b981',
     });
     document.getElementById('privacy-modal').style.display = 'none';
+    document.body.style.overflow = 'auto';
 
     // Reset solo la data e la firma
     const oggi = new Date().toISOString().split('T')[0];
@@ -1803,7 +1804,6 @@ document.getElementById('save-firma').onclick = async function() {
     document.getElementById('trasmissione-materiale-pubblicitario-true').checked = false;
     document.getElementById('trasmissione-materiale-pubblicitario-false').checked = false;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   } catch (error) {
     console.error('Errore durante la generazione del PDF:', error);
     showAlert({
@@ -1842,6 +1842,60 @@ document.querySelectorAll('.consenso-header').forEach(header => {
     }
   });
 });
+
+/*  -----------------------------------------------------------------------------------------------
+  Funzione per salvare la prescrizione libera
+  --------------------------------------------------------------------------------------------------- */
+  document.addEventListener('DOMContentLoaded', function() {
+    const saveBtn = document.getElementById('savePrescrizioneLibera');
+    const textarea = document.getElementById('textareaPrescrizioneLibera');
+    const popup = document.getElementById('popup-success-prescrizione-libera');
+    if (saveBtn && textarea) {
+        saveBtn.addEventListener('click', function() {
+            const testo = textarea.value.trim();
+            if (!testo) {
+              if (popup) {
+                popup.style.display = 'block';
+                popup.textContent = 'Inserisci una prescrizione prima di salvare.';
+                setTimeout(() => { popup.style.display = 'none'; }, 3500);
+              }
+              return;
+            }
+            fetch('/api/salva-prescrizione-libera/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
+                },
+                body: JSON.stringify({
+                    persona_id: window.PAZIENTE_ID,
+                    testo: testo
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    textarea.value = '';
+                    if (popup) {
+                        popup.style.display = 'block';
+                        popup.textContent = 'Prescrizione salvata con successo!';
+                        setTimeout(() => { popup.style.display = 'none'; }, 3500);
+                    }
+                    document.getElementById('modalePrescrizioneLibera').style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                } else {
+                    if (popup) {
+                        popup.style.display = 'block';
+                        popup.textContent = 'Errore nel salvataggio: ' + (data.error || 'Errore generico.');
+                        setTimeout(() => { popup.style.display = 'none'; }, 3500);
+                    }
+                }
+            })
+            .catch(() => alert('Errore di rete nel salvataggio.'));
+        });
+    }
+});
+
 
 /* FILTRI TABELLA PRESCRIZIONE */
 // document.addEventListener("DOMContentLoaded", function () {
