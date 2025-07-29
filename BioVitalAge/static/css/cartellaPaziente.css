@@ -531,6 +531,46 @@
 
 
 
+/* MODALE PRIVACY POLICY */
+.privacy-header{
+  position: sticky;
+  top: 0;
+  left: 0;
+  background: white;
+  color: var(--contrast-color2);
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Scrollbar personalizzata SOLO per .container-content */
+#privacy-modal-content::-webkit-scrollbar {
+  width: 0px !important;
+  background: var(--card-color) !important;
+}
+
+#privacy-modal-content::-webkit-scrollbar-thumb {
+  background: #b0b0b0 !important;
+  border-radius: 8px !important;
+}
+
+#privacy-modal-content::-webkit-scrollbar-track {
+  background: #f0f0f0 !important;
+  border-radius: 8px !important;
+}
+
+.modal-content-privacy {
+  padding: 2rem;
+}
+
+#privacy-modal-close {
+  transition: all 0.2s ease-in-out;
+}
+
+#privacy-modal-close:hover {
+  color: var(--contrast-color2);
+  transform: scale(1.1);
+}
+
+
 
 /* MODALE PRESCRIZIONE LIBERA */
 .custom-modal-content{
@@ -818,14 +858,31 @@
   overflow: auto;
   display: grid;
 }
+
+/* Scrollbar personalizzata SOLO per .container-content */
+.container-content::-webkit-scrollbar {
+  width: 2px !important;
+  background: var(--card-color) !important;
+}
+
+.container-content::-webkit-scrollbar-thumb {
+  background: #b0b0b0 !important;
+  border-radius: 8px !important;
+}
+
+.container-content::-webkit-scrollbar-track {
+  background: #f0f0f0 !important;
+  border-radius: 8px !important;
+}
+
 /* STYLE CONTENUTO SECONDO */
 .container-content-second{
-  background-color: white;
-  border-radius: 8px;
-  margin-top: 1rem;
-  box-shadow: 1px 1px 8px 4px rgba(0,0,0,0.05);
-  border: 1px solid #DDD;
-  display: grid;
+  background-color: white !important;
+  border-radius: 8px !important;
+  margin-top: 1rem !important;
+  box-shadow: 1px 1px 8px 4px rgba(0,0,0,0.05) !important;
+  border: 1px solid #DDD !important;
+  display: grid !important;
 }
 
 
@@ -839,10 +896,13 @@
   overflow: auto;
 }
 .header-table{
+  position: sticky;
+  top: 0;
+  left: 0;
   display: grid;
   grid-template-columns: 15% 45% 20% 20%;
   border-radius: 8px 8px 0px 0px;
-  background-color: var(--contrast-color-shadow);
+  background-color: #d1d1d1;
   border-bottom: 1px solid #DDD;
 }
 .farmaci .header-table{
@@ -1036,7 +1096,7 @@
   color: var(--contrast-color);
 }
 .container-clock{
-  width: 12.5%;
+  width: 16.5%;
   height: 100%;
   border-radius: 8px;
   border: 1px solid #ddd;

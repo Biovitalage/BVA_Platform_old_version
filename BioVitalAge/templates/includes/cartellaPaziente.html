@@ -46,6 +46,8 @@
         <script>
             window.DOTTORE = "{{ dottore.nome }} {{ dottore.cognome }}";
             window.PAZIENTE = "{{ persona.name }} {{ persona.surname }}";
+            window.DOB_PAZIENTE = "{{ persona.dob|date:'d/m/Y' }}";
+            window.CF_PAZIENTE = "{{ persona.codice_fiscale }}";
         </script>
 
 
@@ -93,7 +95,7 @@
                     </div> -->
                     <button title="Prescrione esami" class="circle-btn" onclick="window.location.href='{% url 'esami' persona.id %}'">
                         <img src="{% static 'image/Prescrizione_color.png' %}" alt="Prescrizione Esami">
-                        <p style="margin-bottom: 0;">Pr. Esami</p>
+                        <p style="margin-bottom: 0;">Accertamenti</p>
                     </button>
                     <button title="Visite" class="circle-btn" onclick="window.location.href='{% url 'visite' persona.id %}'">
                         <img src="{% static 'image/Visite_coloree.png' %}" alt="Prescrione certificati">
@@ -101,11 +103,11 @@
                     </button>
                     <button title="Prescrione fermaci" id="openPrescrizioniBtn" class="circle-btn">
                         <img src="{% static 'image/Prescrizione_Fermaci.png' %}" alt="Prescrizione Fermaci">
-                        <p style="margin-bottom: 0;">Pr. Farmaci</p>
+                        <p style="margin-bottom: 0;">Farmaci</p>
                     </button>
                     <button title="Prescrione libera" id="openPrescrizioneLiberaBtn" class="circle-btn">
                         <img src="{% static 'image/Prescrizione_colore.png' %}" alt="Prescrizione Libera">
-                        <p style="margin-bottom: 0;">Pr. Libera</p>
+                        <p style="margin-bottom: 0;">Libera</p>
                     </button>
                 </div>
 
@@ -403,204 +405,208 @@
             <!-- MODALE PRIVACY POLICY -->
             <!-- Modale Privacy con input e firma -->
             <div id="privacy-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-                <div style="background:white; padding:2rem; border-radius:10px; width:75vw; max-height:90vh; overflow-y:auto; position:relative;">
-                    <!-- Bottone chiudi -->
-                    <button id="privacy-modal-close" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
-            
-                    <!-- Titolo -->
-                    <h2 style="margin-top:0;">Privacy Policy</h2>
-            
-                    <!-- PDF della privacy -->
-                    <iframe src="{% static 'includes/pdfTemplates/Privacy&Policy.pdf' %}" width="100%" height="300px" style="border:1px solid #ccc; margin-bottom:1rem;"></iframe>
-            
-                    <!-- Input per i dati -->
-                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Nome e Cognome*:</label>
-                            <input type="text" id="privacy-nome" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.name }} {{ persona.surname }}" placeholder="Inserisci nome e cognome" >
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data di Nascita*:</label>
-                            <input type="date" id="privacy-data-nascita" required value="{{ persona.dob|date:'Y-m-d' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Codice Fiscale*:</label>
-                            <input type="text" id="privacy-codice-fiscale" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.codice_fiscale|default:'' }}" placeholder="Inserisci codice fiscale">
-                        </div>
+                <div id="privacy-modal-content" style="background:white; border-radius:10px; width:75vw; max-height:90vh; overflow-y:auto; position:relative;">
+                    <div class="privacy-header" style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 2rem; border-bottom:1px solid #ccc;">
+                        <!-- Bottone chiudi -->
+                        <button id="privacy-modal-close" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
+                
+                        <!-- Titolo -->
+                        <h2 style="margin-top:0; margin-bottom:0;">Privacy Policy</h2>
                     </div>
                     
-                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data Firma*:</label>
-                            <input type="date" id="privacy-data" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="">
+                    <div class="modal-content-privacy">
+                        <!-- PDF della privacy -->
+                        <iframe src="{% static 'includes/pdfTemplates/Privacy&Policy.pdf' %}" width="100%" height="300px" style="border:1px solid #ccc; margin-bottom:1rem;"></iframe>
+                
+                        <!-- Input per i dati -->
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Nome e Cognome*:</label>
+                                <input type="text" id="privacy-nome" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.name }} {{ persona.surname }}" placeholder="Inserisci nome e cognome" >
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data di Nascita*:</label>
+                                <input type="date" id="privacy-data-nascita" required value="{{ persona.dob|date:'Y-m-d' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Codice Fiscale*:</label>
+                                <input type="text" id="privacy-codice-fiscale" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.codice_fiscale|default:'' }}" placeholder="Inserisci codice fiscale">
+                            </div>
                         </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Email*:</label>
-                            <input type="email" id="privacy-email" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.email|default:'' }}"  placeholder="email@esempio.com">
+                        
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data Firma*:</label>
+                                <input type="date" id="privacy-data" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Email*:</label>
+                                <input type="email" id="privacy-email" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.email|default:'' }}"  placeholder="email@esempio.com">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Telefono*:</label>
+                                <input type="tel" id="privacy-telefono" required value="{{ persona.phone|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="123-456-7890">
+                            </div>
                         </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Telefono*:</label>
-                            <input type="tel" id="privacy-telefono" required value="{{ persona.phone|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="123-456-7890">
+    
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Luogo di Nascita*:</label>
+                                <input type="text" id="privacy-place-of-birth" required value="{{ persona.place_of_birth|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Luogo di nascita">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Residenza*:</label>
+                                <input type="text" id="privacy-residence" required value="{{ persona.residence|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Residenza">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Provincia*:</label>
+                                <input type="text" id="privacy-province" required value="{{ persona.province|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Provincia">
+                            </div>
                         </div>
-                    </div>
-
-                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Luogo di Nascita*:</label>
-                            <input type="text" id="privacy-place-of-birth" required value="{{ persona.place_of_birth|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Luogo di nascita">
+    
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">CAP:</label>
+                                <input type="text" id="privacy-cap" required value="{{ persona.cap|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="CAP">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Indirizzo:</label>
+                                <input type="text" id="privacy-address" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci indirizzo">
+                            </div>
                         </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Residenza*:</label>
-                            <input type="text" id="privacy-residence" required value="{{ persona.residence|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Residenza">
+    
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Documento di Identità:</label>
+                                <input type="text" id="privacy-identity-doc" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Documento di Identità">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Nr. Documento:</label>
+                                <input type="text" id="privacy-nr-identity" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci numero documento">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Rilasciato il:</label>
+                                <input type="date" id="privacy-relased-date" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci data rilascio">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Da comune:</label>
+                                <input type="text" id="privacy-relased-company" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci comune rilasciante">
+                            </div>
                         </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Provincia*:</label>
-                            <input type="text" id="privacy-province" required value="{{ persona.province|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Provincia">
+    
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr; gap:1rem;">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Familiari (Nome e Cognome):</label>
+                            <textarea required id="privacy-family" cols="30" rows="4" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci familiari"></textarea>
                         </div>
-                    </div>
-
-                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">CAP*:</label>
-                            <input type="text" id="privacy-cap" required value="{{ persona.cap|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="CAP">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Indirizzo*:</label>
-                            <input type="text" id="privacy-address" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci indirizzo">
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem;">
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Documento di Identità*:</label>
-                            <input type="text" id="privacy-identity-doc" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Documento di Identità">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Nr.* :</label>
-                            <input type="text" id="privacy-nr-identity" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci numero documento">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Rilasciato il*:</label>
-                            <input type="date" id="privacy-relased-date" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci data rilascio">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Da*:</label>
-                            <input type="text" id="privacy-relased-company" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci comune rilasciante">
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr; gap:1rem;">
-                        <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Familiari (Nome e Cognome)(Facoltativo):</label>
-                        <textarea required id="privacy-family" cols="30" rows="4" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci familiari"></textarea>
-                    </div>
-
-                    <div id="consensiAccordion" style="margin-bottom:1rem;">
-                        <div class="card consenso-card">
-                            <div class="card-header consenso-header" id="headingInterventi" style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
-                              <span style="display:flex; align-items:center;">
-                                <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
-                                Diritti e dati personali
-                              </span>
-                              <div class="form-chek ml-3">
-                                <input class="form-check-input" type="radio" name="diritti-dati-personali" value="true" id="diritti-dati-personali-true" required>
-                                <label class="form-check-label" for="diritti-dati-personali-true">Presta il consenso</label>
-                                <input class="form-check-input" type="radio" name="diritti-dati-personali" value="false" id="diritti-dati-personali-false" required>
-                                <label class="form-check-label" for="diritti-dati-personali-false">Nega il consenso</label>
+    
+                        <div id="consensiAccordion" style="margin-bottom:1rem;">
+                            <div class="card consenso-card">
+                                <div class="card-header consenso-header" id="headingInterventi" style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
+                                  <span style="display:flex; align-items:center;">
+                                    <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
+                                    Diritti e dati personali
+                                  </span>
+                                  <div class="form-chek ml-3">
+                                    <input class="form-check-input" type="radio" name="diritti-dati-personali" value="true" id="diritti-dati-personali-true" required>
+                                    <label class="form-check-label" for="diritti-dati-personali-true">Presta il consenso</label>
+                                    <input class="form-check-input" type="radio" name="diritti-dati-personali" value="false" id="diritti-dati-personali-false" required>
+                                    <label class="form-check-label" for="diritti-dati-personali-false">Nega il consenso</label>
+                                  </div>
+                                </div>
+                                <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
+                                  <small class="p-3">
+                                    - Essendo informato/a sui propri diritti nei confronti del trattamento dei dati personali (artt. 15 e
+                                    seguenti del regolamento UE 2016/679) definiti particolari e/o sensibili (‘dati personali idonei a
+                                    rivelare lo stato di salute e la vita sessuale’), il cui titolare è la società Elos srl con sede in Largo
+                                    Ignazio Ciaia, 19. <br>
+                                    - Consapevole che i dati saranno utilizzati nel pieno rispetto della normativa vigente, degli obblighi di
+                                    riservatezza e di segreto professionale per finalità di tipo medico-sanitario o comunque connesse allo
+                                    svolgimento di tali finalità;
+                                  </small>
+                                </div>
+                            </div>
+                            <div class="card consenso-card">
+                            <div class="card-header consenso-header" id="headingPatologie"
+                                style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
+                                <span style="display:flex; align-items:center;">
+                                    <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
+                                    Materiale Biologico e Referti
+                                </span>
+                                <div class="form-chek ml-3">
+                                    <input class="form-check-input" type="radio" name="materiale-biologico" value="true" id="materiale-biologico-true" required>
+                                    <label class="form-check-label" for="materiale-biologico-true">Presta il consenso</label>
+                                    <input class="form-check-input" type="radio" name="materiale-biologico" value="false" id="materiale-biologico-false" required>
+                                    <label class="form-check-label" for="materiale-biologico-false">Nega il consenso</label>
+                                </div>
+                            </div>
+                              <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
+                                <small class="p-3">
+                                    Consapevole che il materiale biologico e i referti anonimizzati possano essere utilizzati, nel rispetto
+                                    della normativa vigente in materia di protezione dei dati personali, per scopi di ricerca e/o per studi
+                                    finalizzati alla tutela della collettività in campo medico, biomedico ed epidemiologico e per
+                                    informazioni sulle prestazioni del laboratorio, per il tempo minimo necessario al perseguimento delle
+                                    finalità, anche attraverso il trattamento ulteriore che non consenta o non consenta più di
+                                    identificarti.
+                                </small>
                               </div>
                             </div>
-                            <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
-                              <small class="p-3">
-                                - Essendo informato/a sui propri diritti nei confronti del trattamento dei dati personali (artt. 15 e
-                                seguenti del regolamento UE 2016/679) definiti particolari e/o sensibili (‘dati personali idonei a
-                                rivelare lo stato di salute e la vita sessuale’), il cui titolare è la società Elos srl con sede in Largo
-                                Ignazio Ciaia, 19. <br>
-                                - Consapevole che i dati saranno utilizzati nel pieno rispetto della normativa vigente, degli obblighi di
-                                riservatezza e di segreto professionale per finalità di tipo medico-sanitario o comunque connesse allo
-                                svolgimento di tali finalità;
-                              </small>
+                            <div class="card consenso-card">
+                              <div class="card-header consenso-header" id="headingSalute" style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
+                                <span style="display:flex; align-items:center;">
+                                  <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
+                                  Consenso al trattamento ed alla trasmissione a mezzo posta elettronica dei referti
+                                </span>
+                                <div class="form-chek ml-3">
+                                    <input class="form-check-input" type="radio" name="referti-posta-elettronica" value="true" id="referti-posta-elettronica-true" required>
+                                    <label class="form-check-label" for="referti-posta-elettronica-true">Presta il consenso</label>
+                                    <input class="form-check-input" type="radio" name="referti-posta-elettronica" value="false" id="referti-posta-elettronica-false" required>
+                                    <label class="form-check-label" for="referti-posta-elettronica-false">Nega il consenso</label>
+                                </div>
+                              </div>
+                              <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
+                                <small class="p-3">
+                                    Il/la sottoscritta, vista l’informativa sul trattamento dei dati personali, considerato che in ogni
+                                    momento potrà revocare il presente consenso
+                                </small>
+                              </div>
                             </div>
-                        </div>
-                        <div class="card consenso-card">
-                        <div class="card-header consenso-header" id="headingPatologie"
-                            style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
-                            <span style="display:flex; align-items:center;">
+                            <div class="card consenso-card">
+                              <div class="card-header consenso-header" id="headingSalute" style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
+                                <span style="display:flex; align-items:center;">
                                 <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
-                                Materiale Biologico e Referti
-                            </span>
-                            <div class="form-chek ml-3">
-                                <input class="form-check-input" type="radio" name="materiale-biologico" value="true" id="materiale-biologico-true" required>
-                                <label class="form-check-label" for="materiale-biologico-true">Presta il consenso</label>
-                                <input class="form-check-input" type="radio" name="materiale-biologico" value="false" id="materiale-biologico-false" required>
-                                <label class="form-check-label" for="materiale-biologico-false">Nega il consenso</label>
+                                 Consenso alla trasmissione a mezzo posta elettronica e WhatsApp di materiale pubblicitario
+                                </span>
+                                <div class="form-chek ml-3">
+                                    <input class="form-check-input" type="radio" name="trasmissione-materiale-pubblicitario" value="true" id="trasmissione-materiale-pubblicitario-true" required>
+                                    <label class="form-check-label" for="trasmissione-materiale-pubblicitario-true">Presta il consenso</label>
+                                    <input class="form-check-input" type="radio" name="trasmissione-materiale-pubblicitario" value="false" id="trasmissione-materiale-pubblicitario-false" required>
+                                    <label class="form-check-label" for="trasmissione-materiale-pubblicitario-false">Nega il consenso</label>
+                                </div>
+                              </div>
+                              <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
+                                <small class="p-3">
+                                    Inoltre il/la sottoscritta, vista l’informativa sul trattamento dei dati personali, considerato che in
+                                    ogni momento potrà revocare il presente consenso
+                                </small>
+                              </div>
                             </div>
                         </div>
-                          <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
-                            <small class="p-3">
-                                Consapevole che il materiale biologico e i referti anonimizzati possano essere utilizzati, nel rispetto
-                                della normativa vigente in materia di protezione dei dati personali, per scopi di ricerca e/o per studi
-                                finalizzati alla tutela della collettività in campo medico, biomedico ed epidemiologico e per
-                                informazioni sulle prestazioni del laboratorio, per il tempo minimo necessario al perseguimento delle
-                                finalità, anche attraverso il trattamento ulteriore che non consenta o non consenta più di
-                                identificarti.
-                            </small>
-                          </div>
+                
+                        <!-- Area firma -->
+                        <p style="margin-top:1.5rem; margin-bottom:0.5rem; font-weight:bold;">Firma qui sotto per accettare la privacy
+                            policy*:</p>
+                        <canvas id="firma-canvas" width="500" height="150"
+                            style="border:2px solid #007bff; border-radius:4px; touch-action: none; width:100%; max-width:500px; cursor:crosshair;"></canvas>
+                
+                        <!-- Bottoni -->
+                        <div style="margin-top:1rem; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button id="clear-firma"
+                                style="padding:0.7rem 1.5rem; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer;">Cancella
+                                Firma</button>
+                            <button id="save-firma"
+                                style="padding:0.7rem 1.5rem; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer;">Salva
+                                e Scarica PDF</button>
                         </div>
-                        <div class="card consenso-card">
-                          <div class="card-header consenso-header" id="headingSalute" style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
-                            <span style="display:flex; align-items:center;">
-                              <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
-                              Consenso al trattamento ed alla trasmissione a mezzo posta elettronica dei referti
-                            </span>
-                            <div class="form-chek ml-3">
-                                <input class="form-check-input" type="radio" name="referti-posta-elettronica" value="true" id="referti-posta-elettronica-true" required>
-                                <label class="form-check-label" for="referti-posta-elettronica-true">Presta il consenso</label>
-                                <input class="form-check-input" type="radio" name="referti-posta-elettronica" value="false" id="referti-posta-elettronica-false" required>
-                                <label class="form-check-label" for="referti-posta-elettronica-false">Nega il consenso</label>
-                            </div>
-                          </div>
-                          <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
-                            <small class="p-3">
-                                Il/la sottoscritta, vista l’informativa sul trattamento dei dati personali, considerato che in ogni
-                                momento potrà revocare il presente consenso
-                            </small>
-                          </div>
-                        </div>
-                        <div class="card consenso-card">
-                          <div class="card-header consenso-header" id="headingSalute" style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
-                            <span style="display:flex; align-items:center;">
-                            <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
-                             Consenso alla trasmissione a mezzo posta elettronica e WhatsApp di materiale pubblicitario
-                            </span>
-                            <div class="form-chek ml-3">
-                                <input class="form-check-input" type="radio" name="trasmissione-materiale-pubblicitario" value="true" id="trasmissione-materiale-pubblicitario-true" required>
-                                <label class="form-check-label" for="trasmissione-materiale-pubblicitario-true">Presta il consenso</label>
-                                <input class="form-check-input" type="radio" name="trasmissione-materiale-pubblicitario" value="false" id="trasmissione-materiale-pubblicitario-false" required>
-                                <label class="form-check-label" for="trasmissione-materiale-pubblicitario-false">Nega il consenso</label>
-                            </div>
-                          </div>
-                          <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
-                            <small class="p-3">
-                                Inoltre il/la sottoscritta, vista l’informativa sul trattamento dei dati personali, considerato che in
-                                ogni momento potrà revocare il presente consenso
-                            </small>
-                          </div>
-                        </div>
-                      </div>
-            
-                    <!-- Area firma -->
-                    <p style="margin-top:1.5rem; margin-bottom:0.5rem; font-weight:bold;">Firma qui sotto per accettare la privacy
-                        policy*:</p>
-                    <canvas id="firma-canvas" width="500" height="150"
-                        style="border:2px solid #007bff; border-radius:4px; touch-action: none; width:100%; max-width:500px; cursor:crosshair;"></canvas>
-            
-                    <!-- Bottoni -->
-                    <div style="margin-top:1rem; display:flex; gap:10px; flex-wrap:wrap;">
-                        <button id="clear-firma"
-                            style="padding:0.7rem 1.5rem; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer;">Cancella
-                            Firma</button>
-                        <button id="save-firma"
-                            style="padding:0.7rem 1.5rem; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer;">Salva
-                            e Scarica PDF</button>
                     </div>
                 </div>
             </div>
@@ -893,6 +899,92 @@
                             {% endif %}
                         </div>
                     </div>
+
+                    <!-- ACCERTAMENTI -->
+                    <div class="container-content farmaci" style="display: none;">
+                        <div class="header-table">
+                            <div class="header-cella">
+                                <p>Data</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Accertamento</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Descrizione</p>
+                            </div>
+                        </div>
+                    
+                        <div class="container-table">
+                            {% if accertamenti|length == 0 %}
+                                <div class="row-table" style="grid-template-columns: 1fr;">
+                                    <div class="row-cella" colspan="3">
+                                        <p>Nessun accertamento presente.</p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {% for accertamento in accertamenti %}
+                                <div class="row-table"
+                                     data-type="farmaco"
+                                     data-id="{{ prescrizione.id }}"
+                                     data-nome="{{ prescrizione.farmaco.nome_farmaco }}"
+                                     data-posologia="{{ prescrizione.farmaco.dosaggio }}">
+                                    <div class="row-cella">
+                                        <p>{{ prescrizione.data_prescrizione|date:"d/m/Y" }}</p>
+                                    </div>
+                                    <div class="row-cella">
+                                        <p>{{ prescrizione.farmaco.nome_farmaco }}</p>
+                                    </div>
+                                    <div class="row-cella">
+                                        <p>{{ prescrizione.farmaco.dosaggio }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- VISITE -->
+                    <div class="container-content farmaci" style="display: none;">
+                        <div class="header-table">
+                            <div class="header-cella">
+                                <p>Data</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Visita</p>
+                            </div>
+                            <div class="header-cella">
+                                <p>Descrizione</p>
+                            </div>
+                        </div>
+                    
+                        <div class="container-table">
+                            {% if storico_appuntamenti|length == 0 %}
+                                <div class="row-table" style="grid-template-columns: 1fr;">
+                                    <div class="row-cella" colspan="3">
+                                        <p>Nessuna visita presente.</p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {% for visita in storico_appuntamenti %}
+                                <div class="row-table"
+                                     data-type="farmaco"
+                                     data-id="{{ visita.id }}"
+                                     data-nome="{{ visita.tipologia_visita }}"
+                                     data-posologia="{{ visita.note }}">
+                                    <div class="row-cella">
+                                        <p>{{ visita.data|date:"d/m/Y" }}</p>
+                                    </div>
+                                    <div class="row-cella">
+                                        <p>{{ visita.tipologia_visita }}</p>
+                                    </div>
+                                    <div class="row-cella">
+                                        <p>{{ visite.note }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="container-tabella" style="width: 50%;">
@@ -1142,7 +1234,7 @@
                             </div>
                         </div>    
             
-                        <div class="container-clock cardIndici"
+                        <!-- <div class="container-clock cardIndici"
                             id="cardClick"
                             card-name="Salute Cerebrale" 
                             img-card="{% static 'image/Cervello.png' %}"
@@ -1158,7 +1250,7 @@
                                 <img src="{% static 'image/Cervello.png' %}" alt="">
                                 <p>Salute Cerebrale</p>
                             </div>
-                        </div>
+                        </div> -->
                                   
                         <div class="container-clock cardIndici" 
                             id="cardClick"
@@ -1178,7 +1270,7 @@
                             </div>
                         </div>                
         
-                        <div class="container-clock cardIndici"
+                        <!-- <div class="container-clock cardIndici"
                             id="cardClick" 
                             card-name="Salute del Sangue"
                             img-card="{% static 'image/Blood_Colorato.png' %}"
@@ -1194,7 +1286,7 @@
                                 <img src="{% static 'image/Blood_Colorato.png' %}" alt="">
                                 <p>Salute del Sangue</p>
                             </div>
-                        </div>
+                        </div> -->
                     
                         <div class="container-clock cardIndici" style="gap: 15px;" 
                             card-name="Salute del Sistema Immunitario"
@@ -1619,7 +1711,6 @@
                 };
             });
         });
-        // ... existing code ...
         </script>
 
         <!-- Popup successo prescrizione libera -->
@@ -1639,6 +1730,5 @@
           </div>
         </div>
         <div id="dynamicModalBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
-
     </body>
 </html>

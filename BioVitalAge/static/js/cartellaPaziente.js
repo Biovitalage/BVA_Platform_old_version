@@ -466,8 +466,10 @@ document.addEventListener("DOMContentLoaded", async function () {
               <div class="header">
                 <h1>PRESCRIZIONE LIBERA</h1>
                 <img src="${window.location.origin}/static/includes/pdfTemplates/logo.png" style="width: 400px; height: auto; margin-bottom: 10px;" alt="Logo Studio Medico">
-                <p>Data: ${dataOggi}</p>
                 <p>Paziente: ${window.PAZIENTE}</p>
+                <p>Codice Fiscale Paziente: ${window.CF_PAZIENTE}</p>
+                <p>Data di Nascita Paziente: ${window.DOB_PAZIENTE}</p>
+                <p>Data: ${dataOggi}</p>
               </div>
               <div class="prescription-content">
                 <h3>Prescrizione:</h3>
@@ -644,9 +646,11 @@ document.addEventListener("DOMContentLoaded", async function () {
             </head>
             <body>
               <div class="header">
-                <h1>FARMACO PRESCRITTO</h1>
+                <h1>Farmaco ${nomeFarmaco} prescritto</h1>
                 <img src="${window.location.origin}/static/includes/pdfTemplates/logo.png" style="width: 400px; height: auto; margin-bottom: 10px;" alt="Logo Studio Medico">
                 <p>Paziente: ${window.PAZIENTE}</p>
+                <p>Codice Fiscale Paziente: ${window.CF_PAZIENTE}</p>
+                <p>Data di Nascita Paziente: ${window.DOB_PAZIENTE}</p>
                 <p>Data: ${dataOggi}</p>
               </div>
               <div class="farmaco-content">
@@ -1403,12 +1407,6 @@ function validatePrivacyForm() {
     'privacy-place-of-birth',
     'privacy-residence',
     'privacy-province',
-    'privacy-cap',
-    'privacy-address',
-    'privacy-identity-doc',
-    'privacy-nr-identity',
-    'privacy-relased-date',
-    'privacy-relased-company'
   ];
 
   // Controlla i campi di testo

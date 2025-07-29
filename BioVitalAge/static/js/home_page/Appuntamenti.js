@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 let fromCalendar = false;
 let isEditing = false;
 let appointmentsData = {}; // Definita globalmente per contenere i dati caricati
-const ALLOW_APPOINTMENT_CREATION = isSecretary;
+const ALLOW_APPOINTMENT_CREATION = window.isSecretary;
 
 // gestione ricerca
 const searchInput = document.getElementById("searchInput");
@@ -236,7 +236,7 @@ function viewAppointmentDetails(appointmentId) {
           `${data.nome_paziente} ${data.cognome_paziente}`;
 
         // Popola i dettagli nella modale
-        if (isSecretary) {
+        if (ALLOW_APPOINTMENT_CREATION) {
           console.log("Dottore:", data.dottore);
           content.innerHTML = `
             <p><strong>👨‍⚕️ Dottore: ${data.dottore.nome} ${data.dottore.cognome}</strong>
@@ -2405,7 +2405,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <span>${app.tipologia_visita} - ${app.orario.slice(0,5)}</span>
                 <div>
                   <button class="action-btn view" title="Visualizza">👁️</button>
-                  ${isSecretary ? `<button class="action-btn edit" title="Modifica">✏️</button>` : ""}
+                  ${ALLOW_APPOINTMENT_CREATION ? `<button class="action-btn edit" title="Modifica">✏️</button>` : ""}
                 </div>
               `;
               item.querySelector(".view").addEventListener("click", () => {
@@ -2532,7 +2532,7 @@ document.getElementById("googleCalendarBtn").addEventListener("click", function(
   window.open(calendarUrl, '_blank');
 });
 
-if (!isSecretary) {
+if (!ALLOW_APPOINTMENT_CREATION) {
   // Nascondi pulsante aggiunta appuntamento
   document.getElementById("openModal").style.display = "none";
 }
