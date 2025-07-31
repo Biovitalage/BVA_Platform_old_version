@@ -13,5 +13,8 @@ router.register(r'pazienti', PazienteViewSet, basename='paziente')
 urlpatterns = router.urls  #+ extra_urls
 
 urlpatterns += [
-    path('salva-prescrizione-libera/', salva_prescrizione_libera, name='salva_prescrizione_libera'),
+    path('salva-prescrizione-libera/',                  salva_prescrizione_libera,                  name='salva_prescrizione_libera'),
+    
+    # API ICD11
+    path("icd11/search/",                           icd11_search_view),
 ]

@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils import timezone
 import json
+from ..funzioni_python.icd11 import get_icd11_token, search_icd11_entities
 
 class PazienteViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -140,3 +141,10 @@ def salva_prescrizione_libera(request):
 
 
 
+def icd11_search_view(request):
+    query = request.GET.get("q", "")
+    if not query:
+        return JsonResponse({"error": "Missing query"}, status=400)
+    token = get_icd11_token()
+    results = search_icd11_entities(query, token)
+    return JsonResponse(results)

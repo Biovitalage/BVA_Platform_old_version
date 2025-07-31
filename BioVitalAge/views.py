@@ -14,6 +14,7 @@ import uuid
 from datetime import date, datetime, timedelta
 from collections import defaultdict
 from rest_framework import generics, permissions
+from django.utils import timezone
 
 
 # --- IMPORTS DI DJANGO ---
@@ -41,6 +42,8 @@ from django.contrib.auth import authenticate, login, logout # type: ignore
 from django.contrib.auth.mixins import LoginRequiredMixin # type: ignore
 from django.contrib.auth import update_session_auth_hash
 from decimal import Decimal, InvalidOperation
+from datetime import datetime, date
+from django.utils import timezone
 
 from BioVitalAge.api import serializers # type: ignore
 
@@ -1326,7 +1329,14 @@ class CartellaPazienteView(LoginRequiredMixin, View):
                 'diagnosi': '',
                 'nota': v.note,
             })
-        diario.sort(key=lambda x: x['data'], reverse=True)
+        diario.sort(key=lambda x: (
+            datetime.combine(x['data'], datetime.min.time()).replace(tzinfo=None) 
+            if isinstance(x['data'], date) and not isinstance(x['data'], datetime)
+            else x['data'].replace(tzinfo=None) if isinstance(x['data'], datetime) and hasattr(x['data'], 'tzinfo') and x['data'].tzinfo
+            else x['data'] if isinstance(x['data'], datetime)
+            else datetime.min
+        ), reverse=True)
+        
         # --- FINE LOGICA DIARIO CLINICO ---
         for entry in diario:
             if isinstance(entry['data'], date) and not isinstance(entry['data'], datetime):
@@ -2051,6 +2061,25 @@ class NotaRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 # VIEW DIARIO CLINICO
 @method_decorator(catch_exceptions, name='dispatch')
+def normalize_datetime_for_sorting(date_value):
+    """
+    Normalizza date/datetime per il sorting gestendo timezone
+    """
+    if date_value is None:
+        return timezone.now().replace(year=1900)
+
+    if isinstance(date_value, date) and not isinstance(date_value, datetime):
+        dt = datetime.combine(date_value, datetime.min.time())
+    elif isinstance(date_value, datetime):
+        dt = date_value
+    else:
+        return timezone.now().replace(year=1900)
+
+    if timezone.is_aware(dt):
+        dt = timezone.localtime(dt).replace(tzinfo=None)
+
+    return dt
+
 class DiarioCLinicoView(LoginRequiredMixin,View):
     def get(self, request, id):
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user) 
@@ -3361,7 +3390,8 @@ class TestEtaVitaleView(LoginRequiredMixin,View):
             'persona': persona,
             'dati_estesi': dati_estesi,
             'dottore' : dottore,
-            'referti_test_recenti': referti_test_recenti
+            'referti_test_recenti': referti_test_recenti,
+            
         }
 
         return render(request, "cartella_paziente/capacita_vitale/testVitale.html", context)

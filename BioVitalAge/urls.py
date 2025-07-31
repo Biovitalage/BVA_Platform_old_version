@@ -134,4 +134,6 @@ urlpatterns = [
     # TO DEFINE
     path('DownloadPdfVitale/<int:persona_id>/<int:referto_id>',        views.StampaRefertoView.as_view(),            name='download_pdf_vitale'),
     path('update-persona/<int:id>/',                                   views.UpdatePersonaContactView.as_view(),     name='update_persona_contact'), 
+
+
 ]

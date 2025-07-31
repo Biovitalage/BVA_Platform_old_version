@@ -631,6 +631,8 @@
 
                             <div class="tableAnswer-container hgs_script" id="secondTypeTable">
 
+
+                                {% if persona.chronological_age == 10 and persona.chronological_age == 11 %}
                                 <div class="tableRow disabledInput">
                                     <p>10 - 11</p>
                                     {% if persona.gender == "M" %}
@@ -656,7 +658,10 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
                             
+
+                                {% if persona.chronological_age == 12 and persona.chronological_age == 13 %}
                                 <div class="tableRow disabledInput">
                                     <p>12 - 13</p>
                                     {% if persona.gender == "M" %}
@@ -683,7 +688,10 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+
+                                {% if persona.chronological_age == 14 and persona.chronological_age == 15 %}
                                 <div class="tableRow disabledInput">
                                     <p>14 - 15</p>
                                     {% if persona.gender == "M" %}
@@ -710,7 +718,10 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+
+                                {% if persona.chronological_age == 16 and persona.chronological_age == 17 %}
                                 <div class="tableRow disabledInput">
                                     <p>16 - 17</p>
                                     {% if persona.gender == "M" %}
@@ -737,7 +748,10 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
+                            
 
+                                {% if persona.chronological_age == 18 and persona.chronological_age == 19 %}
                                 <div class="tableRow disabledInput">
                                     <p>18 - 19</p>
                                     {% if persona.gender == "M" %}
@@ -764,7 +778,9 @@
                                     </p>
                                     {% endif %}
                                 </div>
-                            
+                                {% endif %}
+
+                                {% if persona.chronological_age >= 20 and persona.chronological_age <= 24 %}
                                 <div class="tableRow disabledInput">
                                     <p>20 - 24</p>
                                     {% if persona.gender == "M" %}
@@ -791,7 +807,9 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+                                {% if persona.chronological_age >= 25 and persona.chronological_age <= 29 %}
                                 <div class="tableRow disabledInput">
                                     <p>25 - 29</p>
                                     {% if persona.gender == "M" %}
@@ -818,7 +836,10 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+
+                                {% if persona.chronological_age >= 30 and persona.chronological_age <= 34 %}
                                 <div class="tableRow disabledInput">
                                     <p>30 - 34</p>
                                     {% if persona.gender == "M" %}
@@ -845,7 +866,10 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+
+                                {% if persona.chronological_age >= 35 and persona.chronological_age <= 39 %}
                                 <div class="tableRow disabledInput">
                                     <p>35 - 39</p>
                                     {% if persona.gender == "M" %}
@@ -872,7 +896,9 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+                                {% if persona.chronological_age >= 40 and persona.chronological_age <= 44 %}
                                 <div class="tableRow disabledInput">
                                     <p>40 - 44</p>
                                     {% if persona.gender == "M" %}
@@ -899,7 +925,10 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
                             
+
+                                {% if persona.chronological_age >= 45 and persona.chronological_age <= 49 %}
                                 <div class="tableRow disabledInput">
                                     <p>45 - 49</p>
                                     {% if persona.gender == "M" %}
@@ -926,7 +955,10 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
+                                
 
+                                {% if persona.chronological_age >= 50 and persona.chronological_age <= 54 %}
                                 <div class="tableRow disabledInput">
                                     <p>50 - 54</p>
                                     {% if persona.gender == "M" %}
@@ -953,7 +985,10 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+
+                                {% if persona.chronological_age >= 55 and persona.chronological_age <= 59 %}
                                 <div class="tableRow disabledInput">
                                     <p>55 - 59</p>
                                     {% if persona.gender == "M" %}
@@ -980,7 +1015,9 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+                                {% if persona.chronological_age >= 60 and persona.chronological_age <= 64 %}
                                 <div class="tableRow disabledInput">
                                     <p>60 - 64</p>
                                     {% if persona.gender == "M" %}
@@ -1007,7 +1044,9 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+                                {% if persona.chronological_age >= 65 and persona.chronological_age <= 69 %}
                                 <div class="tableRow disabledInput">
                                     <p>65 - 69</p>
                                     {% if persona.gender == "M" %}
@@ -1034,7 +1073,9 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
 
+                                {% if persona.chronological_age >= 70 and persona.chronological_age <= 99 %}
                                 <div class="tableRow disabledInput">
                                     <p>70 - 99</p>
                                     {% if persona.gender == "M" %}
@@ -1061,6 +1102,7 @@
                                     </p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
                             </div>
                             
                             <script>

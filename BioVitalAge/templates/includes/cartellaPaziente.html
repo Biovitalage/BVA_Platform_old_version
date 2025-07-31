@@ -113,10 +113,15 @@
 
                 <div class="informazioni-personali">
                     <h3>{{ persona.surname }} {{ persona.name }}</h3>
-                    <h3>{{ persona.codice_fiscale }}</h3>
-                    <h3>{{ persona.dob|date:'d/m/Y' }} - {{ persona.residence }} - {{ persona.gender }} - {{ persona.chronological_age }} </h3>
+                    <h3>C.F.: {{ persona.codice_fiscale }}</h3>
+                    <h3>{{ persona.dob|date:'d·m·Y' }}, {{ persona.residence }} - sesso: {{ persona.gender }} - età: {{ persona.chronological_age }} </h3>
+
+                    {% if persona.email %}
                     <h3>{{ persona.email }}</h3>
+                    {% endif %}
+                    {% if persona.phone %}
                     <h3>{{ persona.phone }}</h3> 
+                    {% endif %}
                 </div>
 
                 <div class="tools-container-left-side">
