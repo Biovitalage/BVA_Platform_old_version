@@ -943,3 +943,85 @@ class PrescrizioneLibera(models.Model):
 
     def str(self):
         return f"Prescrizione libera per {self.persona} del {self.data_creazione.strftime('%d/%m/%Y %H:%M')}"
+
+
+
+class Visita(models.Model):
+    paziente = models.ForeignKey('TabellaPazienti', on_delete=models.CASCADE, related_name='visite_paziente', null=True, blank=True)
+    visita_numero = models.IntegerField(null=True, blank=True)
+    data_visita = models.DateField(default=timezone.now, null=True, blank=True)
+
+    professione = models.CharField(max_length=100, null=True, blank=True)
+    pensionato = models.CharField(max_length=100, null=True, blank=True)
+
+    menarca = models.CharField(max_length=100, null=True, blank=True)
+    ciclo = models.CharField(max_length=100, null=True, blank=True)
+    sintomi = models.CharField(max_length=100, null=True, blank=True)
+    esordio = models.CharField(max_length=100, null=True, blank=True)
+    parto = models.CharField(max_length=100, null=True, blank=True)
+    post_parto = models.CharField(max_length=100, null=True, blank=True)
+    aborto = models.CharField(max_length=100, null=True, blank=True)
+
+    alcol = models.CharField(max_length=255, null=True, blank=True)
+    alcol_type = models.CharField(max_length=255, null=True, blank=True)
+    data_alcol = models.DateField(null=True, blank=True)
+    alcol_frequency = models.CharField(max_length=255, null=True, blank=True)
+
+    smoke = models.CharField(max_length=255, null=True, blank=True)
+    smoke_frequency = models.CharField(max_length=100, blank=True, null=True)
+    reduced_intake = models.CharField(max_length=100, blank=True, null=True)
+
+    sport = models.CharField(default=False, max_length=100, null=True, blank=True)
+    sport_livello = models.CharField(max_length=100, blank=True, null=True)
+    sport_frequency = models.CharField(max_length=100, blank=True, null=True)
+
+    attivita_sedentaria = models.CharField(default=False, max_length=100, null=True, blank=True)
+    livello_sedentarieta = models.CharField(max_length=100, blank=True, null=True)
+    sedentarieta_nota = models.TextField(blank=True, null=True)
+
+    m_cardiache = models.CharField(max_length=100, null=True, blank=True)
+    diabete_m = models.CharField(max_length=100, null=True, blank=True)
+    obesita = models.CharField(max_length=100, null=True, blank=True)
+    epilessia = models.CharField(max_length=100, null=True, blank=True)
+    ipertensione = models.CharField(max_length=100, null=True, blank=True)
+    m_tiroidee = models.CharField(max_length=100, null=True, blank=True)
+    m_polmonari = models.CharField(max_length=100, null=True, blank=True)
+    tumori = models.CharField(max_length=100, null=True, blank=True)
+    allergie = models.CharField(max_length=100, null=True, blank=True)
+    m_psichiatriche = models.CharField(max_length=100, null=True, blank=True)
+
+    patologie = models.CharField(max_length=100, null=True, blank=True)
+    p_p_altro = models.CharField(max_length=100, null=True, blank=True)
+    t_farmaco = models.CharField(max_length=100, null=True, blank=True)
+    t_dosaggio = models.CharField(max_length=100, null=True, blank=True)
+    t_durata = models.CharField(max_length=100, null=True, blank=True)
+
+    p_cardiovascolari = models.CharField(max_length=100, null=True, blank=True)
+    m_metabolica = models.CharField(max_length=100, null=True, blank=True)
+    p_respiratori_cronici = models.CharField(max_length=100, null=True, blank=True)
+    m_neurologica = models.CharField(max_length=100, null=True, blank=True)
+    m_endocrina = models.CharField(max_length=100, null=True, blank=True)
+    m_autoimmune = models.CharField(max_length=100, null=True, blank=True)
+    p_epatici = models.CharField(max_length=100, null=True, blank=True)
+    m_renale = models.CharField(max_length=100, null=True, blank=True)
+    d_gastrointestinali = models.CharField(max_length=100, null=True, blank=True)
+
+    eloquio = models.CharField(max_length=100, null=True, blank=True)
+    s_nutrizionale = models.CharField(max_length=100, null=True, blank=True)
+    a_genarale = models.CharField(max_length=100, null=True, blank=True)
+    psiche = models.CharField(max_length=100, null=True, blank=True)
+    r_ambiente = models.CharField(max_length=100, null=True, blank=True)
+    s_emotivo = models.CharField(max_length=100, null=True, blank=True)
+    costituzione = models.CharField(max_length=100, null=True, blank=True)
+    statura = models.CharField(max_length=100, null=True, blank=True)
+
+    blood_group = models.CharField(max_length=20, null=True, blank=True)
+    rh_factor = models.CharField(max_length=20, null=True, blank=True)
+    pressure_min = models.CharField(max_length=100, null=True, blank=True)
+    pressure_max = models.CharField(max_length=100, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Visita {self.visita_numero} del {self.data_visita} per {self.paziente}"

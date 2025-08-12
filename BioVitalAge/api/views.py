@@ -10,8 +10,20 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils import timezone
+from django.utils.timezone import now
 import json
+import logging
 from ..funzioni_python.icd11 import get_icd11_token, search_icd11_entities
+from django.shortcuts import render
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from BioVitalAge.models import Visita
+from .serializers import VisitaSerializer
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from rest_framework.decorators import action
+
+logger = logging.getLogger(__name__)
 
 class PazienteViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -25,12 +37,20 @@ class PazienteViewSet(viewsets.ReadOnlyModelViewSet):
         doctor = UtentiRegistratiCredenziali.objects.get(user=self.request.user)
         return TabellaPazienti.objects.filter(dottore=doctor)
 
+    from django.core.exceptions import ObjectDoesNotExist
+
     def get_patient_info(self, paziente_id):
         """
         Function to fetch the signle patient
-        """ 
-        doctor = UtentiRegistratiCredenziali.objects.get(user=self.request.user)
-        paziente = get_object_or_404( TabellaPazienti, id=paziente_id, dottore=doctor)
+        """
+        try:
+            doctor = UtentiRegistratiCredenziali.objects.get(user=self.request.user)
+        except ObjectDoesNotExist:
+            from rest_framework.response import Response
+            from rest_framework import status
+            return Response({'error': 'Utente non trovato o non autenticato'}, status=404)
+
+        paziente = get_object_or_404(TabellaPazienti, id=paziente_id, dottore=doctor)
 
         return paziente
 
@@ -115,6 +135,19 @@ class PazienteViewSet(viewsets.ReadOnlyModelViewSet):
         return [cuore, reni, epatica, cerebrale, ormonale, sangue, immunitario]
 
 
+    @action(detail=True, methods=['get'])
+    def visite(self, request, pk=None):
+        """Restituisce tutte le visite di un paziente specifico"""
+        try:
+            paziente = self.get_object()
+            visite = Visita.objects.filter(paziente=paziente).order_by('-data_visita')
+            serializer = VisitaSerializer(visite, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+
+
 
 @csrf_exempt
 def salva_prescrizione_libera(request):
@@ -148,3 +181,132 @@ def icd11_search_view(request):
     token = get_icd11_token()
     results = search_icd11_entities(query, token)
     return JsonResponse(results)
+
+
+
+
+@csrf_exempt
+def salva_dati_base_e_crea_visita(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            paziente_id = data.get('paziente_id')
+            dati_base = data.get('dati_base')
+            visita_data = data.get('visita')
+
+            logger.info(f'Request to save data for patient id: {paziente_id}')
+
+            if not paziente_id:
+                logger.error('Missing patient id in request')
+                return JsonResponse({'success': False, 'error': 'ID paziente mancante.'}, status=400)
+
+            paziente = TabellaPazienti.objects.get(id=paziente_id)
+
+            if dati_base:
+                for key, value in dati_base.items():
+                    if hasattr(paziente, key):
+                        setattr(paziente, key, value)
+                paziente.save()
+
+            visita_data_visita = None
+            if visita_data:
+                visita_data_visita = visita_data.get('data_visita')
+                if visita_data_visita:
+                    visita_data_visita = parse_date(visita_data_visita)
+
+            if visita_data_visita is None:
+                visita_data_visita = now().date()
+
+            ultimo_numero = Visita.objects.filter(paziente=paziente).order_by('-visita_numero').first()
+            if ultimo_numero and ultimo_numero.visita_numero:
+                nuovo_numero = ultimo_numero.visita_numero + 1
+            else:
+                nuovo_numero = 1
+
+            visita = Visita(
+                paziente=paziente,
+                visita_numero=nuovo_numero,
+                data_visita=visita_data_visita
+            )
+
+            if visita_data:
+                for key, value in visita_data.items():
+                    if hasattr(visita, key) and key not in ['visita_numero', 'data_visita']:
+                        setattr(visita, key, value)
+
+            visita.save()
+
+            serializer = VisitaSerializer(visita)
+
+            logger.info(f'Successfully saved visit id: {visita.id} for patient id: {paziente_id}')
+
+            return JsonResponse({'success': True, 'visita': serializer.data})
+
+        except TabellaPazienti.DoesNotExist:
+            logger.error(f'Patient not found with id: {paziente_id}')
+            return JsonResponse({'success': False, 'error': 'Paziente non trovato.'}, status=404)
+        except Exception as e:
+            logger.error(f'Error saving data: {str(e)}')
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    else:
+        logger.error('Method not allowed')
+        return JsonResponse({'success': False, 'error': 'Metodo non consentito.'}, status=405)
+
+
+
+@csrf_exempt
+def visite_paziente_view(request, persona_id):
+    paziente = get_object_or_404(TabellaPazienti, id=persona_id)
+    visite_list = Visita.objects.filter(paziente=paziente).order_by('-data_visita')
+
+    paginator = Paginator(visite_list, 10)  # 10 visite per pagina
+    page = request.GET.get('page')
+
+    try:
+        visite = paginator.page(page)
+    except PageNotAnInteger:
+        visite = paginator.page(1)
+    except EmptyPage:
+        visite = paginator.page(paginator.num_pages)
+
+    context = {
+        'persona': paziente,
+        'visite': visite,
+    }
+    return render(request, 'cartella_paziente/visite.html', context)
+
+@api_view(['GET'])
+def get_visita(request, visita_id):
+    try:
+        visita = Visita.objects.get(id=visita_id)
+    except Visita.DoesNotExist:
+        return Response({'error': 'Visita non trovata'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = VisitaSerializer(visita)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_visite_paziente(request, persona_id):
+    try:
+        logger.info(f'Request to get visits for patient id: {persona_id}')
+        paziente = TabellaPazienti.objects.get(id=persona_id)
+    except TabellaPazienti.DoesNotExist:
+        logger.error(f'Patient not found with id: {persona_id}')
+        return Response({'error': 'Paziente non trovato'}, status=404)
+
+    visite = Visita.objects.filter(paziente=paziente).order_by('-data_visita')
+    serializer = VisitaSerializer(visite, many=True)
+    logger.info(f'Returning {len(visite)} visits for patient id: {persona_id}')
+    return Response(serializer.data)
+    try:
+        logger.info(f'Request to get visits for patient id: {persona_id}')
+        paziente = TabellaPazienti.objects.get(id=persona_id)
+    except TabellaPazienti.DoesNotExist:
+        logger.error(f'Patient not found with id: {persona_id}')
+        return Response({'error': 'Paziente non trovato'}, status=404)
+
+    visite = Visita.objects.filter(paziente=paziente).order_by('-data_visita')
+    serializer = VisitaSerializer(visite, many=True)
+    logger.info(f'Returning {len(visite)} visits for patient id: {persona_id}')
+    return Response(serializer.data)

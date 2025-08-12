@@ -50,6 +50,10 @@ urlpatterns = [
     # URL SEZIONE CARTELLA PAZIENTE            #
     # -----------------------------------------#
 
+    ## VISITE PAZIENTE
+    path("CartellaPaziente/<int:id>/elenco_visite",             views.ElencoVisiteView.as_view(),                    name="visite_paziente"),
+    path("visita/<int:visita_id>/dati/", GetVisitaView.as_view(), name="get_visita_dati"),
+
     ## URL PER LA CARTELLA DEL PAZIENTE
     path("CartellaPaziente/<int:id>/",                          views.CartellaPazienteView.as_view(),                 name="cartella_paziente"),
     path("CartellaPaziente/requestSaveNote/<int:id>",           views.CartellaPazienteNote.as_view(),                 name="cartellaPaziente_note"),
@@ -134,6 +138,7 @@ urlpatterns = [
     # TO DEFINE
     path('DownloadPdfVitale/<int:persona_id>/<int:referto_id>',        views.StampaRefertoView.as_view(),            name='download_pdf_vitale'),
     path('update-persona/<int:id>/',                                   views.UpdatePersonaContactView.as_view(),     name='update_persona_contact'), 
+
 
 
 ]

@@ -1,9 +1,15 @@
-""" 
+"""
     Serializer for API.
 """
 
 from rest_framework import serializers
 from BioVitalAge.models import *
+
+## SERIALIZER FOR VISITS
+class VisitaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Visita
+        fields = '__all__'
 
 ## SERAILIZER FOR PATIENTS
 class PazienteSerializer(serializers.ModelSerializer):
@@ -29,3 +35,4 @@ class NotaSerializer(serializers.ModelSerializer):
         model  = Nota
         fields = ['id', 'paziente', 'titolo', 'contenuto', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+

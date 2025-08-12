@@ -21,7 +21,8 @@ from .models import (
     AllegatiLaboratorio,
     AllegatiStrumentale,
     MicrobiotaReport,
-    Nota
+    Nota,
+    Visita,
 )
 
 @admin.register(MicrobiotaReport)
@@ -170,6 +171,13 @@ class TabellaPazientiAdmin(admin.ModelAdmin):
 class UtentiRegistratiCredenzialiAdmin(admin.ModelAdmin):
     list_display  = ("user", "nome", "cognome", "email")
     search_fields = ("user__username", "nome", "cognome")
+
+
+@admin.register(Visita)
+class VisitaAdmin(admin.ModelAdmin):
+    list_display = ('paziente', 'visita_numero', 'data_visita')
+    list_filter = ('data_visita', 'paziente')
+    search_fields = ('paziente__name', 'paziente__surname')
 
 # --- Inline per l’estensione del referto VITALE ---
 class DatiEstesiRefertiCapacitaVitaleInline(admin.StackedInline):

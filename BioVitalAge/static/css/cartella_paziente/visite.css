@@ -1,0 +1,225 @@
+.button-container button{
+    border-radius: 4px;
+    padding: 10px 15px;
+}
+.backdrop-modale-visite{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+}
+.modale-visita{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 8px;
+    background-color: var(--card-color);
+    width: 94%;
+    height: 82%;
+    overflow: auto;
+    padding: 20px;
+    display: none;
+}
+.title-container{
+    border-bottom: 2px solid #ddd;
+    padding: 10px 0px;
+    display: flex;
+    justify-content: flex-start;
+    gap: 20px;
+    align-items: center;
+}
+.tittle-modale{
+    color: var(--dark1);
+    font-weight: bold;
+    margin: 0!important;
+    padding: 0!important;
+}
+.circle-img{
+    border-radius: 50%;
+    background-color: var(--contrast-color-shadow);
+    padding: 10px;
+    margin-top: -0.5rem;
+}
+.circle-img img{
+    width: 25px;
+    height: 25px;
+}
+#datiBaseForm{
+    margin-top: 2rem;
+}
+
+
+/* CONTENUTO FORM STYLE*/
+.container-card{
+    border: 1px solid #ddd;
+    padding: 20px 10px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.05);
+}
+.header-container{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 1rem;
+}
+.header-container p{
+    margin: 0;
+    background-color: var(--contrast-color-shadow);
+    border-radius: 4px;
+    padding: 5px 10px;
+}
+.flex-container{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 50px;
+    padding: 10px 0px;
+}
+.container-celle-design{
+    width: 50%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.container-celle-design label{
+    width: 30%;
+}
+.container-celle-design input{
+    width: 70%;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+.container_data{
+    margin-top: 1rem;
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    box-shadow: 0px 0px 8px 2px rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+.container_data .header-container{
+    padding: 10px 0px;
+}
+.table-title{
+    margin-top: 1.5rem;
+}
+.riga-container{
+    padding: 10px;
+    gap: 10px;
+    border-bottom: none!important;
+}
+.grid-layout{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+.button-container-button{
+    gap: 10px;
+    justify-content: flex-end;
+}
+#saveDatiBase{
+    background-color: var(--contrast-color)!important;
+    border: none!important;
+    cursor: pointer;
+}
+
+.table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-wrapper th, .table-wrapper td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.table-wrapper th:nth-child(1) {
+    width: 20%; /* Numero visita */
+}
+
+.table-wrapper th:nth-child(2) {
+    width: 40%; /* Data visita */
+}
+
+.table-wrapper th:nth-child(3) {
+    width: 20%; /* Vedi visita */
+}
+
+.table-wrapper td:nth-child(3) button {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.table-wrapper tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Per evitare che l'header venga tagliato */
+.table-wrapper thead tr {
+    display: table-row;
+}
+#closeModal{
+    background-color: #c74b5b!important;
+    border: none!important;
+}
+
+
+
+.pagination{
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+.page-item .page-link{
+    color: grey;
+}
+.page-item .page-link:hover {
+    background-color: var(--contrast-color);
+    color: white;
+}
+.page-item.active .page-link {
+    color: white;
+    background-color: var(--contrast-color) !important;
+    border: none;
+    z-index: 0;
+}
+
+
+
+#button-visite{
+    background: none;
+    border: 1px solid #ddd;
+    color: var(--dark1);
+}
+#button-visite:hover{
+    background-color: var(--contrast-color);
+    color: white;
+}
+
+
+
+.table-wrapper th, 
+.table-wrapper td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.table-wrapper td:nth-child(3) {
+    text-align: center;
+}
+.table-wrapper td:nth-child(3) button {
+    margin: 0 auto;
+    display: inline-block;
+}
