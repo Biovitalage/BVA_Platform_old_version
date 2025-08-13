@@ -1210,7 +1210,6 @@ class InserisciPazienteView(LoginRequiredMixin,View):
 
 
 
-
 @method_decorator(catch_exceptions, name='dispatch')
 class CartellaPazienteView(LoginRequiredMixin, View):
 
@@ -1314,6 +1313,10 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             e['data'] = _to_aware(e['data'])
         diario.sort(key=lambda e: e['data'], reverse=True)
 
+        # --- NOVITÀ: elenco completo per modale ---
+        diario_full = list(diario)
+
+        # Paginazione del diario (8 elementi nel tab)
         diario_paginator = Paginator(diario, 8)
         diario_page_number = request.GET.get('diario_page')
         diario_page = diario_paginator.get_page(diario_page_number)
@@ -1364,8 +1367,8 @@ class CartellaPazienteView(LoginRequiredMixin, View):
                     "Emocromo - Globuli Rossi": "rbc", "Emocromo - Emoglobina": "hemoglobin", "Emocromo - Ematocrito": "hematocrit",
                     "Emocromo - MCV": "mcv", "Emocromo - MCH": "mch", "Emocromo - MCHC": "mchc", "Emocromo - RDW": "rdw",
                     "Emocromo - Globuli Bianchi": "wbc", "Emocromo - Neutrofili": "neutrophils_pct", "Emocromo - Linfociti": "lymphocytes_pct",
-                    "Emocromo - Monociti": "monocytes_pct", "Emocromo - Eosinofili": "eosinophils_pct",
-                    "Emocromo - Basofili": "basophils_pct", "Emocromo - Piastrine": "platelets",
+                    "Emocromo - Monociti": "monocytes_pct", "Emocromo - Eosinofili": "eosinophils_pct", "Emocromo - Basofili": "basophils_pct",
+                    "Emocromo - Piastrine": "platelets",
                     "Ferritina": "ferritin_m", "Sideremia": "sideremia", "Transferrina": "transferrin",
                     "TNF-A": "tnf_a", "IL-6": "inter_6", "IL-10": "inter_10",
                 }
@@ -1417,6 +1420,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'accertamenti_qs': accertamenti_qs,
             'visite_qs': visite_qs,
             'diario_page': diario_page,
+            'diario_full': diario_full,  # <<--- NOVITÀ: per la modale
 
             # opzionale, se ti serve altrove
             'visite_page': visite_page,
@@ -1633,6 +1637,10 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             e['data'] = _to_aware(e['data'])
         diario.sort(key=lambda e: e['data'], reverse=True)
 
+        # --- NOVITÀ: elenco completo per modale ---
+        diario_full = list(diario)
+
+        # Paginazione del diario (8 nel tab)
         diario_paginator = Paginator(diario, 8)
         diario_page_number = request.POST.get('diario_page') or request.GET.get('diario_page')
         diario_page = diario_paginator.get_page(diario_page_number)
@@ -1655,6 +1663,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'accertamenti_qs': accertamenti_qs,
             'visite_qs': visite_qs,
             'diario_page': diario_page,
+            'diario_full': diario_full,  # <<--- NOVITÀ: per la modale
             'visite_page': visite_page,
 
             'dati_diagnosi': dati_diagnosi,
@@ -1664,11 +1673,6 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             "success": True,
         }
         return render(request, "includes/cartellaPaziente.html", context)
-
-
-
-
-
 
 
 

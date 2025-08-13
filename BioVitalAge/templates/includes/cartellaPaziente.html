@@ -819,7 +819,7 @@
                 <div class="container-tabella" style="width: 50%;">
 
                     <div class="container-header-diario">
-                    <h3>Diario Clinico</h3>
+                    <h3 id="open-diario-modal" style="cursor:pointer;">Diario Clinico</h3>
                     <div class="header-container">
                         <button class="button active" data-target="#tab-diario">Diario</button>
                         <button class="button" data-target="#tab-farmaci">Farmaci</button>
@@ -837,6 +837,7 @@
                         <div class="header-cella"><p>Diagnosi</p></div>
                         <div class="header-cella"><p>Nota</p></div>
                     </div>
+
                     <div class="container-table">
                         {% for entry in diario_page %}
                         <div class="row-table diario-clinico-row"
@@ -845,15 +846,15 @@
                             data-data="{{ entry.data|date:'d/m/Y H:i' }}"
                             data-diariotipo="{{ entry.tipo }}"
                             data-descrizione="{{ entry.descrizione }}"
-                            data-diagnosi="{{ entry.diagnosi }}"
+                            data-diagnosi="{{ entry.diagnosi|default_if_none:'' }}"
                             data-nome="{{ entry.nome|default:'non inserito' }}"
                             data-posologia="{{ entry.posologia|default:'non inserito' }}"
-                            data-nota="{{ entry.nota|default:'' }}">
+                            data-nota="{{ entry.nota|default_if_none:'' }}">
                             <div class="row-cella" title="{{ entry.data|date:'d/m/Y H:i' }}"><p>{{ entry.data|date:"d/m/Y H:i" }}</p></div>
-                            <div class="row-cella" title="{{ entry.tipo|default:'non inserito' }}"><p>{{ entry.tipo|default:"non inserito" }}</p></div>
-                            <div class="row-cella" title="{{ entry.descrizione|default:'non inserito' }}"><p>{{ entry.descrizione|default:"non inserito" }}</p></div>
-                            <div class="row-cella" title="{{ entry.diagnosi|default:'non inserito' }}"><p>{{ entry.diagnosi|default:"non inserito" }}</p></div>
-                            <div class="row-cella" title="{{ entry.nota|default:'non inserito' }}"><p>{{ entry.nota|default:"non inserito" }}</p></div>
+                            <div class="row-cella" title="{{ entry.tipo }}"><p>{{ entry.tipo }}</p></div>
+                            <div class="row-cella" title="{{ entry.descrizione }}"><p>{{ entry.descrizione }}</p></div>
+                            <div class="row-cella" title="{{ entry.diagnosi|default:'—' }}"><p>{{ entry.diagnosi|default:"—" }}</p></div>
+                            <div class="row-cella" title="{{ entry.nota|default:'—' }}"><p>{{ entry.nota|default:"—" }}</p></div>
                         </div>
                         {% empty %}
                         <div class="row-table" style="grid-template-columns: 1fr;">
@@ -862,7 +863,7 @@
                         {% endfor %}
                     </div>
                     </div>
-                    
+
                     <!-- FARMACI (SOLO FARMACI) -->
                     <div class="container-content farmaci" id="tab-farmaci" style="display: none;">
                     <div class="header-table">
@@ -870,6 +871,7 @@
                         <div class="header-cella"><p>Farmaco</p></div>
                         <div class="header-cella"><p>Dose</p></div>
                     </div>
+
                     <div class="container-table">
                         {% if farmaci_prescritti|length == 0 %}
                         <div class="row-table" style="grid-template-columns: 1fr;">
@@ -877,27 +879,28 @@
                         </div>
                         {% else %}
                         {% for prescrizione in farmaci_prescritti %}
-                        <div class="row-table"
-                            data-type="farmaco"
-                            data-id="{{ prescrizione.id }}"
-                            data-nome="{{ prescrizione.farmaco.nome_farmaco }}"
-                            data-posologia="{{ prescrizione.farmaco.dosaggio }}">
+                            <div class="row-table"
+                                data-type="farmaco"
+                                data-id="{{ prescrizione.id }}"
+                                data-nome="{{ prescrizione.farmaco.nome_farmaco }}"
+                                data-posologia="{{ prescrizione.farmaco.dosaggio|default_if_none:'' }}">
                             <div class="row-cella"><p>{{ prescrizione.data_prescrizione|date:"d/m/Y" }}</p></div>
                             <div class="row-cella"><p>{{ prescrizione.farmaco.nome_farmaco }}</p></div>
-                            <div class="row-cella"><p>{{ prescrizione.farmaco.dosaggio }}</p></div>
-                        </div>
+                            <div class="row-cella"><p>{{ prescrizione.farmaco.dosaggio|default:"—" }}</p></div>
+                            </div>
                         {% endfor %}
                         {% endif %}
                     </div>
                     </div>
 
                     <!-- ACCERTAMENTI (SOLO ACCERTAMENTI) -->
-                    <div class="container-content accertamenti" id="tab-accertamenti" style="display: none;">
-                    <div class="header-table">
+                    <div class="container-content accertamenti" style="display: none;" id="tab-accertamenti" >
+                    <div class="header-table" style="grid-template-columns: 25% 50% 25%;">
                         <div class="header-cella"><p>Data</p></div>
                         <div class="header-cella"><p>Accertamento</p></div>
                         <div class="header-cella"><p>Descrizione</p></div>
                     </div>
+
                     <div class="container-table">
                         {% if accertamenti_qs|length == 0 %}
                         <div class="row-table" style="grid-template-columns: 1fr;">
@@ -905,13 +908,13 @@
                         </div>
                         {% else %}
                         {% for accertamento in accertamenti_qs %}
-                        <div class="row-table"
-                            data-type="accertamento"
-                            data-id="{{ accertamento.id }}">
+                            <div class="row-table"
+                                data-type="accertamento"
+                                data-id="{{ accertamento.id }}" style="grid-template-columns: 25% 50% 25%;">
                             <div class="row-cella"><p>{{ accertamento.data_visita|date:"d/m/Y" }}</p></div>
                             <div class="row-cella"><p>{{ accertamento.esami_prescritti }}</p></div>
-                            <div class="row-cella"><p>{{ accertamento.descrizione|default:"" }}</p></div>
-                        </div>
+                            <div class="row-cella"><p>{{ accertamento.descrizione|default:"—" }}</p></div>
+                            </div>
                         {% endfor %}
                         {% endif %}
                     </div>
@@ -919,11 +922,12 @@
 
                     <!-- VISITE (SOLO VISITE) -->
                     <div class="container-content visite" id="tab-visite" style="display: none;">
-                    <div class="header-table">
+                    <div class="header-table" style="grid-template-columns: 25% 50% 25%;">
                         <div class="header-cella"><p>Data</p></div>
                         <div class="header-cella"><p>Visita</p></div>
                         <div class="header-cella"><p>Descrizione</p></div>
                     </div>
+
                     <div class="container-table">
                         {% if visite_qs|length == 0 %}
                         <div class="row-table" style="grid-template-columns: 1fr;">
@@ -931,17 +935,18 @@
                         </div>
                         {% else %}
                         {% for visita in visite_qs %}
-                        <div class="row-table"
-                            data-type="visita"
-                            data-id="{{ visita.id }}">
+                            <div class="row-table"
+                                data-type="visita"
+                                data-id="{{ visita.id }}" style="grid-template-columns: 25% 50% 25%;">
                             <div class="row-cella"><p>{{ visita.data_visita|date:"d/m/Y" }}</p></div>
                             <div class="row-cella"><p>Visita n° {{ visita.visita_numero }}</p></div>
-                            <div class="row-cella"><p>{{ visita.descrizione|default:"" }}</p></div>
-                        </div>
+                            <div class="row-cella"><p>{{ visita.descrizione|default:"—" }}</p></div>
+                            </div>
                         {% endfor %}
                         {% endif %}
                     </div>
                     </div>
+
 
                 </div>
 
@@ -969,105 +974,22 @@
                     </div>
                 </div>
 
-                </div>
+            </div>
 
-                <script>
-                // Se usi già uno script di tab, puoi ignorare questo.
-                // Mantiene lo stile e mostra/nasconde le sezioni giuste.
-                document.addEventListener('DOMContentLoaded', () => {
-                const buttons = document.querySelectorAll('.container-header-diario .button');
-                const panes = ['#tab-diario', '#tab-farmaci', '#tab-accertamenti', '#tab-visite']
-                    .map(id => document.querySelector(id));
-
-                buttons.forEach(btn => {
+            <script>
+                document.querySelectorAll('.container-header-diario .button').forEach(btn => {
                     btn.addEventListener('click', () => {
-                    buttons.forEach(b => b.classList.remove('active'));
+                    const target = btn.dataset.target; 
+                    document.querySelectorAll('.container-content').forEach(c => c.style.display = 'none');
+                    const el = document.querySelector(target);
+                    if (el) el.style.display = 'block';
+                    btn.parentElement.querySelectorAll('.button').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-
-                    panes.forEach(p => p.style.display = 'none');
-                    const target = document.querySelector(btn.getAttribute('data-target'));
-                    if (target) target.style.display = 'block';
                     });
                 });
-                });
-                </script>
+            </script>
 
 
-
-
-            <!-- CONTAINER STORICO -->
-            <!-- <div class="container-flex-layout">
-                
-                <div class="container-info">
-
-                    <div class="container-titolo">
-                        <img src="{% static 'image/Info.png' %}" alt="">
-                        <h3>Informazioni Generali</h3>
-                    </div>
-                    
-                </div>
-
-                <div class="container-storico">
-
-                    <div class="card-storico" onclick="window.location.href='{% url 'storico' persona.id %}'">
-                        <div class="img-circle-container">
-                            <img src="{% static 'image/Storico_color.png' %}" alt="">
-                        </div>
-                        <a href="{% url 'storico' persona.id %}">
-                        <span class="freccia">&larr;</span> Storico
-                        </a>
-                    </div>
-
-                    <div class="card-storico" onclick="window.location.href='{% url 'diagnosi' persona.id %}'">
-                        <div class="img-circle-container">
-                            <img src="{% static 'image/Diagnosi_color.png' %}" alt="">
-                        </div>
-                        
-                        <a href="{% url 'diagnosi' persona.id %}">
-                        <span class="freccia">&larr;</span> Diagnosi
-                        </a>
-                    </div>
-
-                    <div class="card-storico">
-                        <div class="img-circle-container">
-                            <img src="{% static 'image/Terapie_color.png' %}" alt="">
-                        </div>
-                        <a href="{% url 'terapie' persona.id %}">
-                        <span class="freccia">&larr;</span> Terapie
-                        </a>
-                    </div>
-
-                    <div class="card-storico">
-                        <div class="img-circle-container">
-                            <img src="{% static 'image/Esame_color.png' %}" alt="">
-                        </div>
-                        <a href="{% url 'esami' persona.id %}">
-                        <span class="freccia">&larr;</span> Esami
-                        </a>
-                    </div>
-
-                    <div class="card-storico">
-                        <div class="img-circle-container">
-                            <img src="{% static 'image/Visite_color.png' %}" alt="">
-                        </div>
-                        <a href="{% url 'visite' persona.id %}">
-                        <span class="freccia">&larr;</span> Visite
-                        </a>
-                    </div>
-
-                    <div class="card-storico">
-                        <div class="img-circle-container">
-                            <img src="{% static 'image/Allegati_color.png' %}" alt="">
-                        </div>
-                        <a href="{% url 'allegati' persona.id %}">
-                        <span class="freccia">&larr;</span> Allegati
-                        </a>
-                    </div>
-
-                </div>
-
-            </div> -->
-        
             <!-- Indicatori di performance -->
             <div class="container-indicatori containerStyle">
 
@@ -1227,6 +1149,68 @@
                 
             </div> 
         </main>
+
+
+        <div class="backdrop-modale-diario-clinico" id="backdrop-diario"></div>
+        <div class="modale-diario-clinico-full" id="diario-modal">
+            <div class="header-modale">
+                <h3>Diario clinico - completo</h3>
+                <button id="close-diario-modal">x</button>
+            </div>
+
+            <div class="modal-diario-body">
+                   
+                <div class="header-table">
+                    <div class="header-cella"><p>Data</p></div>
+                    <div class="header-cella"><p>Tipo</p></div>
+                    <div class="header-cella"><p>Descrizione</p></div>
+                    <div class="header-cella"><p>Diagnosi</p></div>
+                    <div class="header-cella"><p>Nota</p></div>
+                </div>
+
+                <div class="container-table">
+                        {% for entry in diario_full %}
+                        <div class="row-table diario-clinico-row"
+                            data-id="{{ entry.id }}"
+                            data-type="{{ entry.tipo|lower }}"
+                            data-data="{{ entry.data|date:'d/m/Y H:i' }}"
+                            data-diariotipo="{{ entry.tipo }}"
+                            data-descrizione="{{ entry.descrizione }}"
+                            data-diagnosi="{{ entry.diagnosi|default_if_none:'' }}"
+                            data-nome="{{ entry.nome|default:'non inserito' }}"
+                            data-posologia="{{ entry.posologia|default:'non inserito' }}"
+                            data-nota="{{ entry.nota|default_if_none:'' }}">
+                        <div class="row-cella" title="{{ entry.data|date:'d/m/Y H:i' }}"><p>{{ entry.data|date:"d/m/Y H:i" }}</p></div>
+                        <div class="row-cella" title="{{ entry.tipo }}"><p>{{ entry.tipo }}</p></div>
+                        <div class="row-cella" title="{{ entry.descrizione }}"><p>{{ entry.descrizione }}</p></div>
+                        <div class="row-cella" title="{{ entry.diagnosi|default:'—' }}"><p>{{ entry.diagnosi|default:"—" }}</p></div>
+                        <div class="row-cella" title="{{ entry.nota|default:'—' }}"><p>{{ entry.nota|default:"—" }}</p></div>
+                        </div>
+                        {% empty %}
+                        <div class="row-table" style="grid-template-columns: 1fr;">
+                        <div class="row-cella"><p>Nessun evento nel diario clinico.</p></div>
+                        </div>
+                        {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+       
 
         <!-- Mostra messaggi -->
         {% if messages %}
@@ -1629,6 +1613,8 @@
             <div id="dynamicModalBody"></div>
           </div>
         </div>
+
         <div id="dynamicModalBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
+        
     </body>
 </html>

@@ -1784,6 +1784,59 @@ document.querySelectorAll('.consenso-header').forEach(header => {
 });
 
 
+
+/* MODALE DIARIO CLINICO */
+const titleClick = document.getElementById('open-diario-modal');
+const modale = document.getElementById('diario-modal');
+const backdropDiario = document.getElementById('backdrop-diario');
+const closeBtnDiario = document.getElementById('close-diario-modal');
+
+titleClick.addEventListener('click', ()=>{
+  modale.style.display = 'block';
+  backdropDiario.style.display = 'block';
+  // blocca lo scroll del body
+  document.body.dataset.prevOverflow = document.body.style.overflow || '';
+  document.body.style.overflow = 'hidden';
+});
+
+function closeDiario() {
+  modale.style.display = 'none';
+  backdropDiario.style.display = 'none';
+  // ripristina lo scroll del body
+  document.body.style.overflow = document.body.dataset.prevOverflow || '';
+  delete document.body.dataset.prevOverflow;
+}
+
+closeBtnDiario.addEventListener('click', closeDiario);
+backdropDiario.addEventListener('click', (e)=>{ if (e.target === backdropDiario) closeDiario(); });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* FILTRI TABELLA PRESCRIZIONE */
 // document.addEventListener("DOMContentLoaded", function () {
 //   const filterSelect = document.getElementById("filter");

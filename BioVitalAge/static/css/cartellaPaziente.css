@@ -940,6 +940,8 @@
   display: grid;
   grid-template-columns: 15% 45% 20% 20%;
 }
+
+
 .diario-clinico-row{
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
 }
@@ -2369,4 +2371,88 @@ strong {
 /* Menù a tendina */
 .card-body{
   padding: 0 !important;
+}
+
+
+
+
+
+/* STYLE MODALE DIARIO CLINICO */
+.modale-diario-clinico-full{
+  background-color: var(--card-color);
+  width: 90%;
+  height: 80%;
+  border-radius: 8px;
+  z-index: 9999;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+.backdrop-modale-diario-clinico{
+  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: none;
+}
+
+.header-modale{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+.header-modale h3 {
+  color: var(--contrast-color);
+}
+.header-modale button {
+  border: none;
+  color: var(--dark1);
+  border-radius: 8px;
+  padding: 10px 20px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-diario-body{
+  padding: 20px;
+}
+.header-table{
+  display: grid;
+  grid-template-columns: 19.9% 19.9% 19.9%19.9% 19.9% 5px;
+}
+.container-table{
+  overflow: auto;
+  max-height: 550px;
+}
+
+
+/* Scrollbar per Chrome, Edge, Safari */
+.container-table::-webkit-scrollbar {
+    width: 0px;               /* larghezza scrollbar verticale */
+    height: 0px;               /* altezza scrollbar orizzontale */
+}
+
+.container-table::-webkit-scrollbar-track {
+    background: #f1f1f1;        /* colore sfondo barra */
+    border-radius: 10px;
+}
+
+.container-table::-webkit-scrollbar-thumb {
+    background: #888;           /* colore "pollice" barra */
+    border-radius: 10px;
+}
+
+.container-table::-webkit-scrollbar-thumb:hover {
+    background: #555;           /* colore al passaggio del mouse */
+}
+
+/* Scrollbar per Firefox */
+.container-table {
+    scrollbar-width: thin;      /* "auto", "thin" o "none" */
+    scrollbar-color: #888 #f1f1f1; /* thumb / track */
 }
