@@ -15,6 +15,7 @@ from datetime import date, datetime, timedelta
 from collections import defaultdict
 from rest_framework import generics, permissions
 from django.utils import timezone
+from django.db.models import DateField
 
 
 # --- IMPORTS DI DJANGO ---
@@ -1232,6 +1233,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         ViewSetResult.request = request
         persona = ViewSetResult.get_patient_info(id)
 
+        # NOTE del paziente
         note_list = Nota.objects.filter(paziente=persona).order_by('-created_at')
 
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
@@ -1299,6 +1301,18 @@ class CartellaPazienteView(LoginRequiredMixin, View):
                 'id': v.id, 'tipo': 'Visita', 'data': v.data_visita,
                 'descrizione': f"Visita n° {v.visita_numero}", 'diagnosi': '', 'nota': '',
             })
+        # NOTE (come eventi del Diario)
+        for n in note_list:
+            diario.append({
+                'id': n.id,
+                'tipo': 'Nota',
+                'data': n.created_at,
+                'descrizione': n.titolo,
+                'diagnosi': '',
+                'nome': '',
+                'posologia': '',
+                'nota': n.contenuto,
+            })
 
         # Normalizza a datetime aware (per formato d/m/Y H:i in template) e ordina
         def _to_aware(dt_val):
@@ -1313,7 +1327,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             e['data'] = _to_aware(e['data'])
         diario.sort(key=lambda e: e['data'], reverse=True)
 
-        # --- NOVITÀ: elenco completo per modale ---
+        # --- elenco completo per modale ---
         diario_full = list(diario)
 
         # Paginazione del diario (8 elementi nel tab)
@@ -1420,7 +1434,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'accertamenti_qs': accertamenti_qs,
             'visite_qs': visite_qs,
             'diario_page': diario_page,
-            'diario_full': diario_full,  # <<--- NOVITÀ: per la modale
+            'diario_full': diario_full,
 
             # opzionale, se ti serve altrove
             'visite_page': visite_page,
@@ -1440,7 +1454,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'dettagli_organi': dettagli_organi,
             'report_testuale': report_testuale,
 
-            # Note
+            # Note (se vuoi ancora usare la modale di creazione)
             'note_list': note_list,
 
             # Età / bio
@@ -1533,6 +1547,10 @@ class CartellaPazienteView(LoginRequiredMixin, View):
 
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         persona = get_object_or_404(TabellaPazienti, id=id)
+
+        # NOTE del paziente anche in POST (per re-render coerente)
+        note_list = Nota.objects.filter(paziente=persona).order_by('-created_at')
+
         dati_diagnosi = Diagnosi.objects.filter(paziente=persona)
 
         # Farmaci (paginati lato destra)
@@ -1624,6 +1642,18 @@ class CartellaPazienteView(LoginRequiredMixin, View):
                 'id': v.id, 'tipo': 'Visita', 'data': v.data_visita,
                 'descrizione': f"Visita n° {v.visita_numero}", 'diagnosi': '', 'nota': '',
             })
+        # NOTE (come eventi del Diario) anche in POST
+        for n in note_list:
+            diario.append({
+                'id': n.id,
+                'tipo': 'Nota',
+                'data': n.created_at,
+                'descrizione': n.titolo,
+                'diagnosi': '',
+                'nome': '',
+                'posologia': '',
+                'nota': n.contenuto,
+            })
 
         def _to_aware(dt_val):
             tz = timezone.get_current_timezone()
@@ -1637,7 +1667,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             e['data'] = _to_aware(e['data'])
         diario.sort(key=lambda e: e['data'], reverse=True)
 
-        # --- NOVITÀ: elenco completo per modale ---
+        # --- elenco completo per modale ---
         diario_full = list(diario)
 
         # Paginazione del diario (8 nel tab)
@@ -1663,23 +1693,20 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             'accertamenti_qs': accertamenti_qs,
             'visite_qs': visite_qs,
             'diario_page': diario_page,
-            'diario_full': diario_full,  # <<--- NOVITÀ: per la modale
+            'diario_full': diario_full,
             'visite_page': visite_page,
 
             'dati_diagnosi': dati_diagnosi,
             'diagnosi_list': diagnosi_list,
             'ultimo_referto_eta_metabolica': ultimo_referto_eta_metabolica,
             'ultimo_referto_capacita_vitale': ultimo_referto_capacita_vitale,
+
+            # Note per eventuale modale di creazione
+            'note_list': note_list,
+
             "success": True,
         }
         return render(request, "includes/cartellaPaziente.html", context)
-
-
-
-
-
-
-
 
 
 
@@ -5487,6 +5514,37 @@ class MicrobiotaAddView(LoginRequiredMixin, View):
 
 
 
+def _clean_value_for_model(model_cls, field_name, raw_val):
+    """
+    Normalizza il valore in base al tipo campo del MODELLO:
+    - DateField: "" -> None; parse YYYY-MM-DD; se invalido -> None (se nullable).
+    - Altri campi: trim stringhe; lascia None se vuoto.
+    """
+    try:
+        field = model_cls._meta.get_field(field_name)
+    except Exception:
+        # Campo non esiste sul modello; ignora silenziosamente
+        return None
+
+    val = raw_val
+    if isinstance(val, str):
+        val = val.strip()
+
+    # vuoto -> None per campi nullable
+    if val in ("", None):
+        return None if getattr(field, "null", False) else val
+
+    # Cast specifico per DateField
+    if isinstance(field, DateField):
+        try:
+            return datetime.strptime(val, "%Y-%m-%d").date()
+        except Exception:
+            return None if getattr(field, "null", False) else val
+
+    # Default: ritorna il valore così com'è
+    return val
+
+
 @method_decorator(catch_exceptions, name='dispatch')
 class ElencoVisiteView(LoginRequiredMixin, View):
 
@@ -5495,89 +5553,107 @@ class ElencoVisiteView(LoginRequiredMixin, View):
         persona = get_object_or_404(TabellaPazienti, id=id)
 
         visite = Visita.objects.filter(paziente=persona).order_by('-data_visita', '-visita_numero')
-
         paginator = Paginator(visite, 10)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        context = {
-            'persona': persona,
-            'visite': page_obj,
-        }
+        context = {'persona': persona, 'visite': page_obj}
         return render(request, "cartella_paziente/visite.html", context)
 
     def post(self, request, id):
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         persona = get_object_or_404(TabellaPazienti, id=id)
-
         data = request.POST
 
-        fields_to_update = [
-            'professione', 'pensionato', 'menarca', 'ciclo', 'sintomi', 'esordio', 'parto', 'post_parto', 'aborto',
-            'alcol', 'alcol_type', 'data_alcol', 'alcol_frequency', 'smoke', 'smoke_frequency', 'reduced_intake',
-            'sport', 'sport_livello', 'sport_frequency', 'attivita_sedentaria', 'livello_sedentarieta', 'sedentarieta_nota',
-            'm_cardiache', 'diabete_m', 'obesita', 'epilessia', 'ipertensione', 'm_tiroidee', 'm_polmonari', 'tumori', 'allergie', 'm_psichiatriche',
-            'patologie', 'p_p_altro', 't_farmaco', 't_dosaggio', 't_durata', 'p_cardiovascolari', 'm_metabolica', 'p_respiratori_cronici',
-            'm_neurologica', 'm_endocrina', 'm_autoimmune', 'p_epatici', 'm_renale', 'd_gastrointestinali', 'eloquio', 's_nutrizionale',
-            'a_genarale', 'psiche', 'r_ambiente', 's_emotivo', 'costituzione', 'statura', 'blood_group', 'rh_factor', 'pressure_min', 'pressure_max'
+        # Campi del MODELLO che vuoi gestire (per coerenza con il template mostrato)
+        model_fields = [
+            'professione', 'pensionato',
+            'menarca', 'ciclo', 'sintomi', 'esordio', 'parto', 'post_parto', 'aborto',
+            'alcol', 'alcol_type', 'data_alcol', 'alcol_frequency',
+            'smoke', 'smoke_frequency', 'reduced_intake',
+            'sport', 'sport_livello', 'sport_frequency',
+            'attivita_sedentaria', 'livello_sedentarieta', 'sedentarieta_nota',
+            'm_cardiache', 'diabete_m', 'obesita', 'epilessia', 'ipertensione',
+            'm_tiroidee', 'm_polmonari', 'tumori', 'allergie', 'm_psichiatriche',
+            'patologie', 'p_p_altro', 't_farmaco', 't_dosaggio', 't_durata',
+            'p_cardiovascolari', 'm_metabolica', 'p_respiratori_cronici',
+            'm_neurologica', 'm_endocrina', 'm_autoimmune', 'p_epatici',
+            'm_renale', 'd_gastrointestinali',
+            'eloquio', 's_nutrizionale', 'a_genarale', 'psiche', 'r_ambiente',
+            's_emotivo', 'costituzione', 'statura',
+            'blood_group', 'rh_factor', 'pressure_min', 'pressure_max',
         ]
 
-        # aggiorna i campi del paziente
-        for field in fields_to_update:
-            if field in data:
-                value = data.get(field)
-                if field == 'data_alcol' and value:
-                    try:
-                        value = datetime.strptime(value, '%Y-%m-%d').date()
-                    except ValueError:
-                        value = None
-                setattr(persona, field, value)
-        persona.save()
+        # Mappa form->model (alias per i nomi discordanti nel template)
+        fields_map = {name: name for name in model_fields}
+        fields_map.update({
+            'm_cardiache_fam': 'm_cardiache',  # nel template hai questo name
+            'a_generale': 'a_genarale',        # template usa "a_generale"
+        })
 
-        # prossimo numero visita
+        # --- Aggiornamento PERSONA via .update(**updates) ---
+        updates = {}
+        for form_name, model_name in fields_map.items():
+            if form_name in data:
+                cleaned = _clean_value_for_model(TabellaPazienti, model_name, data.get(form_name))
+                # Nota: .update(**updates) ignora i campi non esistenti; noi filtriamo già
+                updates[model_name] = cleaned
+
+        if updates:
+            TabellaPazienti.objects.filter(pk=persona.pk).update(**updates)
+            # ricarica persona fresca dal DB per il render successivo
+            persona.refresh_from_db()
+
+        # --- Prossimo numero visita ---
         last_visita = Visita.objects.filter(paziente=persona).order_by('-visita_numero').first()
-        next_visita_numero = (last_visita.visita_numero + 1) if (last_visita and last_visita.visita_numero) else 1
+        next_visita_numero = (last_visita.visita_numero or 0) + 1 if last_visita else 1
 
-        # data visita dalla modale (name="visita_data_visita"), fallback a oggi
+        # --- Data visita dal form (fallback a oggi se mancante/errata) ---
         data_visita_str = data.get('visita_data_visita', '')
         try:
             data_visita_val = datetime.strptime(data_visita_str, '%Y-%m-%d').date() if data_visita_str else datetime.now().date()
         except ValueError:
             data_visita_val = datetime.now().date()
 
-        # crea la nuova visita
+        # --- Crea VISITA e copia i campi compilati (puliti) ---
         visita = Visita(
             paziente=persona,
             visita_numero=next_visita_numero,
             data_visita=data_visita_val,
         )
-        for field in fields_to_update:
-            if field in data:
-                value = data.get(field)
-                if field == 'data_alcol' and value:
-                    try:
-                        value = datetime.strptime(value, '%Y-%m-%d').date()
-                    except ValueError:
-                        value = None
-                setattr(visita, field, value)
+
+        # riusa la stessa mappa ma valida contro il modello Visita
+        for form_name, model_name in fields_map.items():
+            if form_name in data:
+                cleaned = _clean_value_for_model(Visita, model_name, data.get(form_name))
+                # evita di settare attributi che non esistono sul modello Visita
+                try:
+                    Visita._meta.get_field(model_name)
+                    setattr(visita, model_name, cleaned)
+                except Exception:
+                    pass
+
         visita.save()
 
-        # --- PAGINAZIONE COME NEL GET ---
+        # --- Paginazione come nel GET ---
         visite = Visita.objects.filter(paziente=persona).order_by('-data_visita', '-visita_numero')
-
         paginator = Paginator(visite, 10)
-        # se vuoi restare sulla stessa pagina dopo il salvataggio,
-        # passa un <input type="hidden" name="page" value="{{ visite.number }}"> nel form.
-        # Qui recuperiamo quella info, altrimenti default alla prima pagina.
+
         page_number = request.POST.get('page') or request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
         context = {
             'persona': persona,
             'visite': page_obj,
-            'message': 'Dati paziente e visita salvati con successo.'
+            'message': 'Dati paziente e visita salvati con successo.',
         }
         return render(request, "cartella_paziente/visite.html", context)
+
+
+
+
+
+
 
 
 

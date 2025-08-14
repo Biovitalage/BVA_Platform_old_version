@@ -1794,7 +1794,6 @@ const closeBtnDiario = document.getElementById('close-diario-modal');
 titleClick.addEventListener('click', ()=>{
   modale.style.display = 'block';
   backdropDiario.style.display = 'block';
-  // blocca lo scroll del body
   document.body.dataset.prevOverflow = document.body.style.overflow || '';
   document.body.style.overflow = 'hidden';
 });
@@ -1802,7 +1801,6 @@ titleClick.addEventListener('click', ()=>{
 function closeDiario() {
   modale.style.display = 'none';
   backdropDiario.style.display = 'none';
-  // ripristina lo scroll del body
   document.body.style.overflow = document.body.dataset.prevOverflow || '';
   delete document.body.dataset.prevOverflow;
 }
