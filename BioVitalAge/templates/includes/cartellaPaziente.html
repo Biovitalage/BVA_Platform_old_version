@@ -1602,5 +1602,65 @@
 
         <div id="dynamicModalBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
         
+
+        <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('dynamicModal');
+  const backdrop = document.getElementById('dynamicModalBackdrop');
+  const titleEl = document.getElementById('dynamicModalTitle');
+  const bodyEl  = document.getElementById('dynamicModalBody');
+  const closeEl = document.getElementById('closeDynamicModal');
+
+  const escapeHtml = (str = '') =>
+    String(str).replace(/[&<>"']/g, m => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[m]));
+
+  function openDynamicModal(title, text) {
+    titleEl.textContent = title || 'Nota';
+    // preserva gli a capo del testo
+    bodyEl.innerHTML = `<div style="white-space:pre-wrap; line-height:1.5">${escapeHtml(text || '')}</div>`;
+    modal.style.display = 'flex';
+    backdrop.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDynamic() {
+    modal.style.display = 'none';
+    backdrop.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+
+  if (closeEl) closeEl.addEventListener('click', closeDynamic);
+  if (backdrop) backdrop.addEventListener('click', closeDynamic);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display !== 'none') closeDynamic();
+  });
+
+  // Delego i click per gestire elementi presenti e futuri
+
+  // 1) NOTE nell’elenco (modale Note)
+  document.addEventListener('click', (e) => {
+    const item = e.target.closest('.note-item');
+    if (!item) return;
+    const titolo = item.dataset.titolo || 'Nota';
+    const contenuto = item.dataset.contenuto || '';
+    openDynamicModal(titolo, contenuto);
+  });
+
+  // 2) RIGHE del diario con tipo "nota"
+  document.addEventListener('click', (e) => {
+    const row = e.target.closest('.diario-clinico-row');
+    if (!row) return;
+    const type = (row.dataset.type || '').toLowerCase();
+    if (type !== 'nota') return;
+    const titolo = row.dataset.descrizione || 'Nota';
+    const contenuto = row.dataset.nota || '';
+    openDynamicModal(titolo, contenuto);
+  });
+});
+</script>
+
+
     </body>
 </html>
