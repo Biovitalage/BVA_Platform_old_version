@@ -2456,3 +2456,25 @@ strong {
     scrollbar-width: thin;      /* "auto", "thin" o "none" */
     scrollbar-color: #888 #f1f1f1; /* thumb / track */
 }
+
+.custom-modal {
+  position: fixed;
+  z-index: 99999;
+  left: 0; top: 0; width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+}
+.custom-modal-content {
+  background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  padding: 2rem; min-width: 350px; max-width: 95vw; min-height: 120px; position: relative;
+}
+.custom-modal-close {
+  position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; color: #c74b5b;
+}
+.custom-modal-backdrop {
+  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.25); z-index: 99998;
+}
+.custom-modal-content textarea { width: 100%; min-height: 80px; margin-top: 1rem; }
+.custom-modal-content select, .custom-modal-content input { width: 100%; margin-top: 1rem; }
+.custom-modal-content .farmaco-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+.custom-modal-content .farmaco-row span { flex: 1; }
+.custom-modal-content .farmaco-row button { margin-left: 1rem; }

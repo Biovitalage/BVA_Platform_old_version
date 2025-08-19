@@ -153,27 +153,204 @@ buttonCloseModaleNote.addEventListener('click', ()=>{
   Funzione modale per la gestione dei farmaci
   --------------------------------------------------------------------------------------------------- */
 document.addEventListener("DOMContentLoaded", async function () {
-  // Carica farmaciJSON dal file statico
-  let farmaciJSON = [];
+  // ================== HELPER PDF ==================
+  async function loadLogoBytes() {
+    try {
+      const res = await fetch(`${window.location.origin}/static/includes/pdfTemplates/logo.png`, { cache: "no-store" });
+      if (res.ok) return await res.arrayBuffer();
+    } catch (_) {}
+    return null;
+  }
+  function wrapText(text, font, size, maxWidth) {
+    const words = String(text || "").split(/\s+/);
+    const lines = [];
+    let line = "";
+    for (const w of words) {
+      const test = line ? line + " " + w : w;
+      if (font.widthOfTextAtSize(test, size) > maxWidth && line) {
+        lines.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+  function formatToday() {
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return { dd, mm, yyyy, label: `${dd}/${mm}/${yyyy}` };
+  }
 
+  // Prescrizione libera
+  async function createPrescrizioneLiberaPDF(testo) {
+    const { PDFDocument, StandardFonts, rgb } = (window.PDFLib || {});
+    if (!PDFDocument) {
+      alert("Libreria PDF non disponibile. Verifica il caricamento di pdf-lib.");
+      return;
+    }
+    const pdf  = await PDFDocument.create();
+    const page = pdf.addPage([595.28, 841.89]); // A4
+    const { width, height } = page.getSize();
+
+    const font = await pdf.embedFont(StandardFonts.Helvetica);
+    const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+    const black = rgb(0, 0, 0);
+    const grey  = rgb(0.75, 0.75, 0.75);
+
+    // Logo
+    try {
+      const bytes = await loadLogoBytes();
+      if (bytes) {
+        const png  = await pdf.embedPng(bytes);
+        const w = 220, h = png.height * (w / png.width);
+        page.drawImage(png, { x: (width - w) / 2, y: height - 130, width: w, height: h });
+      }
+    } catch {}
+
+    // Helper per testo centrato
+    const center = (txt, y, f = font, s = 12, c = black) => {
+      const tw = f.widthOfTextAtSize(txt, s);
+      page.drawText(txt, { x: (width - tw) / 2, y, size: s, font: f, color: c });
+    };
+
+    // Dati intestazione
+    let y = height - 165;
+    const lh = 16;
+    const { dd, mm, yyyy, label } = formatToday();
+
+    center(`Paziente: ${window.PAZIENTE || ""}`, y); y -= lh;
+    center(`Codice Fiscale Paziente: ${window.CF_PAZIENTE || ""}`, y); y -= lh;
+    center(`Data di Nascita Paziente: ${window.DOB_PAZIENTE || ""}`, y); y -= lh;
+    center(`Data: ${label}`, y); y -= 40;
+
+    // Box contenuto
+    const margin = 40;
+    const boxH = 360;
+    const boxY = y - boxH;
+    const boxW = width - margin * 2;
+
+    page.drawRectangle({
+      x: margin, y: boxY, width: boxW, height: boxH,
+      borderColor: grey, borderWidth: 1
+    });
+
+    const tx = margin + 12;
+    let ty = y - 18;
+    const maxW = boxW - 24;
+
+    page.drawText("Prescrizione", { x: tx, y: ty, size: 12, font: bold, color: black });
+    ty -= lh;
+
+    for (const line of wrapText(testo, font, 12, maxW)) {
+      if (ty < boxY + 18) break;
+      page.drawText(line, { x: tx, y: ty, size: 12, font });
+      ty -= lh;
+    }
+
+    // Firma
+    page.drawText(`Firma: dott. ${window.DOTTORE || ""}`, { x: width - 240, y: 120, size: 12, font: bold });
+
+    // Download
+    const bytes = await pdf.save();
+    const blob  = new Blob([bytes], { type: "application/pdf" });
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement("a");
+    a.href = url;
+    a.download = `Prescrizione_${(window.PAZIENTE || "paziente").replace(/\s+/g, "_")}_${yyyy}-${mm}-${dd}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Farmaco
+  async function createFarmacoPDF(nomeFarmaco, posologia) {
+    const { PDFDocument, StandardFonts, rgb } = (window.PDFLib || {});
+    if (!PDFDocument) {
+      alert("Libreria PDF non disponibile. Verifica il caricamento di pdf-lib.");
+      return;
+    }
+    const pdf  = await PDFDocument.create();
+    const page = pdf.addPage([595.28, 841.89]);
+    const { width, height } = page.getSize();
+
+    const font = await pdf.embedFont(StandardFonts.Helvetica);
+    const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+    const black = rgb(0, 0, 0);
+    const grey  = rgb(0.75, 0.75, 0.75);
+
+    try {
+      const bytes = await loadLogoBytes();
+      if (bytes) {
+        const png  = await pdf.embedPng(bytes);
+        const w = 220, h = png.height * (w / png.width);
+        page.drawImage(png, { x: (width - w) / 2, y: height - 130, width: w, height: h });
+      }
+    } catch {}
+
+    const center = (txt, y, f = font, s = 12, c = black) => {
+      const tw = f.widthOfTextAtSize(txt, s);
+      page.drawText(txt, { x: (width - tw) / 2, y, size: s, font: f, color: c });
+    };
+
+    let y = height - 165;
+    const lh = 16;
+    const { dd, mm, yyyy, label } = formatToday();
+
+    center(`Paziente: ${window.PAZIENTE || ""}`, y); y -= lh;
+    center(`Codice Fiscale Paziente: ${window.CF_PAZIENTE || ""}`, y); y -= lh;
+    center(`Data di Nascita Paziente: ${window.DOB_PAZIENTE || ""}`, y); y -= lh;
+    center(`Data: ${label}`, y); y -= 36;
+
+    // Box
+    const margin = 40;
+    const boxH = 180;
+    const boxY = y - boxH;
+    const boxW = width - margin * 2;
+
+    page.drawRectangle({
+      x: margin, y: boxY, width: boxW, height: boxH,
+      borderColor: grey, borderWidth: 1
+    });
+
+    const tx = margin + 12;
+    let ty = y - 22;
+
+    page.drawText(`Nome Farmaco: ${nomeFarmaco || "-"}`, { x: tx, y: ty, size: 12, font: bold }); ty -= lh;
+    // Wrappa posologia se lunga
+    for (const line of wrapText(`Posologia: ${posologia || "-"}`, font, 12, boxW - 24)) {
+      page.drawText(line, { x: tx, y: ty, size: 12, font });
+      ty -= lh;
+      if (ty < boxY + 18) break;
+    }
+
+    page.drawText(`Firma: dott. ${window.DOTTORE || ""}`, { x: width - 240, y: 120, size: 12, font: bold });
+
+    const bytes = await pdf.save();
+    const blob  = new Blob([bytes], { type: "application/pdf" });
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement("a");
+    a.href = url;
+    a.download = `Farmaco_${(window.PAZIENTE || "paziente").replace(/\s+/g, "_")}_${yyyy}-${mm}-${dd}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  // ================== /HELPER PDF ==================
+
+  // --- Carica farmaci JSON ---
+  let farmaciJSON = [];
   try {
     const response = await fetch("/static/includes/json/ArchivioFarmaci.json");
     const data = await response.json();
-    console.log("Risposta JSON grezza:", data);
-
-    // Prendi l'array giusto
-    if (data && Array.isArray(data.Foglio1)) {
-      farmaciJSON = data.Foglio1;
-    } else {
-      farmaciJSON = [];
-      console.warn("Formato JSON inatteso:", data);
-    }
-    console.log("Farmaci caricati:", farmaciJSON.length);
+    if (data && Array.isArray(data.Foglio1)) farmaciJSON = data.Foglio1;
+    else console.warn("Formato JSON inatteso:", data);
   } catch (error) {
     console.error("Errore nel caricamento del file ArchivioFarmaci.json:", error);
   }
 
-  // --- MODALE DINAMICA ---
+  // --- MODALE DINAMICA (come tua versione) ---
   const modal = document.getElementById("dynamicModal");
   const modalBackdrop = document.getElementById("dynamicModalBackdrop");
   const modalTitle = document.getElementById("dynamicModalTitle");
@@ -183,18 +360,13 @@ document.addEventListener("DOMContentLoaded", async function () {
   function openDynamicModal({ title, content, onSave }) {
     modalTitle.textContent = title;
     modalBody.innerHTML = "";
-    if (typeof content === "string") {
-      modalBody.innerHTML = content;
-    } else if (content instanceof HTMLElement) {
-      modalBody.appendChild(content);
-    }
+    if (typeof content === "string") modalBody.innerHTML = content;
+    else if (content instanceof HTMLElement) modalBody.appendChild(content);
     modal.style.display = "flex";
     modalBackdrop.style.display = "block";
     document.body.style.overflow = "hidden";
-    // Salva callback per uso futuro
     modalBody._onSave = onSave;
   }
-
   function closeDynamicModal() {
     modal.style.display = "none";
     modalBackdrop.style.display = "none";
@@ -202,20 +374,21 @@ document.addEventListener("DOMContentLoaded", async function () {
     modalBody.innerHTML = "";
     modalBody._onSave = null;
   }
-
   if (closeBtn) closeBtn.onclick = closeDynamicModal;
   if (modalBackdrop) modalBackdrop.onclick = closeDynamicModal;
 
-  // --- LISTENER SU TUTTE LE ROW-TABLE ---
+  // --- LISTENER RIGHE ---
   document.querySelectorAll(".row-table").forEach((row) => {
     row.addEventListener("click", function (e) {
-      // Evita click su bottoni interni
       if (e.target.tagName === "BUTTON" || e.target.closest("button")) return;
+
       const type = row.dataset.type;
       if (!type) return;
 
+      // ======== PRESCRIZIONE LIBERA ========
       if (type === "prescrizionelibera") {
         const testo = row.dataset.descrizione || row.dataset.testo || "";
+
         const textarea = document.createElement("textarea");
         textarea.value = testo;
         textarea.placeholder = "Modifica prescrizione libera...";
@@ -223,8 +396,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         textarea.readOnly = true;
         textarea.style.background = "#f8f9fa";
         textarea.style.cursor = "not-allowed";
-      
-        // Bottone abilita modifica
+
         const abilitaBtn = document.createElement("button");
         abilitaBtn.textContent = "Abilita Modifica";
         abilitaBtn.className = "button";
@@ -238,8 +410,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           annullaBtn.style.display = "inline-block";
           textarea.focus();
         };
-      
-        // Bottone salva (inizialmente nascosto)
+
         const saveBtn = document.createElement("button");
         saveBtn.textContent = "Salva";
         saveBtn.className = "button";
@@ -270,8 +441,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             })
             .catch(() => alert("Errore di rete nel salvataggio."));
         };
-      
-        // Bottone annulla modifica (inizialmente nascosto)
+
         const annullaBtn = document.createElement("button");
         annullaBtn.textContent = "Annulla";
         annullaBtn.className = "button";
@@ -286,8 +456,8 @@ document.addEventListener("DOMContentLoaded", async function () {
           saveBtn.style.display = "none";
           annullaBtn.style.display = "none";
         };
-      
-        // Bottone scarica PDF
+
+        // >>> QUI: PDF lib (niente print)
         const pdfBtn = document.createElement("button");
         pdfBtn.textContent = "Scarica PDF";
         pdfBtn.className = "button";
@@ -296,59 +466,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         pdfBtn.style.color = "white";
         pdfBtn.onclick = function () {
           const testoPdf = textarea.value.trim();
-          if (!testoPdf) {
-            alert("Nessun contenuto da scaricare.");
-            return;
-          }
-          // Funzione per generare PDF (usa print, semplice)
-          const win = window.open("", "_blank");
-          const dataOggi = new Date().toLocaleDateString("it-IT");
-          win.document.write(`
-            <html>
-            <head>
-              <meta charset="UTF-8">
-              <title>Prescrizione Libera - ${window.PAZIENTE}</title>
-              <style>
-                body { font-family: Arial; margin: 40px; }
-                #print-button{ transition: all 0.2s ease-in-out; border: 2px solid #6a2dcc; }
-                #print-button:hover { color: #6a2dcc !important; background: transparent !important; }
-                #close-button{ transition: all 0.2s ease-in-out; border: 2px solid #6c757d; }
-                #close-button:hover { color: #6c757d !important; background: transparent !important; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-                .prescription-content { white-space: pre-wrap; border: 1px solid #ddd; padding: 20px; border-radius: 5px; background: #fff; min-height: 200px; }
-                .footer { margin-top: 40px; text-align: right; border-top: 1px solid #ddd; padding-top: 20px; }
-                @media print { .no-print { display: none; } }
-              </style>
-            </head>
-            <body>
-              <div class="header">
-                <h1>PRESCRIZIONE LIBERA</h1>
-                <img src="${window.location.origin}/static/includes/pdfTemplates/logo.png" style="width: 400px; height: auto; margin-bottom: 10px;" alt="Logo Studio Medico">
-                <p>Paziente: ${window.PAZIENTE}</p>
-                <p>Codice Fiscale Paziente: ${window.CF_PAZIENTE}</p>
-                <p>Data di Nascita Paziente: ${window.DOB_PAZIENTE}</p>
-                <p>Data: ${dataOggi}</p>
-              </div>
-              <div class="prescription-content">
-                <h3>Prescrizione:</h3>
-                ${testoPdf}
-              </div>
-              <div class="footer">
-                <p>Dott. ${window.DOTTORE}</p>
-                <p>Firma: _____________________</p>
-              </div>
-              <div class="no-print" style="text-align: center; margin-top: 20px;">
-                <button onclick="window.print()" style="padding: 10px 20px; background: #6a2dcc; color: white; border-radius: 5px; cursor: pointer;" id="print-button">Stampa/Salva PDF</button>
-                <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border-radius: 5px; cursor: pointer; margin-left: 10px;" id="close-button">Chiudi</button>
-              </div>
-            </body>
-            </html>
-          `);
-          win.document.close();
-          setTimeout(() => win.print(), 500);
+          if (!testoPdf) { alert("Nessun contenuto da scaricare."); return; }
+          createPrescrizioneLiberaPDF(testoPdf);
         };
-      
-        // Container bottoni
+
         const btnsDiv = document.createElement("div");
         btnsDiv.style.display = "flex";
         btnsDiv.style.gap = "10px";
@@ -356,21 +477,19 @@ document.addEventListener("DOMContentLoaded", async function () {
         btnsDiv.appendChild(saveBtn);
         btnsDiv.appendChild(annullaBtn);
         btnsDiv.appendChild(pdfBtn);
-      
-        // Container finale
+
         const container = document.createElement("div");
         container.appendChild(textarea);
         container.appendChild(btnsDiv);
-      
-        openDynamicModal({
-          title: "Prescrizione Libera",
-          content: container,
-        });
-      } else if (type === "farmaco") {
+
+        openDynamicModal({ title: "Prescrizione Libera", content: container });
+      }
+
+      // ======== FARMACO ========
+      else if (type === "farmaco") {
         const nome = row.dataset.nome || "";
         const posologia = row.dataset.posologia || "";
-      
-        // Campi visualizzazione
+
         const nomeInput = document.createElement("input");
         nomeInput.value = nome;
         nomeInput.readOnly = true;
@@ -378,7 +497,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         nomeInput.style.marginBottom = "0.5rem";
         nomeInput.style.background = "#f8f9fa";
         nomeInput.style.cursor = "not-allowed";
-      
+
         const posologiaInput = document.createElement("textarea");
         posologiaInput.value = posologia;
         posologiaInput.readOnly = true;
@@ -386,22 +505,18 @@ document.addEventListener("DOMContentLoaded", async function () {
         posologiaInput.style.background = "#f8f9fa";
         posologiaInput.style.cursor = "not-allowed";
         posologiaInput.style.minHeight = "60px";
-      
-        // Select farmaci (inizialmente nascosta)
+
         const select = document.createElement("select");
         select.style.display = "none";
         select.style.marginTop = "0.5rem";
         if (Array.isArray(farmaciJSON) && farmaciJSON.length > 0) {
           select.innerHTML =
             '<option value="">-- Scegli farmaco --</option>' +
-            farmaciJSON
-              .map((f, i) => `<option value="${i}">${f.NOME_FARMACO}</option>`)
-              .join("");
+            farmaciJSON.map((f, i) => `<option value="${i}">${f.NOME_FARMACO}</option>`).join("");
         } else {
           select.innerHTML = '<option value="">Nessun farmaco disponibile</option>';
         }
-      
-        // Bottone abilita modifica
+
         const abilitaBtn = document.createElement("button");
         abilitaBtn.textContent = "Abilita Modifica";
         abilitaBtn.className = "button";
@@ -412,8 +527,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           saveBtn.style.display = "inline-block";
           annullaBtn.style.display = "inline-block";
         };
-      
-        // Bottone salva (inizialmente nascosto)
+
         const saveBtn = document.createElement("button");
         saveBtn.textContent = "Salva";
         saveBtn.className = "button";
@@ -439,7 +553,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             .then((response) => response.json())
             .then((data) => {
               if (data.success) {
-                console.log("Farmaco aggiornato con successo:", data);
                 nomeInput.value = f.NOME_FARMACO;
                 posologiaInput.value = f.DOSAGGIO;
                 row.dataset.nome = f.NOME_FARMACO;
@@ -451,12 +564,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                 alert("Errore durante il salvataggio: " + (data.error || "Errore sconosciuto"));
               }
             })
-            .catch((error) => {
+            .catch(() => {
               alert("Errore durante il salvataggio. Riprova più tardi.");
             });
         };
-      
-        // Bottone annulla (inizialmente nascosto)
+
         const annullaBtn = document.createElement("button");
         annullaBtn.textContent = "Annulla";
         annullaBtn.className = "button";
@@ -468,15 +580,14 @@ document.addEventListener("DOMContentLoaded", async function () {
           saveBtn.style.display = "none";
           annullaBtn.style.display = "none";
         };
-      
-        // Bottone scarica PDF
+
+        // >>> QUI: PDF lib per Farmaco
         const pdfBtn = document.createElement("button");
         pdfBtn.textContent = "Scarica PDF";
         pdfBtn.className = "button";
         pdfBtn.style.marginTop = "1rem";
         pdfBtn.style.background = "#dc3545";
         pdfBtn.style.color = "white";
-        pdfBtn.classList.add("go-print");
         pdfBtn.onclick = function () {
           const nomeFarmaco = nomeInput.value.trim();
           const posologiaFarmaco = posologiaInput.value.trim();
@@ -484,53 +595,9 @@ document.addEventListener("DOMContentLoaded", async function () {
             alert("Nessun dato da scaricare.");
             return;
           }
-          const dataOggi = new Date().toLocaleDateString("it-IT");
-          const win = window.open("", "_blank");
-          win.document.write(`
-            <html>
-            <head>
-              <title>Farmaco Prescritto - ${window.PAZIENTE}</title>
-              <style>
-                body { font-family: Arial; margin: 40px; }
-                #print-button{ transition: all 0.2s ease-in-out; border: 2px solid #6a2dcc; }
-                #print-button:hover { color: #6a2dcc !important; background: transparent !important; }
-                #close-button{ transition: all 0.2s ease-in-out; border: 2px solid #6c757d; }
-                #close-button:hover { color: #6c757d !important; background: transparent !important; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-                .farmaco-content { border: 1px solid #ddd; padding: 20px; border-radius: 5px; background: #fff; min-height: 100px; }
-                .footer { margin-top: 40px; text-align: right; border-top: 1px solid #ddd; padding-top: 20px; }
-                @media print { .no-print { display: none; } }
-              </style>
-            </head>
-            <body>
-              <div class="header">
-                <h1>Farmaco ${nomeFarmaco} prescritto</h1>
-                <img src="${window.location.origin}/static/includes/pdfTemplates/logo.png" style="width: 400px; height: auto; margin-bottom: 10px;" alt="Logo Studio Medico">
-                <p>Paziente: ${window.PAZIENTE}</p>
-                <p>Codice Fiscale Paziente: ${window.CF_PAZIENTE}</p>
-                <p>Data di Nascita Paziente: ${window.DOB_PAZIENTE}</p>
-                <p>Data: ${dataOggi}</p>
-              </div>
-              <div class="farmaco-content">
-                <b>Nome Farmaco:</b> ${nomeFarmaco}<br>
-                <b>Posologia:</b> ${posologiaFarmaco}
-              </div>
-              <div class="footer">
-                <p>Dott. ${window.DOTTORE}</p>
-                <p>Firma: _____________________</p>
-              </div>
-              <div class="no-print" style="text-align: center; margin-top: 20px;">
-                <button onclick="window.print()" style="padding: 10px 20px; background: #6a2dcc; color: white; border-radius: 10px; cursor: pointer;" id="print-button">Stampa/Salva PDF</button>
-                <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border-radius: 10px; cursor: pointer; margin-left: 10px;" id="close-button">Chiudi</button>
-              </div>
-            </body>
-            </html>
-          `);
-          win.document.close();
-          setTimeout(() => win.print(), 500);
+          createFarmacoPDF(nomeFarmaco, posologiaFarmaco);
         };
-      
-        // Event select: aggiorna i campi in anteprima
+
         select.onchange = function () {
           const idx = select.value;
           if (idx === "" || !farmaciJSON[idx]) return;
@@ -538,8 +605,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           nomeInput.value = f.NOME_FARMACO;
           posologiaInput.value = f.DOSAGGIO;
         };
-      
-        // Container bottoni
+
         const btnsDiv = document.createElement("div");
         btnsDiv.style.display = "flex";
         btnsDiv.style.gap = "10px";
@@ -547,38 +613,48 @@ document.addEventListener("DOMContentLoaded", async function () {
         btnsDiv.appendChild(saveBtn);
         btnsDiv.appendChild(annullaBtn);
         btnsDiv.appendChild(pdfBtn);
-      
-        // Container finale
+
         const container = document.createElement("div");
         container.appendChild(nomeInput);
         container.appendChild(posologiaInput);
         container.appendChild(select);
         container.appendChild(btnsDiv);
-      
-        openDynamicModal({
-          title: "Farmaco Prescritto",
-          content: container,
-        });
-      } else if (
-        type === "diario" ||
-        type === "accertamento" ||
-        type === "visita"
-      ) {
-        // Mostra dettagli diario clinico (sola lettura)
+
+        openDynamicModal({ title: "Farmaco Prescritto", content: container });
+      }
+
+      // ======== ALTRI TIPI (come tua versione) ========
+      else if (type === "diario" || type === "accertamento" || type === "visita") {
         const data = row.dataset.data || "";
         const tipo = row.dataset.diariotipo || "";
         const descrizione = row.dataset.descrizione || "";
         const diagnosi = row.dataset.diagnosi || "";
         const nota = row.dataset.nota || "";
         const html = `<div><b>Data:</b> ${data}<br><b>Tipo:</b> ${tipo}<br><b>Descrizione:</b> ${descrizione}<br><b>Diagnosi:</b> ${diagnosi}<br><b>Nota:</b> ${nota}</div>`;
-        openDynamicModal({
-          title: "Dettaglio Diario Clinico",
-          content: html,
-        });
+        openDynamicModal({ title: "Dettaglio Diario Clinico", content: html });
       }
     });
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1812,6 +1888,7 @@ backdropDiario.addEventListener('click', (e)=>{ if (e.target === backdropDiario)
 
 
 
+/* FUNZIONE GENERA PDF PRESCRIZIONE FARMACI */
 
 
 
@@ -1821,394 +1898,4 @@ backdropDiario.addEventListener('click', (e)=>{ if (e.target === backdropDiario)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* FILTRI TABELLA PRESCRIZIONE */
-// document.addEventListener("DOMContentLoaded", function () {
-//   const filterSelect = document.getElementById("filter");
-//   const tableContent = document.querySelector(".table-content.prescriptions");
-
-//   filterSelect.addEventListener("change", function () {
-//     let selectedFilter = filterSelect.value;
-//     let rows = Array.from(
-//       tableContent.getElementsByClassName("riga-container")
-//     );
-
-//     if (selectedFilter === "Tutti") {
-//       rows.forEach((row) => (row.style.display = "flex"));
-//       return;
-//     }
-
-//     let columnIndex = parseInt(selectedFilter, 10);
-//     let isAscending = columnIndex === 0;
-
-//     rows.sort((a, b) => {
-//       let textA = a
-//         .getElementsByTagName("p")
-//         [columnIndex].innerText.trim()
-//         .toLowerCase();
-//       let textB = b
-//         .getElementsByTagName("p")
-//         [columnIndex].innerText.trim()
-//         .toLowerCase();
-
-//       return isAscending
-//         ? textA.localeCompare(textB)
-//         : textB.localeCompare(textA);
-//     });
-
-//     rows.forEach((row) => tableContent.appendChild(row));
-//   });
-// });
-
-
-/*  -----------------------------------------------------------------------------------------------
-    Mostra di più
---------------------------------------------------------------------------------------------------- */
-// document.addEventListener("DOMContentLoaded", function () {
-//   // Seleziona il tasto "Mostra di più"
-//   const toggleButton = document.querySelector(".button-view-all");
-//   if (!toggleButton) return;
-  
-//   // Seleziona l'intero contenitore dei bottoni
-//   const buttonGrid = document.querySelector(".button-grid");
-//   // Crea un array con tutti i figli del buttonGrid tranne il toggle button
-//   const otherButtons = Array.from(buttonGrid.children).filter(el =>
-//     !el.classList.contains("button-view-all")
-//   );
-  
-//   // Inizialmente nasconde gli altri bottoni (mantiene visibile solo il toggle)
-//   otherButtons.forEach((btn) => {
-//     gsap.set(btn, { opacity: 0, display: "none" });
-//   });
-
-//   // Seleziona i contenitori che già gestisci per i campi della card
-//   const infoContainer = document.querySelector(".container_box");
-//   const contactContainer = document.querySelector(".Contact-Container");
-//   const subCardsContainer = document.querySelector(".subCard-container");
-  
-//   // Seleziona i campi della card (compresi email e telefono)
-//   const hiddenFields = infoContainer.querySelectorAll(".field, .email, .telefono");
-
-//   // Nasconde i campi all'inizio
-//   hiddenFields.forEach((field) => {
-//     gsap.set(field, { opacity: 0, display: "none" });
-//   });
-
-//   // Nasconde anche le sub-card e il container dei contatti
-//   gsap.set(subCardsContainer, { opacity: 0, display: "none" });
-//   gsap.set(contactContainer, { opacity: 0, display: "none" });
-  
-//   // Aggiunge una classe per gestire il layout se necessario
-//   infoContainer.classList.add("hidden-row-grid");
-
-//   // Aggiunge il listener al toggle button (Mostra di più / Mostra di meno)
-//   toggleButton.addEventListener("click", function () {
-//     // Determina se i campi sono attualmente nascosti
-//     const isHidden = hiddenFields[0].style.display === "none";
-
-//     // Toggle per i campi della card
-//     hiddenFields.forEach((field) => {
-//       if (isHidden) {
-//         gsap.to(field, { opacity: 1, display: "flex", duration: 0.5 });
-//       } else {
-//         gsap.to(field, { opacity: 0, display: "none", duration: 0.5 });
-//       }
-//     });
-
-//     // Toggle per le sub-card e i contatti
-//     if (isHidden) {
-//       gsap.to(subCardsContainer, { opacity: 1, display: "flex", duration: 0.5 });
-//       gsap.to(contactContainer, { opacity: 1, display: "flex", duration: 0.5 });
-//       infoContainer.classList.remove("hidden-row-grid");
-//       // Mostra gli altri bottoni quando la card è visibile
-//       otherButtons.forEach((btn) => {
-//         gsap.to(btn, { opacity: 1, display: "flex", duration: 0.5 });
-//       });
-//     } else {
-//       gsap.to(subCardsContainer, { opacity: 0, display: "none", duration: 0.5 });
-//       gsap.to(contactContainer, { opacity: 0, display: "none", duration: 0.5 });
-//       infoContainer.classList.add("hidden-row-grid");
-//       // Nasconde gli altri bottoni quando la card viene chiusa
-//       otherButtons.forEach((btn) => {
-//         gsap.to(btn, { opacity: 0, display: "none", duration: 0.5 });
-//       });
-//     }
-
-//     // Aggiorna il testo e le icone del bottone toggle
-//     toggleButton.innerHTML = `
-//       <span class="button__icon-wrapper">
-//         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg">
-//           <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-//         </svg>
-//         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg button__icon-svg--copy">
-//           <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-//         </svg>
-//       </span>
-//       ${isHidden ? "Mostra di meno" : "Mostra di più"}
-//     `;
-//   });
-// });
-
-
-
-/* FUNZIONE PER ABILITARE GLI INPUT PER LA MODIFICA */
-// document.addEventListener("DOMContentLoaded", () => {
-//   const modifyBtn       = document.querySelector(".Btn-modify");
-//   const displaySpan     = document.getElementById("associate-display");
-//   const selectField     = document.getElementById("associate-select");
-//   const otherInputs     = document.querySelectorAll(".input-disabled:not([name='associate_staff'])");
-//   let   isEditing       = false;
-
-
-//   modifyBtn.addEventListener("click", e => {
-//     e.preventDefault();
-
-//     // ➊ Se non sei segretaria/o, alert su click dello span
-
-//     if (displaySpan && !window.isSecretary) {
-//       console.log("Non sei segretaria/o, non puoi modificare questo campo.");
-//       displaySpan.style.cursor = "pointer";
-//       displaySpan.addEventListener("click", () => {
-//         showAlert({
-//           type: "warning",
-//           message: "Non hai i permessi per modificare questo campo.",
-//           extraMessage: "Solo la segreteria può modificare questo campo.",
-//           borderColor: "#f97316",
-//         });
-//       });
-//     }
-
-//     if (!isEditing) {
-//       // 1) se sono segretaria, nascondi lo span e mostra il select
-//       if (window.isSecretary && selectField) {
-//         displaySpan.style.display = "none";
-//         selectField.style.display = "";   // rimuove display:none
-//         selectField.classList.add("editing");
-//       }
-
-//       // 2) abilita TUTTI gli altri input
-//       otherInputs.forEach(inp => {
-//         inp.removeAttribute("disabled");
-//         inp.classList.add("editing");
-//       });
-
-//       modifyBtn.innerHTML = `
-//         <span class="btn-text">Salva</span>
-//         <svg class="svg" style="width: 25px; height: 25px;" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-//           <!-- Cloud -->
-//           <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.24 4 7 6.24 7 9a5 5 0 0 0 .11 1H5a4 4 0 0 0 0 8h14a3 3 0 0 0 .35-5.96z"/>
-//           <!-- Freccia verso il basso -->
-//           <path d="M13 12v5h-2v-5H8l4-4 4 4h-3z" style="fill: grey;"/>
-//         </svg>
-//       `;
-//       isEditing = true;
-
-//     } else {
-//       // invia il form in modalità "Salva"
-//       document.getElementById("personaForm").submit();
-//     }
-//   });
-// });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* FUNZIONE SCARICA PDF PRESCRIZIONE */
-/* document.addEventListener("DOMContentLoaded", function () {
-  const pdfButtons = document.querySelectorAll(".generatePDFButton");
-  const modal = document.getElementById("pdfDisclaimerModal");
-  const closeBtn = document.getElementById("closeDisclaimerBtn");
-
-  pdfButtons.forEach((button) => {
-    button.addEventListener("click", async (event) => {
-      event.preventDefault();
-      
-      const pdfUrl = button.getAttribute("data-pdf-url");
-      const name = button.getAttribute("data-name") || "N/A";
-      const surname = button.getAttribute("data-surname") || "N/A";
-      const dob = button.getAttribute("data-dob") || "N/A";
-      const cf = button.getAttribute("data-cf") || "N/A";
-
-      if (!pdfUrl) {
-        console.error("Errore: URL PDF non trovato!");
-        return;
-      }
-
-      // Mostra il disclaimer modal
-      modal.classList.remove("hidden");
-
-      // Dopo che il disclaimer viene accettato, genera il PDF
-      closeBtn.addEventListener("click", async () => {
-        modal.classList.add("hidden");
-        await generatePDF(pdfUrl, name, surname, dob, cf);
-      }, { once: true }); // `{ once: true }` evita multiple generazioni
-    });
-  });
-});
- */
-
-/*  -----------------------------------------------------------------------------------------------
-  Funzione animazione shrunk della card informazioni personale
-  --------------------------------------------------------------------------------------------------- */
-/* 
-document.addEventListener('DOMContentLoaded', () => {
-  const header      = document.querySelector('.container-informazioni-personali');
-  const main        = document.querySelector('.container-flex-layout');
-  const wrapper     = document.querySelector('.container-scrollable');
-  const dati        = document.querySelector('.container-dati-anagrafici');
-  const headerTools = document.querySelector('.header-tools');
-  const baseBtn     = document.getElementById('base_btn');  
-
-  const fullH = header.offsetHeight;
-  main.style.marginTop = (fullH + 16) + 'px';  
-
-  let activated = false;
-
-  window.addEventListener('scroll', () => {
-    const scrolled = window.scrollY > 0;
-
-    if (scrolled) {
-      header.classList.add('shrunk');
-      wrapper.classList.add('scrolled');
-      main.style.marginTop = (header.offsetHeight + 16) + 'px';
-      
-      // **NASCONDI tutti gli elementi di .header-tools tranne il baseBtn**
-      headerTools.querySelectorAll(':scope > *').forEach(el => {
-        if (el !== baseBtn) el.style.display = 'none';
-      });
-      // **ASSICURA che il baseBtn sia visibile**
-      baseBtn.style.display = '';
-
-    } else {
-      header.classList.remove('shrunk');
-      wrapper.classList.remove('scrolled');
-      main.style.marginTop = (fullH + 16) + 'px';
-
-      // **RICOMPONI header-tools ripristinando display originale**
-      headerTools.querySelectorAll(':scope > *').forEach(el => {
-        el.style.display = '';
-      });
-    }
-
-    // gestione no-scroll
-    if (!activated && scrolled) {
-      document.body.classList.add('no-scroll');
-      activated = true;
-    } else if (activated && !scrolled) {
-      document.body.classList.remove('no-scroll');
-      activated = false;
-    }
-  });
-
-  // click su dati anagrafici: reset completo
-  dati.addEventListener('click', () => {
-    header.classList.remove('shrunk');
-    wrapper.classList.remove('scrolled');
-    document.body.classList.remove('no-scroll');
-    main.style.marginTop = (fullH + 16) + 'px';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    activated = false;
-
-    // ripristina header-tools
-    headerTools.querySelectorAll(':scope > *').forEach(el => {
-      el.style.display = '';
-    });
-  });
-});
-*/
-
-
-
-
-
-/*  -----------------------------------------------------------------------------------------------
-  Funzione edita dati personali
-  --------------------------------------------------------------------------------------------------- */
-/*
-document.addEventListener('DOMContentLoaded', function() {
-  const form      = document.getElementById('personaForm');
-  const editBtn   = document.getElementById('edit_btn');
-  const cancelBtn = document.getElementById('cancel_btn');
-  const editText  = editBtn.querySelector('.btn-text');
-  let isEditing   = false;
-
-  editBtn.addEventListener('click', function() {
-    if (!isEditing) {
-
-      isEditing = true;
-      editText.textContent = 'Salva';         
-      cancelBtn.classList.remove('hidden');    
-
-
-      form.querySelectorAll('input.input-disabled').forEach(input => {
-        input.dataset.originalValue = input.value;
-        input.disabled = false;
-        input.classList.add('editing');
-      });
-
-      form.querySelectorAll('select').forEach(select => {
-        select.dataset.originalValue = select.value;
-        select.classList.add('editing');
-        select.style.display = '';  
-
-        const disp = document.getElementById(
-          select.id.replace('select', 'display')
-        );
-        if (disp) disp.style.display = 'none';
-      });
-
-    } else {
-      form.submit();
-    }
-  });
-
-  cancelBtn.addEventListener('click', function() {
-    isEditing = false;
-    editText.textContent = 'Edita';
-    cancelBtn.classList.add('hidden');
-
-    form.querySelectorAll('input.input-disabled').forEach(input => {
-      input.value    = input.dataset.originalValue || input.value;
-      input.disabled = true;
-      input.classList.remove('editing');
-      delete input.dataset.originalValue;
-    });
-
-    form.querySelectorAll('select').forEach(select => {
-      select.value = select.dataset.originalValue;
-      select.classList.remove('editing');
-      select.style.display = 'none';
-      delete select.dataset.originalValue;
-
-      const disp = document.getElementById(
-        select.id.replace('select', 'display')
-      );
-      if (disp) disp.style.display = '';
-    });
-  });
-});
-*/
 

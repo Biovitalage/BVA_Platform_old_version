@@ -51,30 +51,6 @@
         </script>
 
 
-        <style>
-        .custom-modal {
-          position: fixed;
-          z-index: 99999;
-          left: 0; top: 0; width: 100vw; height: 100vh;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .custom-modal-content {
-          background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.18);
-          padding: 2rem; min-width: 350px; max-width: 95vw; min-height: 120px; position: relative;
-        }
-        .custom-modal-close {
-          position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; color: #c74b5b;
-        }
-        .custom-modal-backdrop {
-          position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.25); z-index: 99998;
-        }
-        .custom-modal-content textarea { width: 100%; min-height: 80px; margin-top: 1rem; }
-        .custom-modal-content select, .custom-modal-content input { width: 100%; margin-top: 1rem; }
-        .custom-modal-content .farmaco-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
-        .custom-modal-content .farmaco-row span { flex: 1; }
-        .custom-modal-content .farmaco-row button { margin-left: 1rem; }
-        </style>
-
     </head>
 
     <body>
@@ -619,104 +595,6 @@
             </div>
 
 
-            <!-- INFORMAZIONI PERSONALI -->  
-            <!-- <div class="container-informazioni-personali">
-                
-                <form id="personaForm" method="POST" action="{% url 'cartella_paziente' persona.id %}">
-                    {% csrf_token %}
-
-                    <div class="container-header-informazioni">
-
-                        <div class="container-header-info">
-                            <div class="container-dati-anagrafici">
-                                <div class="img-circle-container">
-                                    <img src="{% static 'image/Dati_angrafici.png' %}" alt="">
-                                </div>
-                                <h3>{{ persona.name }} {{ persona.surname }}</h3>   
-                            </div>    
-                        </div>
-            
-
-
-                    </div>
- 
-                    <div class="container_box">
-
-                        <div class="grid-container">
-
-                            <div class="field">
-                                <p class="field-title">Età:</p>
-                                <p>{{ persona.chronological_age |default:'non inserito' }}</p>
-                            </div>
-
-                            <div class="field">
-                                <p class="field-title">Codice Fiscale:</p>
-                                <p>{{ persona.codice_fiscale|default:'non inserito' }}</p>
-                            </div>
-
-                            <div class="field">
-                                <p class="field-title">Data di Nascita:</p>
-                                <p>{{ persona.dob|date:'d/m/Y'|default:'non inserito' }}</p>
-                            </div>
-                        
-                            <div class="field">
-                                <p class="field-title">Città di residenza:</p>
-                                <p>{{ persona.residence|default:'non inserito' }}, {{ persona.cap|default:'non inserito' }}, {{ persona.province|default:'non inserito' }}</p>
-                            </div>
-
-                            <div class="field">
-                                <p class="field-title">Genere:</p>
-                                <p>{{ persona.gender|default:'non inserito' }}</p>
-                            </div>
-
-                     
-                        </div>
-
-                        <div class="footer-container">
-                            <div class="subCard-container">
-                            
-                                <div class="card-subcard">
-                                <div class="img-circle-container">
-                                    <img src="{% static 'image/Calendario.png' %}" alt="">
-                                </div>
-                                <div class="container-input-info">
-                                    <p>Prossima Visita</p>
-                                    <span class="type-two cursor-not-allowed">
-                                    {% if prossimo_appuntamento %}{{ prossimo_appuntamento.data|date:"d/m/Y" }}
-                                    {% else %}non presente.{% endif %}
-                                    </span>
-                                </div>
-                                </div>
-                            </div>
-
-                            <div class="Contact-Container">
-                                
-                                <div class="card-subcard">
-                                    <div class="img-circle-container">
-                                        <img src="{% static 'image/Email_Violet.png' %}" alt="">
-                                    </div>
-                                    <div class="container-input-info">
-                                        <p>Email</p>
-                                        <span>{{ persona.email|default:'non inserito' }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="card-subcard">
-                                    <div class="img-circle-container">
-                                        <img src="{% static 'image/Phone.png' %}" alt="">
-                                    </div>
-                                    <div class="container-input-info">
-                                        <p>Telefono</p>
-                                        <span>{{ persona.phone|default:'non inserito' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-
-            </div> -->
-
             <div class="container-second-row">
 
                 <div class="capacita_vitale" data-punteggio="{{ punteggio_eta_metabolica|default:'2' }}">
@@ -937,7 +815,11 @@
                         {% for visita in visite_qs %}
                             <div class="row-table"
                                 data-type="visita"
-                                data-id="{{ visita.id }}" style="grid-template-columns: 25% 50% 25%;">
+                                data-id="{{ visita.id }}"
+                                data-data="{{ visita.data_visita|date:'d/m/Y' }}"
+                                data-numero="{{ visita.visita_numero }}"
+                                data-descrizione="{{ visita.descrizione|default_if_none:'' }}"
+                                style="grid-template-columns: 25% 50% 25%;">
                             <div class="row-cella"><p>{{ visita.data_visita|date:"d/m/Y" }}</p></div>
                             <div class="row-cella"><p>Visita n° {{ visita.visita_numero }}</p></div>
                             <div class="row-cella"><p>{{ visita.descrizione|default:"—" }}</p></div>
@@ -1448,10 +1330,10 @@
                 {
                     categoria: "IV THERAPY",
                     farmaci: [
-                        { nome: "L-acetilcarnitina 500 mg in fiale IV", posologia: "Somministrare in fisiologica 250 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
-                        { nome: "Fosfolipidi ipotalamici 28 mg fiale IV", posologia: "Somministrare in fisiologica 250 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
-                        { nome: "Glutatione 600 mg fiale IV", posologia: "Somministrare in fisiologica 100 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" },
-                        { nome: "Vitamina C1 1 g fiale IV", posologia: "Somministrare in fisiologica 100 ml 2‑3 volte a settimana per un totale di 10 somministrazioni" }
+                        { nome: "L-acetilcarnitina 500 mg in fiale IV", posologia: "Somministrare in fisiologica 250 ml 2-3 volte a settimana per un totale di 10 somministrazioni" },
+                        { nome: "Fosfolipidi ipotalamici 28 mg fiale IV", posologia: "Somministrare in fisiologica 250 ml 2-3 volte a settimana per un totale di 10 somministrazioni" },
+                        { nome: "Glutatione 600 mg fiale IV", posologia: "Somministrare in fisiologica 100 ml 2-3 volte a settimana per un totale di 10 somministrazioni" },
+                        { nome: "Vitamina C1 1 g fiale IV", posologia: "Somministrare in fisiologica 100 ml 2-3 volte a settimana per un totale di 10 somministrazioni" }
                     ]
                 }
             ];
@@ -1603,63 +1485,350 @@
         <div id="dynamicModalBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
         
 
+        <!-- ====== MODALE DINAMICA + PDF (NOTE + VISITE) ====== -->
         <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById('dynamicModal');
-  const backdrop = document.getElementById('dynamicModalBackdrop');
-  const titleEl = document.getElementById('dynamicModalTitle');
-  const bodyEl  = document.getElementById('dynamicModalBody');
-  const closeEl = document.getElementById('closeDynamicModal');
+            // Carica logo con fallback
+            async function loadLogoBytes() {
+                const paths = [
+                    "{% static 'includes/pdfTemplates/logo.png' %}",
+                    // eventuali altri path fallback (aggiungili qui se ti servono)
+                ];
+                for (const url of paths) {
+                    try {
+                        const res = await fetch(url, { cache: 'no-store' });
+                        if (res.ok) return await res.arrayBuffer();
+                    } catch (_) {}
+                }
+                return null;
+            }
 
-  const escapeHtml = (str = '') =>
-    String(str).replace(/[&<>"']/g, m => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-    }[m]));
+            // Wrapping testo (globale, riusabile)
+            function wrapTextToLines(text, font, size, maxWidth) {
+                const words = String(text || '').split(/\s+/);
+                const lines = [];
+                let line = '';
+                for (const w of words) {
+                    const test = line ? line + ' ' + w : w;
+                    const width = font.widthOfTextAtSize(test, size);
+                    if (width > maxWidth && line) {
+                        lines.push(line);
+                        line = w;
+                    } else {
+                        line = test;
+                    }
+                }
+                if (line) lines.push(line);
+                return lines;
+            }
 
-  function openDynamicModal(title, text) {
-    titleEl.textContent = title || 'Nota';
-    // preserva gli a capo del testo
-    bodyEl.innerHTML = `<div style="white-space:pre-wrap; line-height:1.5">${escapeHtml(text || '')}</div>`;
-    modal.style.display = 'flex';
-    backdrop.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-  }
+            document.addEventListener('DOMContentLoaded', () => {
+                const modal     = document.getElementById('dynamicModal');
+                const backdrop  = document.getElementById('dynamicModalBackdrop');
+                const titleEl   = document.getElementById('dynamicModalTitle');
+                const bodyEl    = document.getElementById('dynamicModalBody');
+                const closeEl   = document.getElementById('closeDynamicModal');
 
-  function closeDynamic() {
-    modal.style.display = 'none';
-    backdrop.style.display = 'none';
-    document.body.style.overflow = 'auto';
-  }
+                const { PDFDocument, StandardFonts, rgb } = window.PDFLib || {};
 
-  if (closeEl) closeEl.addEventListener('click', closeDynamic);
-  if (backdrop) backdrop.addEventListener('click', closeDynamic);
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.style.display !== 'none') closeDynamic();
-  });
+                const escapeHtml = (str = '') =>
+                    String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-  // Delego i click per gestire elementi presenti e futuri
+                function closeDynamic() {
+                    modal.style.display = 'none';
+                    backdrop.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    bodyEl.innerHTML = ''; 
+                }
 
-  // 1) NOTE nell’elenco (modale Note)
-  document.addEventListener('click', (e) => {
-    const item = e.target.closest('.note-item');
-    if (!item) return;
-    const titolo = item.dataset.titolo || 'Nota';
-    const contenuto = item.dataset.contenuto || '';
-    openDynamicModal(titolo, contenuto);
-  });
+                if (closeEl) closeEl.addEventListener('click', closeDynamic);
+                if (backdrop) backdrop.addEventListener('click', closeDynamic);
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && modal.style.display !== 'none') closeDynamic();
+                });
 
-  // 2) RIGHE del diario con tipo "nota"
-  document.addEventListener('click', (e) => {
-    const row = e.target.closest('.diario-clinico-row');
-    if (!row) return;
-    const type = (row.dataset.type || '').toLowerCase();
-    if (type !== 'nota') return;
-    const titolo = row.dataset.descrizione || 'Nota';
-    const contenuto = row.dataset.nota || '';
-    openDynamicModal(titolo, contenuto);
-  });
-});
-</script>
+                // Modale riusabile per Nota e Visita
+                function openDynamicModal(title, text, { isNota = false, isVisita = false, visitaData = '', visitaNumero = '' } = {}) {
+                    titleEl.textContent = title || (isVisita ? 'Visita' : 'Nota');
+                    bodyEl.innerHTML = `<div style="white-space:pre-wrap; line-height:1.5">${escapeHtml(text || '')}</div>`;
+
+                    if (isNota || isVisita) {
+                        const footer = document.createElement('div');
+                        footer.id = 'dynamicModalFooter';
+                        footer.style = 'display:flex;justify-content:flex-end;gap:10px;margin-top:1rem;';
+                        const btn = document.createElement('button');
+                        btn.id = isVisita ? 'printVisitBtn' : 'printNoteBtn';
+                        btn.className = 'button';
+                        btn.textContent = 'Scarica PDF';
+                        btn.addEventListener('click', () => {
+                            if (isVisita) {
+                                generateVisitPdf({
+                                    titolo: title,
+                                    contenuto: text,
+                                    dataVisita: visitaData,
+                                    numeroVisita: visitaNumero
+                                });
+                            } else {
+                                generateNotePdf({ titolo: title, contenuto: text });
+                            }
+                        });
+                        footer.appendChild(btn);
+                        bodyEl.appendChild(footer);
+                    }
+
+                    modal.style.display = 'flex';
+                    backdrop.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                }
+
+                // ====== PDF NOTE ======
+                async function generateNotePdf({ titolo = 'Prescrizione', contenuto = '' } = {}) {
+                    if (!PDFDocument) return;
+
+                    const pdf  = await PDFDocument.create();
+                    const page = pdf.addPage([595.28, 841.89]); // A4
+                    const { width, height } = page.getSize();
+
+                    const font     = await pdf.embedFont(StandardFonts.Helvetica);
+                    const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+                    const black = rgb(0,0,0);
+                    const grey  = rgb(0.75,0.75,0.75);
+
+                    // LOGO grande e centrato
+                    try {
+                        const logoBytes = await loadLogoBytes();
+                        if (logoBytes) {
+                            const png  = await pdf.embedPng(logoBytes);
+                            const imgW = 220;
+                            const imgH = png.height * (imgW / png.width);
+                            page.drawImage(png, {
+                                x: (width - imgW) / 2,
+                                y: height - 130,
+                                width: imgW,
+                                height: imgH
+                            });
+                        }
+                    } catch (_) {}
+
+                    // helper centratura
+                    const drawCentered = (txt, y, fnt = font, size = 12, color = black) => {
+                        const w = fnt.widthOfTextAtSize(txt, size);
+                        const x = (width - w) / 2;
+                        page.drawText(txt, { x, y, size, font: fnt, color });
+                    };
+
+                    // Dati paziente centrati
+                    let y = height - 165;
+                    const lineH = 16;
+                    const size = 12;
+
+                    const paziente = window.PAZIENTE || '';
+                    const cf       = window.CF_PAZIENTE || '';
+                    const dob      = window.DOB_PAZIENTE || '';
+                    const docName  = window.DOTTORE || '';
+
+                    drawCentered(`Paziente: ${paziente}`, y, font, size); y -= lineH;
+                    drawCentered(`Codice Fiscale Paziente: ${cf}`, y, font, size); y -= lineH;
+                    drawCentered(`Data di Nascita Paziente: ${dob}`, y, font, size); y -= lineH;
+
+                    const now = new Date();
+                    const dd = String(now.getDate()).padStart(2, '0');
+                    const mm = String(now.getMonth() + 1).padStart(2, '0');
+                    const yyyy = now.getFullYear();
+                    drawCentered(`Data: ${dd}/${mm}/${yyyy}`, y, font, size);
+                    y -= 48; // spazio extra come richiesto
+
+                    // Box contenuto
+                    const margin = 40;
+                    const boxTopY = y;
+                    const boxHeight = 360;
+                    const boxY = boxTopY - boxHeight;
+
+                    page.drawRectangle({
+                        x: margin, y: boxY, width: width - margin * 2, height: boxHeight,
+                        borderColor: grey, borderWidth: 1, color: rgb(1,1,1)
+                    });
+
+                    const textX = margin + 12;
+                    let textY   = boxTopY - 18;
+                    const maxW  = width - (margin + 12) * 2;
+                    const fullText = `${titolo ? titolo + '\n' : ''}${contenuto || ''}`;
+                    const lines = wrapTextToLines(fullText, font, 12, maxW);
+
+                    for (const line of lines) {
+                        if (textY < boxY + 18) break; 
+                        page.drawText(line, { x: textX, y: textY, size: 12, font });
+                        textY -= lineH;
+                    }
+
+                    // Firma (solo testo a destra)
+                    const sigY = 90;
+                    page.drawText(`Firma: dott. ${docName}`, { x: width - 240, y: sigY + 30, size: 12, font: fontBold });
+
+                    // Download
+                    const bytes = await pdf.save();
+                    const blob  = new Blob([bytes], { type: 'application/pdf' });
+                    const a     = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `Prescrizione_${(paziente || 'paziente').replace(/\s+/g, '_')}_${yyyy}-${mm}-${dd}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+                }
+
+                // ====== PDF VISITE ======
+                async function generateVisitPdf({ titolo = 'Visita', contenuto = '', dataVisita = '', numeroVisita = '' } = {}) {
+                    if (!PDFDocument) return;
+
+                    const pdf  = await PDFDocument.create();
+                    const page = pdf.addPage([595.28, 841.89]); // A4
+                    const { width, height } = page.getSize();
+
+                    const font     = await pdf.embedFont(StandardFonts.Helvetica);
+                    const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+                    const black = rgb(0,0,0);
+                    const grey  = rgb(0.75,0.75,0.75);
+
+                    // LOGO
+                    try {
+                        const logoBytes = await loadLogoBytes();
+                        if (logoBytes) {
+                            const png  = await pdf.embedPng(logoBytes);
+                            const imgW = 220;
+                            const imgH = png.height * (imgW / png.width);
+                            page.drawImage(png, {
+                                x: (width - imgW) / 2,
+                                y: height - 130,
+                                width: imgW,
+                                height: imgH
+                            });
+                        }
+                    } catch (_) {}
+
+                    // helper centratura
+                    const drawCentered = (txt, y, fnt = font, size = 12, color = black) => {
+                        const w = fnt.widthOfTextAtSize(txt, size);
+                        const x = (width - w) / 2;
+                        page.drawText(txt, { x, y, size, font: fnt, color });
+                    };
+
+                    // Dati paziente centrati
+                    let y = height - 165;
+                    const lineH = 16;
+                    const size = 12;
+
+                    const paziente = window.PAZIENTE || '';
+                    const cf       = window.CF_PAZIENTE || '';
+                    const dob      = window.DOB_PAZIENTE || '';
+                    const docName  = window.DOTTORE || '';
+
+                    drawCentered(`Paziente: ${paziente}`, y, font, size); y -= lineH;
+                    drawCentered(`Codice Fiscale Paziente: ${cf}`, y, font, size); y -= lineH;
+                    drawCentered(`Data di Nascita Paziente: ${dob}`, y, font, size); y -= lineH;
+
+                    const now = new Date();
+                    const dd = String(now.getDate()).padStart(2, '0');
+                    const mm = String(now.getMonth() + 1).padStart(2, '0');
+                    const yyyy = now.getFullYear();
+                    drawCentered(`Data: ${dd}/${mm}/${yyyy}`, y, font, size);
+                    y -= 48; // spazio extra
+
+                    // Box contenuto + intestazione visita
+                    const margin   = 40;
+                    const boxTopY  = y;
+                    const boxH     = 360;
+                    const boxY     = boxTopY - boxH;
+
+                    page.drawRectangle({
+                        x: margin, y: boxY, width: width - margin * 2, height: boxH,
+                        borderColor: grey, borderWidth: 1, color: rgb(1,1,1)
+                    });
+
+                    const textX = margin + 12;
+                    let textY   = boxTopY - 18;
+                    const maxW  = width - (margin + 12) * 2;
+
+                    const header = `Visita${numeroVisita ? ' n° ' + numeroVisita : ''}${dataVisita ? ' — Data visita: ' + dataVisita : ''}`;
+                    page.drawText(header, { x: textX, y: textY, size: 12, font: fontBold, color: black });
+                    textY -= lineH;
+
+                    const lines = wrapTextToLines(`${titolo ? titolo + '\n' : ''}${contenuto || ''}`, font, 12, maxW);
+                    for (const line of lines) {
+                        if (textY < boxY + 18) break;
+                        page.drawText(line, { x: textX, y: textY, size: 12, font });
+                        textY -= lineH;
+                    }
+
+                    // Firma
+                    const sigY = 90;
+                    page.drawText(`Firma: dott. ${docName}`, { x: width - 240, y: sigY + 30, size: 12, font: fontBold });
+
+                    // Download
+                    const bytes = await pdf.save();
+                    const blob  = new Blob([bytes], { type: 'application/pdf' });
+                    const a     = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    const safeP = (paziente || 'paziente').replace(/\s+/g, '_');
+                    a.download = `Visita_${safeP}_${yyyy}-${mm}-${dd}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+                }
+
+                // ====== EVENTI: apri modale per NOTE ======
+                document.addEventListener('click', (e) => {
+                    const item = e.target.closest('.note-item');
+                    if (!item) return;
+                    const titolo    = item.dataset.titolo || 'Nota';
+                    const contenuto = item.dataset.contenuto || '';
+                    openDynamicModal(titolo, contenuto, { isNota: true });
+                });
+
+                // ====== EVENTI: apri modale per NOTE dal Diario (tipo = nota) ======
+                document.addEventListener('click', (e) => {
+                    const row = e.target.closest('.diario-clinico-row');
+                    if (!row) return;
+                    const type = (row.dataset.type || '').toLowerCase();
+                    if (type !== 'nota') return;
+                    const titolo    = row.dataset.descrizione || 'Nota';
+                    const contenuto = row.dataset.nota || '';
+                    openDynamicModal(titolo, contenuto, { isNota: true });
+                });
+
+                // ====== EVENTI: apri modale per VISITE (tab Visite + Diario se tipo=visita) ======
+                document.addEventListener('click', (e) => {
+                    const row = e.target.closest('.row-table[data-type="visita"], .diario-clinico-row[data-type="visita"]');
+                    if (!row) return;
+
+                    // 1) data-attrs se presenti
+                    let dataVisita   = row.dataset.data || '';
+                    let numeroVisita = row.dataset.numero || '';
+                    let descrizione  = row.dataset.descrizione || '';
+
+                    // 2) fallback: leggi dalle celle
+                    if (!dataVisita) {
+                        const c1 = row.querySelector('.row-cella:nth-child(1) p');
+                        dataVisita = c1 ? c1.textContent.trim() : '';
+                    }
+                    if (!numeroVisita) {
+                        const c2 = row.querySelector('.row-cella:nth-child(2) p');
+                        const t2 = c2 ? c2.textContent.trim() : '';
+                        const m  = t2.match(/\d+/);
+                        numeroVisita = m ? m[0] : '';
+                    }
+                    if (!descrizione) {
+                        const c3 = row.querySelector('.row-cella:nth-child(3) p');
+                        descrizione = c3 ? c3.textContent.trim() : '';
+                    }
+
+                    const titolo = numeroVisita ? `Visita n° ${numeroVisita}` : 'Visita';
+                    const testo  = descrizione || '(nessuna descrizione)';
+
+                    openDynamicModal(titolo, testo, { isVisita: true, visitaData: dataVisita, visitaNumero: numeroVisita });
+                });
+            });
+        </script>
 
 
     </body>
