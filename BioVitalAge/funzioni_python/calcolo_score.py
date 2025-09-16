@@ -1,8 +1,4 @@
 
-
-
-# 1. Dizionario che associa ogni organo agli esami con il rispettivo peso percentuale
-# Ogni esame ha un peso che indica quanto influisce sullo stato di salute dell'organo
 ORGANI_ESAMI_PESI = {
     "Cuore": {
         "Colesterolo Totale": 10,
@@ -98,8 +94,7 @@ ORGANI_ESAMI_PESI = {
     },
 }
 
-# 2. Range normali indicativi per gli esami principali
-# Ogni esame ha un range (minimo, massimo) di valori considerati normali
+
 RANGES_NORMALI = {
     # Esami cardiaci e metabolici
     "Colesterolo Totale": (125, 200),
@@ -122,7 +117,7 @@ RANGES_NORMALI = {
     "Cloruri": (95, 105),
     "Fosforo": (2.5, 4.5),
     "Calcio": (8.5, 10.5),
-    "Esame delle Urine": (0, 1),  # valore placeholder (esame qualitativo)
+    "Esame delle Urine": (0, 1), 
     
     # Funzionalità epatica
     "Transaminasi GOT": (0, 40),
@@ -208,25 +203,10 @@ RANGES_PER_SESSO = {
 
 
 def calcola_carica_rimanente(valore, minimo, massimo):
-    """
-    Calcola la percentuale di "carica" rimanente per un singolo valore di esame.
-    
-    Un valore nel range mantiene il 100% della carica.
-    Un valore fuori range perde carica in base alla percentuale di deviazione.
-    
-    Args:
-        valore (float): Il valore dell'esame clinico
-        minimo (float): Il limite inferiore del range normale
-        massimo (float): Il limite superiore del range normale
-        
-    Returns:
-        float: Percentuale di carica rimanente (0-100%)
-    """
-    # Se il valore è nel range, mantiene il 100% della sua carica
+
     if minimo <= valore <= massimo:
         return 100.0
     
-    # Calcolo dell'ampiezza del range
     range_width = massimo - minimo
     
     if valore < minimo:
@@ -242,40 +222,19 @@ def calcola_carica_rimanente(valore, minimo, massimo):
 
 
 def ottieni_range_corretto(esame, sesso=None):
-    """
-    Restituisce il range corretto per l'esame, considerando il sesso se disponibile.
-    
-    Args:
-        esame (str): Nome dell'esame
-        sesso (str, optional): Sesso del paziente ('M' o 'F'). Default a None.
-        
-    Returns:
-        tuple: Range (minimo, massimo) per l'esame
-    """
-    # Se il sesso è specificato e l'esame ha range specifici per sesso
+
     if sesso and sesso in RANGES_PER_SESSO and esame in RANGES_PER_SESSO[sesso]:
         return RANGES_PER_SESSO[sesso][esame]
     
-    # Altrimenti usa il range standard
+
     if esame in RANGES_NORMALI:
         return RANGES_NORMALI[esame]
-    
-    # Se non è disponibile un range per questo esame
+
     return None
 
 
 def calcola_score_organi(valori_esami, sesso=None):
-    """
-    Calcola lo score di salute per ciascun organo basato sui valori degli esami.
-    
-    Args:
-        valori_esami (dict): Dizionario con i valori degli esami {nome_esame: valore}
-        sesso (str, optional): Sesso del paziente ('M' o 'F'). Default a None.
-        
-    Returns:
-        dict: Dizionario con lo score di ciascun organo {nome_organo: percentuale}
-        dict: Dizionario con i dettagli del calcolo per ciascun esame e organo
-    """
+
     punteggi = {}
     dettagli = {}
 
@@ -285,25 +244,24 @@ def calcola_score_organi(valori_esami, sesso=None):
         dettagli[organo] = {}
         
         for esame, peso_percentuale in esami.items():
-            # Verifica se abbiamo il valore per questo esame
             if esame in valori_esami:
                 valore = valori_esami[esame]
                 
-                # Ottieni il range corretto considerando il sesso
+       
                 range_esame = ottieni_range_corretto(esame, sesso)
                 
                 if range_esame:
                     minimo, massimo = range_esame
                     
-                    # Calcola la percentuale di carica rimanente per questo esame
+            
                     carica_rimanente = calcola_carica_rimanente(valore, minimo, massimo)
                     
-                    # Contributo di questo esame allo score dell'organo (pesato)
+
                     contributo = (carica_rimanente * peso_percentuale / 100)
                     score_totale += contributo
                     peso_totale_considerato += peso_percentuale
                     
-                    # Salva i dettagli per questo esame
+      
                     dettagli[organo][esame] = {
                         "valore": valore,
                         "range": (minimo, massimo),
@@ -311,10 +269,9 @@ def calcola_score_organi(valori_esami, sesso=None):
                         "peso": peso_percentuale,
                         "contributo": contributo
                     }
-        
-        # Calcola lo score finale considerando solo gli esami disponibili
+
         if peso_totale_considerato > 0:
-            # Normalizza lo score rispetto alla somma dei pesi degli esami disponibili
+
             punteggi[organo] = round((score_totale / peso_totale_considerato) * 100, 2)
         else:
             punteggi[organo] = 0
@@ -323,21 +280,10 @@ def calcola_score_organi(valori_esami, sesso=None):
 
 
 def genera_report(punteggi, dettagli, mostrar_dettagli=False):
-    """
-    Genera un report formattato con i risultati dell'analisi.
-    
-    Args:
-        punteggi (dict): Dizionario con lo score di ciascun organo
-        dettagli (dict): Dizionario con i dettagli del calcolo
-        mostrar_dettagli (bool): Se True, include anche i dettagli di ogni esame
-        
-    Returns:
-        str: Report formattato
-    """
+
     report = []
     report.append("=== REPORT STATO DI SALUTE DEGLI ORGANI ===\n")
-    
-    # Ordina gli organi in base al punteggio (dal più basso al più alto)
+
     organi_ordinati = sorted(punteggi.items(), key=lambda x: x[1])
     
     for organo, punteggio in organi_ordinati:
@@ -348,7 +294,6 @@ def genera_report(punteggi, dettagli, mostrar_dettagli=False):
         for organo, punteggio in organi_ordinati:
             report.append(f"\n{organo} ({punteggio}%):")
             
-            # Ordina gli esami dal più problematico al meno problematico
             esami_ordinati = sorted(
                 dettagli[organo].items(), 
                 key=lambda x: x[1]["carica_rimanente"]

@@ -1,6 +1,3 @@
-# Algoritmo completo per il calcolo dell'età metabolica basato su 6 domini
-# I dati di input dovranno essere forniti in un dizionario `dati_paziente`
-
 from statistics import mean
 
 def calcola_eta_metabolica(dati_paziente):
@@ -25,16 +22,15 @@ def calcola_eta_metabolica(dati_paziente):
     else:
         delta_dom1 += 3
 
-    # Grasso corporeo e Acqua corporea totale
+
     grasso = dati_paziente['grasso_percento']
     acqua = dati_paziente['acqua_percento']
 
     if (sesso == 'maschio' and not (50 <= acqua <= 65)) or (sesso == 'femmina' and not (45 <= acqua <= 60)):
         delta_dom1 += 1
 
-    # Massa muscolare % rispetto a range età/sesso
     massa = dati_paziente['massa_muscolare_percento']
-    eta_range = min(70, eta)  # semplificazione
+    eta_range = min(70, eta)  
     ranges_uomo = {
         (20,29): (39,44), (30,39): (38,43), (40,49): (37,42),
         (50,59): (36,41), (60,69): (35,40), (70,150): (34,39)

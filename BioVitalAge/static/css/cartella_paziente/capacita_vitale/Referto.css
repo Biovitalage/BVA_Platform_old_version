@@ -49,11 +49,9 @@
   align-items: center;
   z-index: 1000;
 }
-
 .modal-pdf-container.hidden {
   display: none;
 }
-
 .modal-pdf-content {
   background: white !important;
   padding: 20px;
@@ -62,15 +60,12 @@
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-
 .modal-pdf-content h2 {
   margin-bottom: 10px;
 }
-
 .modal-pdf-content p {
   margin-bottom: 20px;
 }
-
 .btn-pdf-close {
   background-color: #007bff;
   color: #fff;
@@ -79,49 +74,40 @@
   border-radius: 5px;
   cursor: pointer;
 }
-
 .btn-pdf-close:hover {
   background-color: #0056b3;
 }
-
 .container-risultati {
   width: 98%;
   margin: 2rem auto;
 }
-
 .card-personal-info {
   background-color: var(--tittle1);
   border-radius: 8px;
   padding: 10px 20px;
 }
-
 .card-content-container {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
 }
-
 .card-personal-info h3,
 .exams-container h3 {
   color: var(--contrast-color);
   padding-bottom: 20px;
 }
-
 .detail-row {
   display: flex;
   justify-content: flex-start;
   align-items: center;
 }
-
 .detail-row p {
   font-size: 18px;
 }
-
 span {
   color: var(--contrast-color2);
   font-weight: bold;
   padding-right: 10px;
 }
-
 .exams-container {
   margin-top: 1rem;
   background-color: var(--card-color);
@@ -129,41 +115,34 @@ span {
   padding: 40px;
   margin: 25px;
 }
-
 .content-container {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
   padding: 20px 0;
 }
-
 .description {
   display: flex;
   justify-content: flex-start;
   align-items: center;
 }
-
 .indicator {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-bottom: 15px;
 }
-
 #indicator img {
   margin-top: -0.5rem;
 }
-
 .negativeTesto,
 .extremeNegativeRange {
   color: var(--negative-color-right);
   width: 30%;
 }
-
 .extremeNegativeRange {
   text-align: right;
 }
-
 .positiveTesto {
   color: var(--positive-color);
   display: flex;
@@ -171,22 +150,18 @@ span {
   align-items: center;
   width: 50%;
 }
-
 .extremePositiveRange {
   color: var(--positive-color);
 }
-
 #middleTesto {
   width: 40%;
   color: var(--neutral-range-color);
 }
-
 #middleBar {
   width: 40%;
   left: 30%;
   background-color: var(--neutral-range-color);
 }
-
 .barra-container {
   background-color: var(--neutral-bg-color);
   border-radius: 8px;
@@ -194,14 +169,12 @@ span {
   position: relative;
   background-color: var(--negative-color-right);
 }
-
 .barra-container-none {
   background-color: var(--neutral-bg-color);
   border-radius: 8px;
   height: 1rem;
   position: relative;
 }
-
 .barra-pointer {
   height: 100%;
   position: absolute;
@@ -213,7 +186,6 @@ span {
   background-color: var(--positive-color);
   z-index: 1;
 }
-
 .barra-pointer-two {
   background-color: var(--positive-color);
   position: absolute;
@@ -223,12 +195,10 @@ span {
   height: 100%;
   border-radius: 8px;
 }
-
 #barraSpecial {
   left: 50%;
   width: 50%;
 }
-
 #indicator {
   position: absolute;
   top: -1rem;
@@ -237,24 +207,17 @@ span {
   width: 0.5rem;
   border-radius: 8px;
 }
-
 #screenshotBtn {
   margin: 0 0 20px 25px;
 }
-
-/*  -----------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------- */
-
 .anagraphic_data h3 {
   margin: 0 !important;
   padding: 0 !important;
 }
-
 .container_box {
   display: flex;
   justify-content: space-between;
 }
-
 .info_container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -263,7 +226,6 @@ span {
   row-gap: 20px;
   width: 100%;
 }
-
 .container_data {
   display: flex;
   visibility: hidden;
@@ -271,12 +233,10 @@ span {
   flex-direction: column;
   position: relative;
 }
-
 .field {
   display: flex;
   flex-direction: column;
 }
-
 .field p:first-of-type {
   background-color: var(--contrast-color-shadow);
   border-radius: 8px;
@@ -286,7 +246,6 @@ span {
   font-weight: bold;
   padding-bottom: 25px;
 }
-
 .field p:last-of-type {
   border-bottom: 1px solid #ddd;
   border-left: 1px solid #ddd;
@@ -298,36 +257,27 @@ span {
   color: var(--dark1);
   background-color: white;
 }
-
-/*  -----------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------- */
-
 .indicator-container {
   border-radius: 8px;
 }
-
 .indicator-container {
   color: var(--dark2);
   font-size: 20px;
 }
-
 .nome {
   background-color: var(--contrast-color-shadow);
   padding: 20px;
   border-radius: 8px;
 }
-
 .nome span {
   color: var(--dark2);
   font-size: 20px;
 }
-
 .nome {
   display: flex;
   justify-content: space-between;
   padding-right: 20px;
 }
-
 #indicatori-container {
   background-color: white;
   border: 1px solid #ddd;
@@ -336,8 +286,6 @@ span {
   margin-top: -1.5rem;
   padding-bottom: 30px;
 }
-
-/*  SPINNER STAMPA STYLE */
 #spinnerBackdrop {
   background-color: rgba(0, 0, 0, 0.584);
   backdrop-filter: blur(3px);
@@ -350,10 +298,6 @@ span {
   z-index: 11;
   display: none;
 }
-
-/*  -----------------------------------------------------------------------------------------------
-  SPINNER 3
---------------------------------------------------------------------------------------------------- */
 #snipperStampa {
   --blue: #5c86ff;
   --blue-dark: #275efe;
@@ -369,7 +313,6 @@ span {
   -webkit-animation: bounce05 var(--duration) linear infinite;
   animation: bounce05 var(--duration) linear infinite;
 }
-
 #snipperStampa .slide {
   width: 92px;
   height: 20px;
@@ -380,7 +323,6 @@ span {
   -webkit-animation: slide05 var(--duration) ease infinite;
   animation: slide05 var(--duration) ease infinite;
 }
-
 #snipperStampa .slide:before,
 #snipperStampa .slide:after,
 #snipperStampa .slide i:before {
@@ -388,14 +330,12 @@ span {
   position: absolute;
   background: var(--tool);
 }
-
 #snipperStampa .slide:before {
   width: 2px;
   height: 8px;
   top: 6px;
   left: 100%;
 }
-
 #snipperStampa .slide:after {
   left: 94px;
   top: 3px;
@@ -403,7 +343,6 @@ span {
   width: 6px;
   border-radius: 3px;
 }
-
 #snipperStampa .slide i {
   display: block;
   position: absolute;
@@ -413,7 +352,6 @@ span {
   top: 4px;
   background: var(--tool);
 }
-
 #snipperStampa .slide i:before {
   right: 100%;
   top: -2px;
@@ -421,7 +359,6 @@ span {
   border-radius: 2px;
   height: 14px;
 }
-
 #snipperStampa .paper {
   position: absolute;
   left: 24px;
@@ -434,7 +371,6 @@ span {
   -webkit-animation: paper05 var(--duration) linear infinite;
   animation: paper05 var(--duration) linear infinite;
 }
-
 #snipperStampa .paper:before {
   content: "";
   position: absolute;
@@ -447,7 +383,6 @@ span {
   background: var(--text);
   box-shadow: 0 12px 0 var(--text), 0 24px 0 var(--text), 0 36px 0 var(--text);
 }
-
 #snipperStampa .keyboard {
   width: 120px;
   height: 56px;
@@ -455,13 +390,11 @@ span {
   z-index: 1;
   position: relative;
 }
-
 #snipperStampa .keyboard:before,
 #snipperStampa .keyboard:after {
   content: "";
   position: absolute;
 }
-
 #snipperStampa .keyboard:before {
   top: 0;
   left: 0;
@@ -472,7 +405,6 @@ span {
   transform: perspective(10px) rotateX(2deg);
   transform-origin: 50% 100%;
 }
-
 #snipperStampa .keyboard:after {
   left: 2px;
   top: 25px;
@@ -486,7 +418,6 @@ span {
   -webkit-animation: keyboard05 var(--duration) linear infinite;
   animation: keyboard05 var(--duration) linear infinite;
 }
-
 @keyframes bounce05 {
   85%,
   92%,
@@ -502,7 +433,6 @@ span {
     transform: translateY(2px);
   }
 }
-
 @keyframes slide05 {
   5% {
     transform: translateX(14px);
@@ -532,7 +462,6 @@ span {
     transform: translateX(14px);
   }
 }
-
 @keyframes paper05 {
   5% {
     transform: translateY(46px);
@@ -563,7 +492,6 @@ span {
     transform: translateY(46px);
   }
 }
-
 @keyframes keyboard05 {
   5%,
   12%,
@@ -644,6 +572,7 @@ span {
       60px 10px 0 var(--key), 68px 10px 0 var(--key), 83px 10px 0 var(--key);
   }
 }
+
 
 /* ! CSS Referto quiz */
 .container-box-score {
@@ -728,11 +657,6 @@ h2 {
   margin-top: 15px;
   border-radius: 8px;
 }
-
-
-
-
-
 .tittle-container{
   display: flex;
   justify-content: flex-start;

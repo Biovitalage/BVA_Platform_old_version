@@ -29,7 +29,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet" />
   
-
   <!-- CDN import head-->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -45,8 +44,7 @@
       window.currentUser = "{{ dottore|escapejs }}" || 'guest';
       window.isSecretary = {{ dottore.isSecretary|yesno:"true,false" }};
       
-
-          // Calcola il ruolo
+      // Calcola il ruolo
       window.role = window.isSecretary 
         ? 'Segreteria/o' 
         : 'Dottore/Dottoressa';
@@ -155,7 +153,6 @@
             </div>
           </div>
         </div>
-
       </div>
       
       <div class="card-actions">
@@ -196,10 +193,8 @@
             </div>
             <p>Configurazione</p>
           </div>
-
         </div>
       </div>
-
     </div>
 
     <!-- RICERCA PAZIENTI -->
@@ -222,63 +217,20 @@
             <input type="text" class="input" id="Email" name="inputField" placeholder="Scrivi qui il testo..." required>
 
             <button class="button button--submit" type="submit">
-
               <span class="button__icon-wrapper">
-
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  width="15"
-                  class="button__icon-svg"
-                >
-                  <circle
-                    cx="11"
-                    cy="11"
-                    r="7"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  ></circle>
-                  <line
-                    x1="16"
-                    y1="16"
-                    x2="21"
-                    y2="21"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  ></line>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="15" class="button__icon-svg">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                  <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
                 </svg>
     
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  width="15"
-                  class="button__icon-svg button__icon-svg--copy"
-                >
-                  <circle
-                    cx="11"
-                    cy="11"
-                    r="7"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  ></circle>
-                  <line
-                    x1="16"
-                    y1="16"
-                    x2="21"
-                    y2="21"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  ></line>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="15" class="button__icon-svg button__icon-svg--copy">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                  <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
                 </svg>
 
               </span>
               Cerca
             </button>
-
           </div>
         </form>
 
@@ -344,402 +296,16 @@
 
                 </div>
             {% endfor %}
-
             </div>
-
           </div>
-
       </div>
-
     </div>
     
-
     <!-- CDN import end of body -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Import Script end of body -->
     <script src="{% static 'js/ricerca_pazienti/risultati.js' %}" defer></script>
+    <script id="emails-data" type="application/json">[]</script>
 </body>
-
-<!-- Script per dati email -->
-<script id="emails-data" type="application/json">[]</script>
-
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-     <!--  <div class="container-work-in-progress">
-        <div class="reminders "> 
-          <div class="button-container">
-            <h3>Promemoria</h3>
-            <button class="button">
-              <span class="button__icon-wrapper">
-                <svg
-                  viewBox="0 0 14 15"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="button__icon-svg"
-                  width="10"
-                >
-                  <path
-                    d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-  
-                <svg
-                  viewBox="0 0 14 15"
-                  fill="none"
-                  width="10"
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="button__icon-svg button__icon-svg--copy"
-                >
-                  <path
-                    d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-              </span>
-              Vedi Tutti
-            </button>
-          </div>
-          <ul class="reminder-list">
-            <li>
-              <div class="reminder-text">
-                <span>-</span> Controllare i risultati di laboratorio del paziente William Mathews.
-              </div>
-              <span class="urgency-badge high">Priorità alta</span>
-              <div class="reminder-time">Due: 10:00 AM</div>
-              <div class="reminder-actions">
-                <button class="action-btn approve">✔</button>
-                <button class="action-btn delete">✖</button>
-              </div>
-            </li>
-            <li>
-              <div class="reminder-text">
-                <span>-</span> Preparare le note di consultazione per Adam Bradley.
-              </div>
-              <span class="urgency-badge medium">Priorità media</span>
-              <div class="reminder-time">Due: 2:30 PM</div>
-              <div class="reminder-actions">
-                <button class="action-btn approve">✔</button>
-                <button class="action-btn delete">✖</button>
-              </div>
-            </li>
-            <li>
-              <div class="reminder-text">
-                <span>-</span> Fissare un appuntamento di follow-up con Kathy Atkinson.
-              </div>
-              <span class="urgency-badge low">Priorità Bassa</span>
-              <div class="reminder-time">Due: Domani</div>
-              <div class="reminder-actions">
-                <button class="action-btn approve">✔</button>
-                <button class="action-btn delete">✖</button>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div> -->
-      
-
-    <!-- CARD APPUNTAMENTI -->
-    <!-- <div class="cardAppuntamenti">
-          <div class="button-container">
-              <h3>Appuntamenti</h3>
-              <button class="button" onclick="window.location.href='{% url 'appuntamenti' %}'"> 
-                <span class="button__icon-wrapper">
-                  <svg
-                    viewBox="0 0 14 15"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="button__icon-svg"
-                    width="10"
-                  >
-                    <path
-                      d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
-                      fill="currentColor"
-                    ></path>
-                  </svg>
-      
-                  <svg
-                    viewBox="0 0 14 15"
-                    fill="none"
-                    width="10"
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="button__icon-svg button__icon-svg--copy"
-                  >
-                    <path
-                      d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
-                      fill="currentColor"
-                    ></path>
-                  </svg>
-                </span>
-                Vedi Tutti
-              </button>
-          </div>
-          <table>
-              <thead>
-                  <tr>
-                      <th>#</th>
-                      <th>Nome Paziente</th>
-                      <th>Data</th>
-                      <th>Ora</th>
-                      <th>Studio</th>
-                      <th>Tipologia</th>
-                      <th>Azione</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  {% if appuntamenti %}
-                      {% for appointment in appuntamenti %}
-                      <tr data-id="{{ appointment.id }}">
-                          <td>{{ appointment.id }}</td>
-                          <td><img src="{% static 'image/Username_Violet.png' %}" alt="Avatar" class="avatar"> {{ appointment.nome_paziente|title }}</td>
-                          <td>{{ appointment.data|date:"d/m/Y" }}</td>
-                          <td>{{ appointment.orario|time:"H:i" }}</td>
-                          <td>{{ appointment.numero_studio }}</td>
-                          <td>
-                              <span
-                                  class="badge
-                                  {% if appointment.tipologia_visita == 'Generale' %}
-                                    general
-                                  {% elif appointment.tipologia_visita == 'Riabilitazione' %}
-                                    rehab
-                                  {% elif appointment.tipologia_visita == 'Fisioterapia e Riabilitazione' %}
-                                    physio-ria
-                                  {% elif appointment.tipologia_visita == 'Fisioterapia Sportiva' %}
-                                    physio-spo
-                                  {% elif appointment.tipologia_visita == 'Fisioestetica' %}
-                                    physio-est
-                                  {% else %}
-                                    other
-                                  {% endif %}">
-                                  {{ appointment.tipologia_visita }}
-                              </span>
-                          </td>
-                          <td>
-                            {% if appointment.confermato %}
-                              <button class="action-btn action-btn-approved approve" disabled title="Appuntamento confermato.">✔</button>
-                              <button class="action-btn delete" title="Elimina">✖</button>
-                            {% else %}
-                              <button class="action-btn approve">✔</button>
-                              <button class="action-btn delete" title="Elimina">✖</button>
-                            {% endif %}
-                          </td>
-                      </tr>
-                      {% endfor %}
-                  {% else %}
-                      <tr>
-                          <td colspan="7" class="text-center">Nessun appuntamento disponibile</td>
-                      </tr>
-                  {% endif %}
-              </tbody>
-          </table>
-
-          <div id="pagination" class="pagination-container"></div>
-    </div>
- -->
-    <!-- CARDS REPORT -->
-<!--     <div class="cards">
-
-      <div class="report-card" id="card-style">
-        <div class="container-info-report">
-          <div class="img-container">
-            <img src="{% static 'image/Patient.png' %}" alt="">
-          </div>
-          <div class="report-description">
-            <h3>Totale Pazienti</h3>
-            <div class="report-info-detail">
-              <p class="primary-info">
-                <span class="animate-num" data-target="{{ current_week_patients|default:"0" }}">{{ current_week_patients|default:"0" }}</span>
-              </p>
-              <p>
-                {% if difference < 0 %}
-                  <span class="animate-num" data-target="{{ difference|default:"0" }}">{{ difference|default:"0" }}</span> settimana scorsa
-                {% elif difference > 0 %}
-                  + <span class="animate-num" data-target="{{ difference|default:"0" }}">{{ difference|default:"0" }}</span> settimana scorsa
-                {% else %}
-                  <span class="animate-num" data-target="0">0</span> rispetto alla settimana scorsa
-                {% endif %}
-              </p>
-            </div>
-          </div>
-          
-        </div>
-        <p id="mediaPercentage">
-          <span class="animate-num" data-target="{{ percentage_increase|floatformat:"0" }}">
-            {{ percentage_increase|floatformat:"0" }}
-          </span>% rispetto alla settimana scorsa.
-        </p>        
-      </div>
-      
-      <div class="report-card" id="card-style">
-        <div class="container-info-report">
-          <div class="img-container">
-            <img src="{% static 'image/Referto.png' %}" alt="">
-          </div>
-          <div class="report-description">
-            <h3>Totale Prescrizioni</h3>
-            <div class="report-info-detail">
-              {% if difference_referti > 0 %}
-                <p class="primary-info">
-                  <span class="animate-num" data-target="{{ current_week_referti|default:"0" }}">{{ current_week_referti|default:"0" }}</span>
-                </p>
-                <p>
-                  &nbsp;+ <span class="animate-num" data-target="{{ difference_referti|default:"0" }}">{{ difference_referti|default:"0" }}</span> settimana scorsa
-                </p>
-              {% elif difference_referti < 0 %}
-                <p class="primary-info">
-                  <span class="animate-num" data-target="{{ current_week_referti|default:"0" }}">{{ current_week_referti|default:"0" }}</span>
-                </p>
-                <p>
-                  &nbsp;- <span class="animate-num" data-target="{{ abs_difference_referti|default:"0" }}">{{ abs_difference_referti|default:"0" }}</span> settimana scorsa
-                </p>
-              {% else %}
-                <p class="primary-info">
-                  <span class="animate-num" data-target="{{ current_week_referti|default:"0" }}">{{ current_week_referti|default:"0" }}</span>
-                </p>
-                <p>&nbsp;0 settimana scorsa</p>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-        {% if difference_referti > 0 %}
-          <p id="mediaPercentage">
-            <span class="animate-num" data-target="{{ percentage_increase_referti|floatformat:'0' }}">
-              {{ percentage_increase_referti|floatformat:'0' }}
-            </span>% in più rispetto alla settimana scorsa.
-          </p>
-        {% elif difference_referti < 0 %}
-          <p id="mediaPercentage">
-            <span class="animate-num" data-target="{{ percentage_increase_referti|floatformat:'0' }}">
-              {{ percentage_increase_referti|floatformat:'0' }}
-            </span>% in meno rispetto alla settimana scorsa.
-          </p>
-        {% else %}
-          <p id="mediaPercentage">
-            Nessun cambiamento rispetto alla settimana scorsa.
-          </p>
-        {% endif %}      
-      </div>
-      
-      <div class="report-card" id="card-style">
-        <div class="container-info-report">
-          <div class="img-container">
-            <img src="{% static 'image/Heart.png' %}" alt="">
-          </div>
-          <div class="report-description">
-            <h3>Età media dei pazienti</h3>
-            <div class="report-info-detail">
-              <p><span class="animate-num" data-target="{{ min_age|default:"0" }}">{{ min_age|default:"0" }}</span> Anni</p>
-              <p>a <span class="animate-num" data-target="{{ max_age|default:"0" }}">{{ max_age|default:"0" }}</span> Anni</p>
-            </div>
-          </div>
-        </div>
-        <p id="mediaPercentage">
-          {% if media_percentage > 66 %}
-            Mente - età elevata
-          {% elif media_percentage < 33 %}
-            Mente - età bassa
-          {% else %}
-            Mente - età media
-          {% endif %} 
-        </p>
-      </div>
-
-      <div class="report-card" id="card-style">
-        <div class="container-info-report">
-          <div class="img-container">
-            <img src="{% static 'image/Income.png' %}" alt="">
-          </div>
-          <div class="report-description">
-            <h3>Guadagni</h3>
-            <div class="report-info-detail">
-              <p>
-                &nbsp;+ <span class="animate-num" data-target="980">0</span>€ &nbsp;il mese scorso
-              </p>
-            </div>
-          </div>
-        </div>
-        <p id="mediaPercentage">
-          <span class="animate-num" data-target="20">0</span>% in più rispetto al mese scorso.
-        </p>
-      </div> 
-
-    </div> -->
-
-    <!-- TABELLA PAZIENTI RECENTI -->
-<!--     <div class="recent-patients">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0 text-center">Ultimi 5 Pazienti Inseriti</h2>
-        <a href="{% url 'inserisci_paziente' %}" title="Add Patient" class="button">
-          <span class="button__icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg" width="14"
-              height="14">
-              <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-        
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-              class="button__icon-svg button__icon-svg--copy" width="14" height="14">
-              <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-        
-          </span>
-          Aggiungi Paziente
-        </a>
-      </div>
-      <div class="table-container">
-        <div class="table-header">
-          <p>Nome</p>
-          <p>Cognome</p>
-          <p>Data di nascita</p>
-          <p>Codice Fiscale</p>
-          <p>Città di nascita</p>
-          <p>Età cronologica</p>
-          <p>Cartella Paziente</p>
-        </div>
-
-        <div class="table-content">
-          {% if persone %}
-            {% for persona in persone %}
-            <div class="riga-container">
-              <p>{{ persona.name|title }}</p>
-              <p>{{ persona.surname|title }}</p>
-              <p>{{ persona.dob|date:"d/m/Y"|default:"Non specificato." }}</p>
-              <p>{{ persona.codice_fiscale|default:"Non specificato." }}</p>
-              <p>{{ persona.place_of_birth|title|default:"Non specificato." }}</p>
-              <p>{{ persona.chronological_age }}</p>
-  
-              <p>
-                <a href="{% url 'cartella_paziente' persona.id %}">
-                  <img src="{% static 'image/Cartella.png' %}" alt="Cartella" />
-                </a>
-              </p>
-            </div>
-            {% endfor %}
-          {% else %}
-            <div class="riga-container">
-              <p colspan="7" class="text-center">Nessun paziente trovato.</p>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </main>
- -->
-  

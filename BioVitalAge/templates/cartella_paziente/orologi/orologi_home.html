@@ -1,0 +1,1030 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orologi Biologici — BioVitalAge</title>
+  <!-- Css Import -->
+  <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+  <link rel="stylesheet" href="{% static 'css/cartellaPaziente.css' %}">
+  <link rel="stylesheet" href="{% static 'css/homePage.css' %}">
+  <link rel="stylesheet" href="{% static 'css/cartella_paziente/orologi.css' %}">
+  <link rel="stylesheet" href="{% static 'css/cartella_paziente/eta_biologica/calcolatore.css' %}">
+
+  <!-- Bootstrap import -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Import  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+  <!-- CDN IMPORT -->
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- JS Import -->
+  <script src="{% static 'js/cartella_paziente/orologi.js' %}" type="module" defer></script>
+  <script src="{% static 'js/cartellaPaziente.js' %}" defer type="module" data-user="{{user.id}}" data-paziente="{{persona.name}}"></script>
+  
+  <script>
+    window.DOTTORE = "{{ dottore.nome }} {{ dottore.cognome }}";
+    window.PAZIENTE = "{{ persona.name }} {{ persona.surname }}";
+    window.DOB_PAZIENTE = "{{ persona.dob|date:'d/m/Y' }}";
+    window.CF_PAZIENTE = "{{ persona.codice_fiscale }}";
+  </script>
+
+  {% if active_panel %}
+    <script>
+    // imposta l'hash così lo script "sidebar" lo leggerà come stato iniziale
+    if (!location.hash || location.hash !== '#{{ active_panel }}') {
+        location.hash = '#{{ active_panel }}';
+    }
+    </script>
+    {% endif %}
+</head>
+<body>
+  {% include 'components/loader.html' %}
+  {% include 'components/navBar.html' %}
+
+  <main>
+    <div class="bio-layout">
+      <!-- SIDEBAR -->
+      <aside class="bio-side">
+        <div class="side-title">Orologi Biologici</div>
+        <nav class="side-nav" id="bioSideNav">
+            
+          <button class="side-btn active" data-panel="panel-dashboard"><span class="side-ico">🏠</span> Dashboard</button>
+          <button class="side-btn" data-panel="panel-eta-biologica"><span class="side-ico">🧬</span> Età Biologica</button>
+          <button class="side-btn" data-panel="panel-capacita-vitale"><span class="side-ico">⚡</span> Capacità Vitale</button>
+          <button class="side-btn" data-panel="panel-resilienza"><span class="side-ico">🛡️</span> Resilienza</button>
+          <button class="side-btn" data-panel="panel-score-organi"><span class="side-ico">🧩</span> Score organi/apparati</button>
+          <button class="side-btn" data-panel="panel-terapie"><span class="side-ico">💉</span> Terapie</button>
+          <button class="side-btn" data-panel="panel-appuntamenti"><span class="side-ico">📅</span> Appuntamenti</button>
+          <button class="side-btn" data-panel="panel-analisi-lab"><span class="side-ico">🧪</span> Analisi Lab</button>
+          <button class="side-btn" data-panel="panel-analytics"><span class="side-ico">📊</span> Analytics</button>
+          <button class="side-btn" data-panel="panel-diario"><span class="side-ico">📝</span> Diario</button>
+          <button class="side-btn" data-panel="panel-referto"><span class="side-ico">🧾</span> Referto Longevità</button>
+          <button class="side-btn" data-panel="panel-impostazioni"><span class="side-ico">⚙️</span> Impostazioni</button>
+        </nav>
+      </aside>
+
+      <!-- MAIN -->
+      <section class="bio-main">
+        <div class="main-title-nav">
+          <div class="back-tittle">
+            <a id="back" href="{% url 'cartella_paziente' persona.id %}">
+              <img src="{% static 'image/Arrow_Back.png' %}">
+            </a>
+            <h2 class="main-welcome-title">
+              <span>{{ persona.surname|title }}</span>
+              <span>{{ persona.name|title }}</span> |
+              <span>Età: {{ persona.chronological_age }}</span>
+            </h2>
+          </div>
+          <div class="main-menu-trace">
+            <a href="{% url 'HomePage' %}"><img src="{% static 'image/home.png' %}" alt="Home" /></a>
+            <p>»</p>
+            <p><a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a></p>
+            <p>»</p>
+            <p class="breadcrumb">Età Biologica</p>
+          </div>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+            <div class="flash {{ message.tags }}" id="flash-{{ forloop.counter }}">
+            <p>{{ message }}</p>
+            <div class="progressBarContainer">
+                <div class="progressBar" id="progress-{{ forloop.counter }}"></div>
+            </div>
+            </div>
+            <script>
+            (function(){
+                const box = document.getElementById('flash-{{ forloop.counter }}');
+                const bar = document.getElementById('progress-{{ forloop.counter }}');
+                const duration = 5000; // 5s
+                const step = 50;
+                let elapsed = 0;
+                const t = setInterval(() => {
+                elapsed += step;
+                const pct = Math.max(0, 100 - (elapsed / duration) * 100);
+                bar.style.width = pct + '%';
+                if (elapsed >= duration) {
+                    clearInterval(t);
+                    if (box) box.style.display = 'none';
+                }
+                }, step);
+            })();
+            </script>
+        {% endfor %}
+        {% endif %}
+
+
+
+        <div class="main-content">
+
+            <div id="panel-dashboard" class="dashboard" hidden></div>
+
+            <div id="panel-eta-biologica" class="bio-panel" hidden>
+                <form method="POST" action="{% url 'Calcolatore' persona.id %}" class="form-container" id="age-form">  
+                {% csrf_token %} 
+
+
+                 <!-- 🔹 MARCATORI PRINCIPALI -->
+              
+                    <div class="card-indices_header" id="marcatori">
+                        <div class="card-header_title">
+                            <img src="{% static 'image/dna.png' %}" alt="">
+                            <h3>Età Biologica</h3>
+                        </div>
+                    </div>
+
+                    <h5 class="marcatori-title">Biomarcatori Principali</h5>
+
+                    <div class="grid-container" id="marcatori-principali">
+                            <!-- Biometrici -->
+                            <div class="form-group"><label for="sbp">SBP* — Pressione sistolica (mmHg)</label><input type="number" id="sbp" name="sbp"></div>
+                            <div class="form-group"><label for="dbp">DBP* — Pressione diastolica (mmHg)</label><input type="number" id="dbp" name="dbp"></div>
+                            <div class="form-group"><label for="bmi">BMI* — Indice massa corporea (kg/m²)</label><input type="number" id="bmi" name="bmi"></div>
+                            <div class="form-group"><label for="waist">WAIST* — Circonferenza vita (cm)</label><input type="number" id="waist" name="waist"></div>
+
+                            <!-- Emocromo -->
+                            <div class="form-group"><label for="wbc">WBC* — Leucociti (×10⁹/L)</label><input type="number" id="wbc" name="wbc"></div>
+                            <div class="form-group"><label for="rbc">RBC* — Eritrociti (×10¹²/L)</label><input type="number" id="rbc" name="rbc"></div>
+                            <div class="form-group"><label for="hgb">HGB* — Emoglobina (g/dL)</label><input type="number" id="hgb" name="hgb"></div>
+                            <div class="form-group"><label for="hct">HCT* — Ematocrito (%)</label><input type="number" id="hct" name="hct"></div>
+                            <div class="form-group"><label for="mcv">MCV* — Volume corpuscolare medio (fL)</label><input type="number" id="mcv" name="mcv"></div>
+                            <div class="form-group"><label for="rdw">RDW* — Ampiezza distribuzione eritrocitaria (%)</label><input type="number" id="rdw" name="rdw"></div>
+                            <div class="form-group"><label for="plt">PLT* — Piastrine (×10⁹/L)</label><input type="number" id="plt" name="plt"></div>
+
+                            <!-- Biochimica -->
+                            <div class="form-group"><label for="alb">ALB* — Albumina (g/dL)</label><input type="number" id="alb" name="alb"></div>
+                            <div class="form-group"><label for="ast">AST* — Aspartato-aminotransferasi (U/L)</label><input type="number" id="ast" name="ast"></div>
+                            <div class="form-group"><label for="alt">ALT* — Alanina-aminotransferasi (U/L)</label><input type="number" id="alt" name="alt"></div>
+                            <div class="form-group"><label for="ggt">GGT* — Gamma-GT (U/L)</label><input type="number" id="ggt" name="ggt"></div>
+                            <div class="form-group"><label for="azotemia">Azotemia* (mg/dL)</label><input type="number" id="azotemia" name="azotemia"></div>
+                            <div class="form-group"><label for="crea">CREA* — Creatinina (mg/dL)</label><input type="number" id="crea" name="crea"></div>
+                            <div class="form-group"><label for="glu">GLU* — Glicemia (mg/dL)</label><input type="number" id="glu" name="glu"></div>
+                            <div class="form-group"><label for="hba1c">HBA1C* — Emoglobina glicata (%)</label><input type="number" id="hba1c" name="hba1c"></div>
+                            <div class="form-group"><label for="tc">TC* — Colesterolo totale (mg/dL)</label><input type="number" id="tc" name="tc"></div>
+                            <div class="form-group"><label for="tg">TG* — Trigliceridi (mg/dL)</label><input type="number" id="tg" name="tg"></div>
+                    </div>
+               
+                    <div class="toolkit">
+                        <img src="{% static 'image/Arrow_Back.png' %}" alt="" style="width: 40px; height: 40px;">
+
+                        <a href="{% url 'elenco_referti' persona.id %}" class="button" id="vediButton">
+                            <span class="button__icon-wrapper">
+                                <svg viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg" width="10">
+                                    <path
+                                        d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                                        fill="currentColor"></path>
+                                </svg>
+                    
+                                <svg viewBox="0 0 14 15" fill="none" width="10" xmlns="http://www.w3.org/2000/svg"
+                                    class="button__icon-svg button__icon-svg--copy">
+                                    <path
+                                        d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+                                        fill="currentColor"></path>
+                                </svg>
+                            </span>
+                            Vedi i Risultati
+                        </a>
+
+
+                        <button id="calculateButton" type="submit" class="button">
+                            <span class="button__icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg">
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                    
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18"
+                                    class="button__icon-svg button__icon-svg--copy">
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                            Calcola Età Biologica
+                        </button>
+                    </div>
+
+                    <div class="contenitore-genitore">
+
+                        <!-- SALUTE DEL CUORE -->
+                        <div class="card-indices">
+                            <div class="card-indices_header">
+                            <div class="card-header_title">
+                                <img src="{% static 'image/Heart_Colorato.png' %}" alt="">
+                                <h3>Salute del cuore</h3>
+                            </div>
+                            <button class="btn-selected" type="button" id="cuore-show">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            </div>
+
+                            <div class="card-indices_content" id="cuoreContent">
+                            <div class="grid-container">
+                                <div class="form-group">
+                                <label for="ldl_chol">Colesterolo LDL (mg/dL)</label>
+                                <input type="number" id="ldl_chol" name="ldl_chol" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="hdl_chol_m">Colesterolo HDL Uomo (mg/dL)</label>
+                                <input type="number" id="hdl_chol_m" name="hdl_chol_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="hdl_chol_w">Colesterolo HDL Donna (mg/dL)</label>
+                                <input type="number" id="hdl_chol_w" name="hdl_chol_w" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="pai_1">Inibitore dell’attivatore del plasminogeno-1</label>
+                                <input type="number" id="pai_1" name="pai_1" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="d_dimero">D-Dimero (ng/ml)</label>
+                                <input type="number" id="d_dimero" name="d_dimero" step="0.01">
+                                </div>
+                            </div>
+
+                            <!-- STRESS OSSIDATIVO -->
+                            <h3>Stress Ossidativo</h3>
+                            <div class="flex-container" id="flex-adjust">
+                                <div class="form-group">
+                                <label for="d_roms">d-ROMs</label>
+                                <input type="number" id="d_roms" name="d_roms" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="pat">Plasma Antioxidant Test (PAT)</label>
+                                <input type="number" id="pat" name="pat" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="osi">Oxidative Stress Index (OSI)</label>
+                                <input type="number" id="osi" name="osi" step="0.01">
+                                </div>
+                            </div>
+
+                            <!-- OMEGA SCREENING -->
+                            <h3>Omega Screening</h3>
+                            <h5>Acidi Grassi Saturi</h5>
+                            <div class="grid-container" style="row-gap: 60px;">
+                                <div class="form-group">
+                                <label for="my_acid">Acido Miristico</label>
+                                <input type="number" id="my_acid" name="my_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="p_acid">Acido Palmitico</label>
+                                <input type="number" id="p_acid" name="p_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="st_acid">Acido Stearico</label>
+                                <input type="number" id="st_acid" name="st_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="ar_acid">Acido Arachidico</label>
+                                <input type="number" id="ar_acid" name="ar_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="beenic_acid">Acido Beenico</label>
+                                <input type="number" id="beenic_acid" name="beenic_acid" step="0.01">
+                                </div>
+                            </div>
+
+                            <h5 style="margin-top: 4rem;">Acidi Grassi Insaturi</h5>
+                            <div class="grid-container">
+                                <div class="form-group">
+                                <p>Omega 7</p>
+                                <label for="pal_acid">Acido Palmitoleico</label>
+                                <input type="number" id="pal_acid" name="pal_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <p>Omega 9</p>
+                                <label for="ol_acid">Acido Oleico</label>
+                                <input type="number" id="ol_acid" name="ol_acid" step="0.01">
+                                </div>
+                                <div class="form-group" style="margin-top: 2.5rem;">
+                                <label for="ner_acid">Acido Nervonico</label>
+                                <input type="number" id="ner_acid" name="ner_acid">
+                                </div>
+                            </div>
+
+                            <p style="margin-top: 4rem;">Omega 3</p>
+                            <div class="flex-container" id="flex-adjust">
+                                <div class="form-group">
+                                <label for="a_linoleic_acid">Acido Linoleico Alpha</label>
+                                <input type="number" id="a_linoleic_acid" name="a_linoleic_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="eico_acid">Acido EPA (Eicosapentaenoico)</label>
+                                <input type="number" id="eico_acid" name="eico_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="doco_acid">Acido DHA (Docosaesaenoico)</label>
+                                <input type="number" id="doco_acid" name="doco_acid" step="0.01">
+                                </div>
+                            </div>
+
+                            <p style="margin-top: 4rem;">Omega 6</p>
+                            <div class="grid-container">
+                                <div class="form-group">
+                                <label for="lin_acid">Acido Linolenico</label>
+                                <input type="number" id="lin_acid" name="lin_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="gamma_lin_acid">Acido Gamma Linolenico</label>
+                                <input type="number" id="gamma_lin_acid" name="gamma_lin_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="dih_gamma_lin_acid">Acido Diomo Gamma Linolenico</label>
+                                <input type="number" id="dih_gamma_lin_acid" name="dih_gamma_lin_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="arachidonic_acid">Acido Arachidonico</label>
+                                <input type="number" id="arachidonic_acid" name="arachidonic_acid">
+                                </div>
+                            </div>
+
+                            <div class="grid-container" style="margin-top: 4rem;">
+                                <div class="form-group">
+                                <label for="sa_un_fatty_acid">Quoziente Saturi/Insaturi</label>
+                                <input type="number" id="sa_un_fatty_acid" name="sa_un_fatty_acid" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="o3o6_fatty_acid_quotient">Quoziente O-6/O-3 (AA/DHA)</label>
+                                <input type="number" id="o3o6_fatty_acid_quotient" name="o3o6_fatty_acid_quotient" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="aa_epa">Quoziente AA/EPA</label>
+                                <input type="number" id="aa_epa" name="aa_epa" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="o3_index">Omega 3 index</label>
+                                <input type="number" id="o3_index" name="o3_index" step="0.01">
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+
+                                        <!-- SALUTE RENALE -->
+                        <div class="card-indices">
+                            <div class="card-indices_header">
+                            <div class="card-header_title">
+                                <img src="{% static 'image/Reni.png' %}" alt="">
+                                <h3>Salute Renale</h3>
+                            </div>
+                            <button class="btn-selected" type="button" id="renale-show">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            </div>
+
+                            <div class="card-indices_content" id="renaleContent">
+                            <div class="grid-container">
+                                <div class="form-group">
+                                <label for="creatinine_m">Creatinina Uomo (mg/dL)</label>
+                                <input type="number" id="creatinine_m" name="creatinine_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="creatinine_w">Creatinina Donna (mg/dL)</label>
+                                <input type="number" id="creatinine_w" name="creatinine_w" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="cistatine_c">Cistatina C (mg/dL)</label>
+                                <input type="number" id="cistatine_c" name="cistatine_c" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="ci">Cloruri (mEq/L)</label>
+                                <input type="number" id="ci" name="ci" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="ca">Calcio (mg/dL)</label>
+                                <input type="number" id="ca" name="ca" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="p">Fosforo (mg/dL)</label>
+                                <input type="number" id="p" name="p" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="uricemy_m">Uricemia Uomo (mg/dL)</label>
+                                <input type="number" id="uricemy_m" name="uricemy_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="uricemy_w">Uricemia Donna (mg/dL)</label>
+                                <input type="number" id="uricemy_w" name="uricemy_w" step="0.01">
+                                </div>
+                            </div>
+
+                            <p style="margin-top: 4rem; width: 10rem;">Esame delle urine</p>
+                            <div class="grid-container" style="padding-bottom: 50px;">
+                                <div class="form-group">
+                                <label for="s_weight">Peso specifico</label>
+                                <input type="number" id="s_weight" name="s_weight" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="ph">pH</label>
+                                <input type="number" id="ph" name="ph" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="glucose">Glucosio (mmol/L)</label>
+                                <input type="number" id="glucose" name="glucose" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="proteins_ex">Proteine (mg/dL)</label>
+                                <input type="number" id="proteins_ex" name="proteins_ex" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="blood_ex">Sangue (ery/µL)</label>
+                                <input type="number" id="blood_ex" name="blood_ex" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="ketones">Chetoni (mg/dL)</label>
+                                <input type="number" id="ketones" name="ketones" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="uro">Urobilinogeno (µmol/L)</label>
+                                <input type="number" id="uro" name="uro" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="bilirubin_ex">Bilirubina (mg/dL)</label>
+                                <input type="number" id="bilirubin_ex" name="bilirubin_ex" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="leuc">Leucociti (Leu/µL)</label>
+                                <input type="number" id="leuc" name="leuc" step="0.01">
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+
+                                        <!-- SALUTE EPATICA -->
+                        <div class="card-indices">
+                            <div class="card-indices_header">
+                            <div class="card-header_title">
+                                <img src="{% static 'image/Fegato.png' %}" alt="">
+                                <h3>Salute Epatica</h3>
+                            </div>
+                            <button class="btn-selected" type="button" id="epatica-show">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            </div>
+
+                            <div class="card-indices_content" id="epaticaContent">
+                            <div class="grid-container" style="padding-bottom: 50px;">
+
+                                <div class="form-group">
+                                <label for="g_gt_m">Gamma GT Uomo (U/I)</label>
+                                <input type="number" id="g_gt_m" name="g_gt_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="g_gt_w">Gamma GT Donna (U/I)</label>
+                                <input type="number" id="g_gt_w" name="g_gt_w" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="got_m">Transaminasi GOT Uomo (U/I)</label>
+                                <input type="number" id="got_m" name="got_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="got_w">Transaminasi GOT Donna (U/I)</label>
+                                <input type="number" id="got_w" name="got_w" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="gpt_m">Transaminasi GPT Uomo (U/I)</label>
+                                <input type="number" id="gpt_m" name="gpt_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="gpt_w">Transaminasi GPT Donna (U/I)</label>
+                                <input type="number" id="gpt_w" name="gpt_w" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="a_photo_m">Fosfatasi Alcalina Uomo (U/I)</label>
+                                <input type="number" id="a_photo_m" name="a_photo_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="a_photo_w">Fosfatasi Alcalina Donna (U/I)</label>
+                                <input type="number" id="a_photo_w" name="a_photo_w" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="tot_bili">Bilirubina totale (mg/dL)</label>
+                                <input type="number" id="tot_bili" name="tot_bili" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="direct_bili">Bilirubina diretta (mg/dL)</label>
+                                <input type="number" id="direct_bili" name="direct_bili" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="idirect_bili">Bilirubina indiretta (mg/dL)</label>
+                                <input type="number" id="idirect_bili" name="idirect_bili" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="albumin_ele">Albumina (%)</label>
+                                <input type="number" id="albumin_ele" name="albumin_ele" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="tot_prot_ele">Proteine Totali (%)</label>
+                                <input type="number" id="tot_prot_ele" name="tot_prot_ele" step="0.01">
+                                </div>
+
+                            </div>
+                            </div>
+                        </div>
+
+                                        <!-- SALUTE CEREBRALE -->
+                        <div class="card-indices">
+                            <div class="card-indices_header">
+                            <div class="card-header_title">
+                                <img src="{% static 'image/Cervello.png' %}" alt="">
+                                <h3>Salute Cerebrale</h3>
+                            </div>
+                            <button class="btn-selected" type="button" title="Apri Sezione" id="celebrale-show">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                class="feather feather-chevron-down">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            </div>
+
+                            <div class="card-indices_content" id="celebraleContent">
+                            <div class="grid-container" style="padding-bottom: 50px;">
+
+                                <div class="form-group">
+                                <label for="mg">Magnesio (mg/dL)</label>
+                                <input type="number" id="mg" name="mg" placeholder="Solo valori numerici" step="0.01">
+                                <input type="range" id="mg_range" name="mg_range" min="0" max="5" value="0" oninput="mg.value=this.value" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="na">Sodio (mEq/L)</label>
+                                <input type="number" id="na" name="na" placeholder="Solo valori numerici" step="0.01">
+                                <input type="range" id="na_range" name="na_range" min="0" max="300" value="0" oninput="na.value=this.value" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="k">Potassio (mEq/L)</label>
+                                <input type="number" id="k" name="k" placeholder="Solo valori numerici" step="0.01">
+                                <input type="range" id="k_range" name="k_range" min="0" max="10" value="0" oninput="k.value=this.value" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="v_b12">Vitamina B12</label>
+                                <input type="number" id="v_b12" name="v_b12" placeholder="Solo valori numerici" step="0.01">
+                                <input type="range" id="v_b12_range" name="v_b12_range" min="0" max="1542" value="0" oninput="v_b12.value=this.value" step="0.01">
+                                </div>
+
+                            </div>
+                            </div>
+                        </div>
+
+                                        <!-- SALUTE ORMONALE -->
+                        <div class="card-indices">
+                            <div class="card-indices_header">
+                            <div class="card-header_title">
+                                <img src="{% static 'image/Cellula.png' %}" alt="">
+                                <h3>Salute Ormonale</h3>
+                            </div>
+                            <button class="btn-selected" type="button" title="Apri Sezione" id="ormonale-show">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                class="feather feather-chevron-down">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            </div>
+
+                            <div class="card-indices_content" id="ormonaleContent">
+                            <div class="grid-container" style="padding-bottom: 50px;">
+
+                                <div class="form-group">
+                                <label for="tsh">Ormone stimolante della tiroide (uIU/ml)</label>
+                                <input type="number" id="tsh" name="tsh" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="ft3">Triodotironina libera (pg/ml)</label>
+                                <input type="number" id="ft3" name="ft3" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="ft4">Tiroxina libera (ng/dL)</label>
+                                <input type="number" id="ft4" name="ft4" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="insulin">Insulina (ng/mL)</label>
+                                <input type="number" id="insulin" name="insulin" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="homa">Homa test</label>
+                                <input type="number" id="homa" name="homa" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="ir">IR test</label>
+                                <input type="number" id="ir" name="ir" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="dhea_m">DHEA Uomo (ng/ml)</label>
+                                <input type="number" id="dhea_m" name="dhea_m" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="dhea_w">DHEA Donna (ng/ml)</label>
+                                <input type="number" id="dhea_w" name="dhea_w" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="testo_m">Testosterone Uomo (ng/mL)</label>
+                                <input type="number" id="testo_m" name="testo_m" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="testo_w">Testosterone Donna (ng/mL)</label>
+                                <input type="number" id="testo_w" name="testo_w" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="beta_es_m">17 beta estradiolo Uomo</label>
+                                <input type="number" id="beta_es_m" name="beta_es_m" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="beta_es_w">17 beta estradiolo Donna</label>
+                                <input type="number" id="beta_es_w" name="beta_es_w" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="prog_m">Progesterone Uomo</label>
+                                <input type="number" id="prog_m" name="prog_m" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="prog_w">Progesterone Donna</label>
+                                <input type="number" id="prog_w" name="prog_w" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="shbg_m">Globulina legante ormoni sessuali Uomo</label>
+                                <input type="number" id="shbg_m" name="shbg_m" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="shbg_w">Globulina legante ormoni sessuali Donna</label>
+                                <input type="number" id="shbg_w" name="shbg_w" step="0.01">
+                                </div>
+
+                            </div>
+                            </div>
+                        </div>
+                                        <!-- SALUTE DEL SANGUE -->
+                        <div class="card-indices">
+                            <div class="card-indices_header">
+                            <div class="card-header_title">
+                                <img src="{% static 'image/Blood_Colorato.png' %}" alt="">
+                                <h3>Salute del Sangue</h3>
+                            </div>
+                            <button class="btn-selected" type="button" title="Apri Sezione" id="sangue-show">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            </div>
+
+                            <div class="card-indices_content" id="sangueContent">
+
+                            <!-- GLOBULI BIANCHI -->
+                            <h3>Globuli Bianchi</h3>
+                            <div class="grid-container">
+                                <div class="form-group">
+                                <label for="baso">Basofili (%)</label>
+                                <input type="number" id="baso" name="baso" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="eosi">Eosinofili (%)</label>
+                                <input type="number" id="eosi" name="eosi" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="lymph">Linfociti (%)</label>
+                                <input type="number" id="lymph" name="lymph" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="mono">Monociti (%)</label>
+                                <input type="number" id="mono" name="mono" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="neut">Neutrofili (%)</label>
+                                <input type="number" id="neut" name="neut" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="wbc">Globuli bianchi (10^3/uL)</label>
+                                <input type="number" id="wbc" name="wbc" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="neut_ul">Neutrofili (10^3/uL)</label>
+                                <input type="number" id="neut_ul" name="neut_ul" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="lymph_ul">Linfociti (10^3/uL)</label>
+                                <input type="number" id="lymph_ul" name="lymph_ul" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="mono_ul">Monociti (10^3/uL)</label>
+                                <input type="number" id="mono_ul" name="mono_ul" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="eosi_ul">Eosinofili (10^3/uL)</label>
+                                <input type="number" id="eosi_ul" name="eosi_ul" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="baso_ul">Basofili (10^3/uL)</label>
+                                <input type="number" id="baso_ul" name="baso_ul" step="0.01">
+                                </div>
+                            </div>
+
+                            <!-- GLOBULI ROSSI -->
+                            <h3>Globuli Rossi</h3>
+                            <div class="grid-container" style="row-gap: 60px;">
+                                <div class="form-group">
+                                <label for="hct_m">Hematocrit Uomo (%)</label>
+                                <input type="number" id="hct_m" name="hct_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="hct_w">Hematocrit Donna (%)</label>
+                                <input type="number" id="hct_w" name="hct_w" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="hgb_m">Hemoglobin Uomo (g/dL)</label>
+                                <input type="number" id="hgb_m" name="hgb_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="hgb_w">Hemoglobin Donna (g/dL)</label>
+                                <input type="number" id="hgb_w" name="hgb_w" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="mch">Emoglobina corpuscolare media (pg)</label>
+                                <input type="number" id="mch" name="mch" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="mchc">Concentrazione media di emoglobina corpuscolare (g/dL)</label>
+                                <input type="number" id="mchc" name="mchc" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="mcv">Volume corpuscolare medio (fL)</label>
+                                <input type="number" id="mcv" name="mcv" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="rbc_m">Globuli rossi Uomo (10^6/uL)</label>
+                                <input type="number" id="rbc_m" name="rbc_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="rbc_w">Globuli rossi Donna (10^6/uL)</label>
+                                <input type="number" id="rbc_w" name="rbc_w" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="rdwsd">RDW-SD (fL)</label>
+                                <input type="number" id="rdwsd" name="rdwsd" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="rdwcv">RDW-CV (%)</label>
+                                <input type="number" id="rdwcv" name="rdwcv" step="0.01">
+                                </div>
+                            </div>
+
+                            <!-- COAGULAZIONE -->
+                            <h3>Stato della coagulazione</h3>
+                            <div class="grid-container" style="padding-bottom: 50px;">
+                                <div class="form-group">
+                                <label for="plt">Piastrine (10^3/uL)</label>
+                                <input type="number" id="plt" name="plt" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="mpv">Volume medio piastrine (fL)</label>
+                                <input type="number" id="mpv" name="mpv" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="plcr">P-LCR (%)</label>
+                                <input type="number" id="plcr" name="plcr" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="pct">Procalcitonina (%)</label>
+                                <input type="number" id="pct" name="pct" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="pdw">Larghezza distribuzione piastrine (fL)</label>
+                                <input type="number" id="pdw" name="pdw" step="0.01">
+                                </div>
+                            </div>
+
+                            <!-- FERRO -->
+                            <div class="grid-container" style="padding-bottom: 50px;">
+                                <div class="form-group">
+                                <label for="fe">Sidermia (µg/dL)</label>
+                                <input type="number" id="fe" name="fe" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="ferritin_m">Ferritina Uomo (ng/mL)</label>
+                                <input type="number" id="ferritin_m" name="ferritin_m" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="ferritin_w">Ferritina Donna (ng/mL)</label>
+                                <input type="number" id="ferritin_w" name="ferritin_w" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                <label for="transferrin">Transferrina (mg/dL)</label>
+                                <input type="number" id="transferrin" name="transferrin" step="0.01">
+                                </div>
+                            </div>
+
+                            </div>
+                        </div>
+
+                                        <!-- SALUTE DEL SISTEMA IMMUNITARIO -->
+                        <div class="card-indices">
+                            <div class="card-indices_header">
+                            <div class="card-header_title">
+                                <img src="{% static 'image/Sistema.png' %}" alt="">
+                                <h3>Salute del Sistema Immunitario</h3>
+                            </div>
+                            <button class="btn-selected" type="button" title="Apri Sezione" id="immunitario-show">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            </div>
+
+                            <div class="card-indices_content" id="immunitarioContent">
+                            <div class="grid-container">
+
+                                <div class="form-group">
+                                <label for="pcr_c">PCR-C Proteina Reattiva (mg/L)</label>
+                                <input type="number" id="pcr_c" name="pcr_c" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="ves2">Omocisteina (µmol/L)</label>
+                                <input type="number" id="ves2" name="ves2" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="sideremia">Sideremia</label>
+                                <input type="number" id="sideremia" name="sideremia" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="tnf_a">TNF-alpha (pg/ml)</label>
+                                <input type="number" id="tnf_a" name="tnf_a" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="inter_6">Interleuchina-6 (pg/ml)</label>
+                                <input type="number" id="inter_6" name="inter_6" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="inter_10">Interleuchina-10 (ng/ml)</label>
+                                <input type="number" id="inter_10" name="inter_10" step="0.01">
+                                </div>
+
+                            </div>
+                            </div>
+                        </div>
+
+                                        <!-- SALUTE MUSCOLO-SCHELETRICA -->
+                        <div class="card-indices">
+                            <div class="card-indices_header">
+                            <div class="card-header_title">
+                                <img src="{% static 'image/Muscolo.png' %}" alt="">
+                                <h3>Salute Muscolo-scheletrica</h3>
+                            </div>
+                            <button class="btn-selected" type="button" title="Apri Sezione" id="muscolare-show">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            </div>
+
+                            <div class="card-indices_content" id="muscolareContent">
+                            <div class="grid-container">
+
+                                <div class="form-group">
+                                <label for="calcio">Calcio (mg/dL)</label>
+                                <input type="number" id="calcio" name="calcio" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="fosforo">Fosforo (mg/dL)</label>
+                                <input type="number" id="fosforo" name="fosforo" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="mg_muscolare">Magnesio (mg/dL)</label>
+                                <input type="number" id="mg_muscolare" name="mg_muscolare" step="0.01">
+                                </div>
+
+                                <div class="form-group">
+                                <label for="v_d">Vitamina D</label>
+                                <input type="number" id="v_d" name="v_d" step="0.01">
+                                </div>
+
+                            </div>
+                            </div>
+                        </div>
+                    
+                    </div> 
+                </form>
+
+
+
+            </div>
+
+            <div id="panel-capacita-vitale" class="bio-panel" hidden></div>
+            <div id="panel-resilienza" class="bio-panel" hidden></div>
+            <div id="panel-score-organi" class="bio-panel" hidden></div>
+            <div id="panel-terapie" class="bio-panel" hidden></div>
+            <div id="panel-appuntamenti" class="bio-panel" hidden></div>
+            <div id="panel-analisi-lab" class="bio-panel" hidden></div>
+            <div id="panel-analytics" class="bio-panel" hidden></div>
+            <div id="panel-diario" class="bio-panel" hidden></div>
+            <div id="panel-referto" class="bio-panel" hidden></div>
+            <div id="panel-impostazioni" class="bio-panel" hidden></div>
+
+
+        </div>
+
+
+
+      </main>
+
+        <script>
+        // ====== Sidebar switching (pannelli on-demand) ======
+        (function(){
+            const side = document.getElementById('bioSideNav');
+            const buttons = Array.from(side.querySelectorAll('.side-btn'));
+            const panels = Array.from(document.querySelectorAll('.bio-panel'));
+
+            function openPanel(id){
+            // mostra solo il pannello richiesto
+            panels.forEach(p => p.hidden = (p.id !== id));
+            // attiva solo il bottone selezionato
+            buttons.forEach(b => b.classList.toggle('active', b.dataset.panel === id));
+            // aggiorna hash
+            history.replaceState(null, '', '#' + id);
+            // scroll a vista (se esiste)
+            const target = document.getElementById(id);
+            if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
+            }
+
+            side.addEventListener('click', (e) => {
+            const btn = e.target.closest('.side-btn');
+            if(!btn) return;
+            const id = btn.dataset.panel;
+            // se clicchi Età Biologica, apri il form; per altri tab, pannelli vuoti
+            if (document.getElementById(id)) openPanel(id);
+            });
+
+            // Stato iniziale: nessun pannello visibile, a meno che l'URL abbia un hash valido
+            const initial = location.hash.replace('#','');
+            if (initial && document.getElementById(initial)) {
+            openPanel(initial);
+            } else {
+            // tutto nascosto e nessun bottone attivo
+            panels.forEach(p => p.hidden = true);
+            buttons.forEach(b => b.classList.remove('active'));
+            // (se vuoi far partire aperto Età Biologica, decommenta la riga sotto)
+            // openPanel('panel-eta-biologica');
+            }
+        })();
+
+        // ====== Fill KPI from data-* (backend può sovrascrivere) ======
+        (function(){
+            const hero = document.getElementById('bioHero');
+            if (!hero) return;
+
+            const ov = Number(hero.dataset.overall || 78);
+            const de = Number(hero.dataset.delta || -3);
+            const te = Number(hero.dataset.tests || 12);
+            const la = hero.dataset.last || '—';
+
+            const gauge = document.querySelector('.hero-grid .gauge');
+            if (gauge) {
+            gauge.style.setProperty('--val', ov);
+            const span = gauge.querySelector('span');
+            if (span) span.textContent = ov;
+            }
+            const kpiOverall = document.getElementById('kpi-overall');
+            if (kpiOverall) kpiOverall.textContent = `${ov}/100`;
+            const kpiDelta = document.getElementById('kpi-delta');
+            if (kpiDelta) kpiDelta.textContent = (de>0?`+${de}`:de) + ' anni';
+            const kpiTests = document.getElementById('kpi-tests');
+            if (kpiTests) kpiTests.textContent = te;
+            const kpiLast = document.getElementById('kpi-last');
+            if (kpiLast) kpiLast.textContent = la.split('-').reverse().join('/').replace(/^\/+/,'') || la;
+        })();
+        </script>
+
+    </body>
+</html>

@@ -515,30 +515,57 @@ class RefertiEtaMetabolica(models.Model):
     def __str__(self):
         return f"Referto {self.id} - {self.paziente.name} {self.paziente.surname} - {self.data_referto.date()}"
 
-# CAPACITA RESILIENZA
+
+PROTOCOL_CHOICES = (
+    ('30m', '30 m'),
+    ('60m', '60 m'),
+    ('24h', '24 h'),
+)
+
 class Resilienza(models.Model):
     paziente = models.ForeignKey(
         TabellaPazienti,
         on_delete=models.CASCADE,
         related_name='resilienza'
     )
- 
-    hrv = models.FloatField(null=True, blank=True)
-    cortisolo = models.FloatField(null=True, blank=True)
-    ros = models.FloatField(null=True, blank=True)
-    osi = models.FloatField(null=True, blank=True)
-    droms = models.FloatField(null=True, blank=True)
-    pcr = models.FloatField(null=True, blank=True)
-    nlr = models.FloatField(null=True, blank=True)
-    homa = models.FloatField(null=True, blank=True)
-    ir = models.FloatField(null=True, blank=True)
-    omega_3 = models.FloatField(null=True, blank=True)
-    vo2max = models.FloatField(null=True, blank=True)
 
+    # meta
+    protocollo = models.CharField(max_length=10, choices=PROTOCOL_CHOICES, null=True)
+    selected_tests = models.JSONField(default=list, blank=True)  # es: ["hrv","bp","holter"]
+    data_misurazione = models.DateTimeField(default=timezone.now)
+
+    # HRV
+    hrv_rmssd = models.FloatField(null=True, blank=True)
+    hrv_sdnn = models.FloatField(null=True, blank=True)
+    hrv_pnn50 = models.FloatField(null=True, blank=True)
+    hrv_lf_power = models.FloatField(null=True, blank=True)
+    hrv_hf_power = models.FloatField(null=True, blank=True)
+    hrv_lf_hf = models.FloatField(null=True, blank=True)
+
+    # Pressione arteriosa
+    bp_sbp_mean = models.FloatField(null=True, blank=True)
+    bp_dbp_mean = models.FloatField(null=True, blank=True)
+    bp_pp_calc = models.FloatField(null=True, blank=True)
+    bp_sd_sbp = models.FloatField(null=True, blank=True)
+    bp_sd_dbp = models.FloatField(null=True, blank=True)
+    bp_morning_surge = models.FloatField(null=True, blank=True)
+    bp_nocturnal_dip = models.FloatField(null=True, blank=True)
+
+    # Holter / Stabilità cardiaca
+    holter_hr_mean = models.FloatField(null=True, blank=True)
+    holter_hr_min = models.FloatField(null=True, blank=True)
+    holter_hr_max = models.FloatField(null=True, blank=True)
+    holter_pac_hour = models.FloatField(null=True, blank=True)
+    holter_pvc_hour = models.FloatField(null=True, blank=True)
+    holter_af_burden = models.FloatField(null=True, blank=True)
+    holter_st_events = models.FloatField(null=True, blank=True)
+
+    # eventuale composito
     risultato = models.FloatField(null=True, blank=True)
 
     def __str__(self):
-        return f"Referto - {self.paziente.name} {self.paziente.surname}"
+        return f"Resilienza - {self.paziente.name} {self.paziente.surname} ({self.data_misurazione:%Y-%m-%d %H:%M})"
+
 
 # CAPACITA VITALE TABLE
 class RefertiCapacitaVitale(models.Model):

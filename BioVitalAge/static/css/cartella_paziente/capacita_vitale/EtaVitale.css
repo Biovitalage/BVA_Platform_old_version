@@ -9,14 +9,12 @@
     justify-content: space-between;
     align-items: center;
 }
-
 .contenitoreTest h3 {
     font-size: 25px;
     color: var(--contrast-color);
     text-align: center;
     font-weight: bold;
 }
-
 .contenitoreTest {
     display: flex;
     flex-direction: column;
@@ -28,7 +26,6 @@
     width: 50%;
     position: relative;
 }
-
 .contenitoreTest::after {
     content: '';
     position: absolute;
@@ -39,7 +36,6 @@
     height: 96%;
     border-radius: 5px;
 }
-
 .contenitoreTitolo img {
     border-radius: 50px;
 }
@@ -66,7 +62,6 @@
 #lista_domini li a:hover{
     font-weight: bold;
 }
-
 .containerCard-test {
     display: flex;
     justify-content: space-between;
@@ -76,11 +71,9 @@
     gap: 5px;
     margin-bottom: 0px;
 }
-
 .contentTest h5 {
     font-weight: bold;
 }
-
 .containerCard-test p {
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -93,11 +86,9 @@
     background-color: white;
     font-weight: bold;
 }
-
 .contenitoreTest button {
     margin-bottom: 20px;
 }
-
 .container-button-submit{
     display: flex;
     justify-content: flex-start;
@@ -116,7 +107,6 @@
     height: 100%;
     width: 50%;
 }
-
 .TabellaVitale-header {
     width: 100%;
     padding: 20px;
@@ -125,33 +115,20 @@
     align-items: center;
     height: 17%;
 }
-
 .table-container {
     height: 73%;
     width: 100%;
     padding: 20px;
 }
-
 .table-content{
     border-bottom: 1px solid #ddd;
     border-left: 1px solid #ddd;
 }
-
 .TabellaVitale-header h3 {
     color: var(--contrast-color);
     font-weight: bold;
     font-size: 25px;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -162,7 +139,6 @@
     width: auto;
     display: inline-block;
 }
-
 .custom-select {
     appearance: none;
     width: 245px;
@@ -175,14 +151,11 @@
     transition: border-color 0.2s ease;
     background-image: none;
 }
-
 .custom-select:focus {
     outline: none;
     border-color: var(--contrast-color);
     box-shadow: 0 0 5px var(--contrast-color2);
 }
-
-/* Nuova freccia */
 .custom-arrow {
     position: absolute;
     top: 50%;
@@ -196,7 +169,6 @@
     transition: transform 0.2s ease;
     pointer-events: none;
 }
-
 .backdropModale{
     background-color: rgba(0,0,0,0.5);
     position: fixed;

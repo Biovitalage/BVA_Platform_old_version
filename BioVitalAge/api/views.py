@@ -1,7 +1,6 @@
 """ 
 ViewSet for API 
 """
-
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from BioVitalAge.models import *
@@ -147,8 +146,6 @@ class PazienteViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({'error': str(e)}, status=400)
 
 
-
-
 @csrf_exempt
 def salva_prescrizione_libera(request):
     if request.method == 'POST':
@@ -172,8 +169,6 @@ def salva_prescrizione_libera(request):
     return JsonResponse({'success': False, 'error': 'Metodo non consentito.'}, status=405)
 
 
-
-
 def icd11_search_view(request):
     query = request.GET.get("q", "")
     if not query:
@@ -181,8 +176,6 @@ def icd11_search_view(request):
     token = get_icd11_token()
     results = search_icd11_entities(query, token)
     return JsonResponse(results)
-
-
 
 
 @csrf_exempt

@@ -8,9 +8,7 @@ from .views import *
 router = DefaultRouter()
 router.register(r'pazienti', PazienteViewSet, basename='paziente')
 
-# extra_urls = []
-
-urlpatterns = router.urls  #+ extra_urls
+urlpatterns = router.urls  
 
 from .views import get_visita, get_visite_paziente
 
@@ -22,7 +20,6 @@ urlpatterns += [
 
     # API ICD11
     path("icd11/search/",                           icd11_search_view),
-
 
     path('api/visite/<int:visita_id>/', get_visita, name='get_visita_api'),
     path('api/visite-paziente/<int:persona_id>/', get_visite_paziente, name='get_visite_paziente'),

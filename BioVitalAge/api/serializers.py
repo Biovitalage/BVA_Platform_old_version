@@ -1,7 +1,6 @@
 """
-    Serializer for API.
+Serializer for API.
 """
-
 from rest_framework import serializers
 from BioVitalAge.models import *
 

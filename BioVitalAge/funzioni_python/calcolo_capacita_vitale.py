@@ -286,6 +286,3 @@ def CalcoloPunteggioCapacitaVitale(
     return round(calcoloCapacitaVitale, 2)
 
 
-#result = CalcoloPunteggioCapacitaVitale(26,1,1,7,7,'Strong',95,1,19,36,0.80,'Verde',0.60,1.2,60,4,gender = 'M')
-
-#print(result)

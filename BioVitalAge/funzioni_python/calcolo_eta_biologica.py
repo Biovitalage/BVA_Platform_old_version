@@ -162,11 +162,11 @@ def adjust_age_glucose(glucose):
     glucose = float(glucose) if glucose else 0 
 
     if 70 <= glucose <= 105:
-        return 0  # Range normale
+        return 0  
     elif 106 <= glucose <= 140:
-        return 2  # Glucosio leggermente elevato
+        return 2  
     elif glucose > 140:
-        return 5  # Alto rischio
+        return 5  
     return 0
 
 def adjust_age_creatinine(creatinine):
@@ -434,7 +434,6 @@ def adjust_age_examsF(exams):
                 minValue, maxValue = normal_values[key]
                 if minValue != 0:
                     age_adjustment += 0
-                    #print(f"{key}: ✅ {value} il valore non è stato inserito ({minValue}, {maxValue})")
                     continue
 
             if key in normal_values:
@@ -442,10 +441,8 @@ def adjust_age_examsF(exams):
                 minValue, maxValue = normal_values[key]
             
                 if minValue <= value <= maxValue:
-                    #print(f"{key}: ✅ {value} è dentro il range ({minValue}, {maxValue})")
                     age_adjustment -= 0.2  
                 else:
-                    #print(f"{key}: ❌ {value} è FUORI dal range ({minValue}, {maxValue})")
                     age_adjustment += 0.4 
          
     return age_adjustment
@@ -578,7 +575,6 @@ def adjust_age_examsM(exams):
                 minValue, maxValue = normal_values[key]
                 if minValue != 0:
                     age_adjustment += 0
-                    #print(f"{key}: ✅ {value} il valore non è stato inserito ({minValue}, {maxValue})")
                     continue
 
             if key in normal_values:
@@ -586,10 +582,8 @@ def adjust_age_examsM(exams):
                 minValue, maxValue = normal_values[key]
             
                 if minValue <= value <= maxValue:
-                    #print(f"{key}: ✅ {value} è dentro il range ({minValue}, {maxValue})")
                     age_adjustment -= 0.2  
                 else:
-                    #print(f"{key}: ❌ {value} è FUORI dal range ({minValue}, {maxValue})")
                     age_adjustment += 0.4 
          
     return age_adjustment
@@ -606,7 +600,7 @@ def calculate_biological_age(chronological_age, d_roms = 260, osi = 10, pat = 25
     if gender == 'F':
         biological_age += adjust_age_examsF(exams)
 
-    # Aggiustamenti basati sui vari parametri
+
     biological_age += adjust_age_d_roms(d_roms)
     biological_age += adjust_age_osi(osi)
     biological_age += adjust_age_pat(pat)
@@ -624,7 +618,7 @@ def calculate_biological_age(chronological_age, d_roms = 260, osi = 10, pat = 25
     biological_age += adjust_age_mchc(mchc)
     biological_age += adjust_age_rdw(rdw)
 
-    # Aggiustamenti basati sugli esami specifici
+
     biological_age += adjust_age_glucose(exams[102].get('glucose', 0))
    
     if gender == 'M':
@@ -643,8 +637,4 @@ def calculate_biological_age(chronological_age, d_roms = 260, osi = 10, pat = 25
 
     return int(biological_age)
 
-
-#risultatoTest = calculate_biological_age(chronological_age = 53, wbc = 5430 , basophils = 0.6,
-               # lymphocytes = 36.8, monocytes = 0.2, neutrophils = 54.3 , rbc = 4.45, hgb = 13.6, 
-               # hct = 37.7, mcv = 84.7, mch = 30.6, mchc = 36.1, rdw = 37.4, gender = 'F', exams = exams)
 
