@@ -942,7 +942,146 @@
             </div>
 
             <div id="panel-capacita-vitale" class="bio-panel" hidden></div>
-            <div id="panel-resilienza" class="bio-panel" hidden></div>
+
+            <div id="panel-resilienza" class="bio-panel" hidden>
+
+                <form method="POST" action="{% url 'resilienza' persona.id %}">
+                {% csrf_token %}
+
+                
+
+                <div class="card-container">
+
+                        <div class="card-indices_header" id="header-title">
+                            <div class="card-header_title">
+                                <img src="{% static 'image/resilienz.png' %}" alt="">
+                                <h3>Resilienza</h3>
+                            </div>
+                        </div>
+
+                        <div class="title-container">
+                            <img src="{% static 'image/Stress.png' %}" alt="">
+                            <h3>Stress e Recupero</h3>
+                        </div>
+                        
+                        <div class="grid-container">
+                            <div class="form-group">
+                                <label for="name">HRV (Variabilità Cardiaca)</label>
+                                <input type="text" id="hrv" name="hrv" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">Cortisolo (Stress Cronico)</label>
+                                <input type="text" id="cortisolo" name="cortisolo" required placeholder="Inserisci il valore">
+                            </div>
+                        </div>
+                </div>
+                    
+                <div class="card-container">
+                        <div class="title-container">
+                            <img src="{% static 'image/Stress_Ossidativo.png' %}" alt="">
+                            <h3>Bilancio Redox e Stress Ossidativo</h3>
+                        </div>
+                        
+                        <div class="grid-container2">
+                            <div class="form-group">
+                                <label for="name">ROS (Specie Reattive dell'Ossigeno)</label>
+                                <input type="text" id="ros" name="ros" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">OSI Index (Oxidative Stress Index)</label>
+                                <input type="text" id="osi" name="osi" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">dROMS (Danni da Radicali Liberi)</label>
+                                <input type="text" id="dRoms" name="dRoms" required placeholder="Inserisci il valore">
+                            </div>
+                        </div>
+                </div>
+                    
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Risposta_Immunitaria.png' %}" alt="">
+                        <h3>Infiammazione e Risposta Immunitaria</h3>
+                    </div>
+                        
+                    <div class="grid-container">
+                            <div class="form-group">
+                                <label for="name">Proteina C-reattiva (PCR)</label>
+                                <input type="text" id="pcr" name="pcr" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">Rapporto Neutrofili/Linfociti (NLR)</label>
+                                <input type="text" id="pcr" name="pcr" required placeholder="Inserisci il valore">
+                            </div>
+                    </div>
+                </div>
+                
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Profilo_Metabolico.png' %}" alt="">
+                        <h3>Metabolismo e Nutrizione</h3>
+                    </div>
+                        
+                    <div class="grid-container2">
+                            <div class="form-group">
+                                <label for="name">HOMA Test (Sensibilità Insulinica)</label>
+                                <input type="text" id="homa_t" name="homa_t" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">IR Test (Resistenza Insulinica)</label>
+                                <input type="text" id="ir_t" name="ir_t" required placeholder="Inserisci il valore">
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">Indice Omega-3 (EPA/DHA)</label>
+                                <input type="text" id="omega_3" name="omega_3" required placeholder="Inserisci il valore">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="card-container">
+                    <div class="title-container">
+                        <img src="{% static 'image/Capacita_Fisica.png' %}" alt="">
+                        <h3>Capacita Fisica e Resilienza Strumentale</h3>
+                    </div>
+                        
+                    <div class="grid-container">
+                            <div class="form-group">
+                                <label for="name">VO2 Max (Capacità Aerobica)</label>
+                                <input type="text" id="vo2" name="vo2" required placeholder="Inserisci il valore">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="toolkit">
+                        <img src="{% static 'image/Arrow_Back.png' %}" alt="" style="width: 40px; height: 40px;">
+
+                        <button id="calculateButton" type="submit" class="button">
+                            <span class="button__icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg">
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                    
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18"
+                                    class="button__icon-svg button__icon-svg--copy">
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                            Calcola Resilienza
+                        </button>
+                </div>
+
+            </form>
+
+
+
+
+
+
+            </div>
             <div id="panel-score-organi" class="bio-panel" hidden></div>
             <div id="panel-terapie" class="bio-panel" hidden></div>
             <div id="panel-appuntamenti" class="bio-panel" hidden></div>

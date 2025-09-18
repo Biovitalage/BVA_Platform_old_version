@@ -113,3 +113,40 @@ body{
 
 .progressBarContainer { height: 4px; background: rgba(0,0,0,.08); border-radius: 4px; overflow: hidden; margin-top: .5rem; }
 .progressBar { height: 100%; width: 100%; background: currentColor; opacity: .25; transition: width .05s linear; }
+
+
+
+
+/* RESILIENZA STYLE */
+
+.card-container{
+  padding: 20px;
+}
+.title-container{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 15px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.title-container img{
+  width: 30px;
+}
+.title-container h3{
+  padding: 0;
+  margin: 0;
+}
+.grid-container{
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, 1fr)!important;
+}
+.grid-container2{
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, 1fr)!important;
+}
+#header-title{
+  margin-bottom: 1rem;
+}
