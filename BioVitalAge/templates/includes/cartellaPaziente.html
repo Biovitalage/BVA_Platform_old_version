@@ -693,7 +693,7 @@
                 </div>
 
                 <div class="capacita_vitale" data-punteggio="{{ referti_test_recenti.resilienza|default:'2' }}">
-                    <a href="{% url 'resilienza' persona.id %}" style="text-decoration: none; color: inherit;" title="Resilienza">
+                    <a href="{% url 'orologi' persona.id %}#panel-resilienza" style="text-decoration: none; color: inherit;" title="Resilienza">
                         <h3>Resilienza</h3>
                         <div class="card-polmone">
                             <div class="backdrop-riempimento">
@@ -708,7 +708,7 @@
                 </div>
 
                 <div class="capacita_vitale" data-punteggio="{{ referti_test_recenti.resilienza|default:'2' }}">
-                    <a href="{% url 'eta_biologica' persona.id %}" style="text-decoration: none; color: inherit;" title="Resilienza">
+                    <a href="{% url 'orologi' persona.id %}#panel-eta-biologica" style="text-decoration: none; color: inherit;" title="Resilienza">
                         <h3>Età Biologica</h3>
                         <div class="card-polmone">
                             <div class="backdrop-riempimento">
