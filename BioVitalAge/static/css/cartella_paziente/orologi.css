@@ -41,9 +41,12 @@
   margin-bottom: 1rem;
   margin-top: 1rem;
 }
+main{
+    background: linear-gradient(180deg, #2ab0c5 0%, #145277 100%)!important;
+}
 
 .main-title-nav{
-  background: none;
+  background: none!important;
   height: 5rem!important;
   margin-top: 0rem!important;
 }
@@ -61,6 +64,7 @@
   border-radius: 8px;
   margin-bottom: 2rem;
 }
+
 
 .nav-bar {
   background: linear-gradient(90deg, #2ab0c5 0%, #145277 100%)!important;
