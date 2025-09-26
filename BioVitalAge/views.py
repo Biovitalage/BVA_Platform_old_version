@@ -1211,6 +1211,23 @@ class InserisciPazienteView(LoginRequiredMixin,View):
 
 
 
+# --- IMPORT AGGIUNTIVI ---
+import hashlib
+import re
+
+# --- UTILITY PER CODICE PIATTAFORMA ---
+def _slugify_compact(value: str) -> str:
+    value = re.sub(r'\s+', '-', value.strip().lower())
+    value = re.sub(r'[^a-z0-9\-]+', '', value)
+    return re.sub(r'-{2,}', '-', value).strip('-')
+
+def _make_platform_code(nome: str, dosaggio: str) -> str:
+    base = f"{nome}|{dosaggio}".strip().lower()
+    slug = _slugify_compact(f"{nome}-{dosaggio}") or "item"
+    digest = hashlib.sha1(base.encode('utf-8')).hexdigest()[:8]
+    return f"PKG-{slug}-{digest}"
+
+
 @method_decorator(catch_exceptions, name='dispatch')
 class CartellaPazienteView(LoginRequiredMixin, View):
 
@@ -1270,7 +1287,6 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         # ==========================
         #   VISITE + DIARIO CLINICO
         # ==========================
-        # Sezione VISITE dedicata (MODEL: Visita)
         visite_qs = Visita.objects.filter(paziente=persona).order_by('-data_visita', '-visita_numero')
         visite_paginator = Paginator(visite_qs, 5)
         visite_page_number = request.GET.get('visite_page')
@@ -1314,7 +1330,7 @@ class CartellaPazienteView(LoginRequiredMixin, View):
                 'nota': n.contenuto,
             })
 
-        # Normalizza a datetime aware (per formato d/m/Y H:i in template) e ordina
+        # Normalizza a datetime aware e ordina
         def _to_aware(dt_val):
             tz = timezone.get_current_timezone()
             if isinstance(dt_val, date) and not isinstance(dt_val, datetime):
@@ -1559,6 +1575,103 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         page_number_farmaci = request.GET.get('page')
         farmaci_page = paginator_farmaci.get_page(page_number_farmaci)
 
+        # ================================
+        # NUOVO: salvataggio massivo da modale (singoli + pacchetti)
+        # ================================
+        if request.POST.get('action') == 'save_prescrizioni':
+            try:
+                items_json = request.POST.get('items', '[]')
+                items = json.loads(items_json)
+
+                data_inizio_str = request.POST.get('data_inizio') or ''
+                data_fine_str = request.POST.get('data_fine') or ''
+                diagnosi_val = request.POST.get('diagnosi') or ''
+                note_medico_val = request.POST.get('note_medico') or ''
+                posologia_pers = request.POST.get('posologia_personalizzata') or ''
+
+                data_inizio_val = parse_italian_date(data_inizio_str) or now().date()
+                data_fine_val = parse_italian_date(data_fine_str)
+
+                created_count = 0
+                skipped_count = 0  # <--- conteggio duplicati/skip
+
+                for it in items:
+                    codice = (it.get('codice') or '').strip()
+                    nome = (it.get('nome') or '').strip()
+                    dosaggio = (it.get('dosaggio') or '').strip()
+
+                    if not (codice or nome):
+                        skipped_count += 1
+                        continue
+
+                    farmaco = None
+                    if codice:
+                        farmaco = Farmaco.objects.filter(codice_univoco_farmaco=codice).first()
+
+                    if not farmaco and nome:
+                        farmaco = Farmaco.objects.filter(
+                            nome_farmaco__iexact=nome,
+                            dosaggio__iexact=dosaggio
+                        ).first()
+
+                    if not farmaco:
+                        gen_code = _make_platform_code(nome or 'Farmaco', dosaggio or '')
+                        farmaco = Farmaco.objects.create(
+                            codice_univoco_farmaco=gen_code,
+                            nome_farmaco=nome or 'Farmaco',
+                            principio_attivo=nome or 'N/A',
+                            dosaggio=dosaggio or ''
+                        )
+
+                    # === controllo duplicato (stesse date) ===
+                    dup_qs = PrescrizioneFarmaco.objects.filter(
+                        paziente=persona,
+                        farmaco=farmaco,
+                        data_inizio=data_inizio_val,
+                    )
+                    if data_fine_val is None:
+                        dup_qs = dup_qs.filter(data_fine__isnull=True)
+                    else:
+                        dup_qs = dup_qs.filter(data_fine=data_fine_val)
+
+                    if dup_qs.exists():
+                        skipped_count += 1
+                        continue
+
+                    PrescrizioneFarmaco.objects.create(
+                        paziente=persona,
+                        medico=dottore,
+                        farmaco=farmaco,
+                        data_inizio=data_inizio_val,
+                        data_fine=data_fine_val,
+                        posologia_personalizzata=posologia_pers,
+                        note_medico=note_medico_val,
+                        diagnosi=diagnosi_val,
+                        stato='attiva'
+                    )
+                    created_count += 1
+
+                # Se è una chiamata AJAX, rispondi in JSON e NON ricaricare il template
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    # success True anche se created_count=0: il server non è in errore, ma segnaliamo i conti
+                    return JsonResponse({
+                        'success': True,
+                        'created': created_count,
+                        'skipped': skipped_count,
+                    })
+
+                # --- (fallback per submit normali) ---
+                request.POST = request.POST.copy()
+                request.POST['diario_page'] = request.POST.get('diario_page') or request.GET.get('diario_page')
+                request.POST['visite_page'] = request.POST.get('visite_page') or request.GET.get('visite_page')
+                request._prescrizioni_create_count = created_count
+
+            except Exception as e:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': str(e)}, status=400)
+                return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
         # Creazione/aggiornamento diagnosi (come nel tuo codice)
         if request.POST.get('data_nuova_diagnosi') and request.POST.get('descrizione_nuova_diagnosi'):
             try:
@@ -1642,7 +1755,6 @@ class CartellaPazienteView(LoginRequiredMixin, View):
                 'id': v.id, 'tipo': 'Visita', 'data': v.data_visita,
                 'descrizione': f"Visita n° {v.visita_numero}", 'diagnosi': '', 'nota': '',
             })
-        # NOTE (come eventi del Diario) anche in POST
         for n in note_list:
             diario.append({
                 'id': n.id,
@@ -1667,10 +1779,8 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             e['data'] = _to_aware(e['data'])
         diario.sort(key=lambda e: e['data'], reverse=True)
 
-        # --- elenco completo per modale ---
         diario_full = list(diario)
 
-        # Paginazione del diario (8 nel tab)
         diario_paginator = Paginator(diario, 8)
         diario_page_number = request.POST.get('diario_page') or request.GET.get('diario_page')
         diario_page = diario_paginator.get_page(diario_page_number)
@@ -1707,11 +1817,6 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             "success": True,
         }
         return render(request, "includes/cartellaPaziente.html", context)
-
-
-
-
-
 
 
 

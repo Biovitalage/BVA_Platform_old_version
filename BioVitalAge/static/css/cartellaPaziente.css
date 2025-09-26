@@ -1950,6 +1950,7 @@ strong {
   justify-content: space-between;
   align-items: center;
   border-radius: 8px;
+  gap: 10px;
 }
 .Modale-Result-content{
   background-color: var(--contrast-color-shadow);
@@ -1998,19 +1999,29 @@ strong {
   margin-left: 10px;
   padding: 10px;
   cursor: pointer;
+  width: 20%;
 }
 #buttonAdd{
   margin-left: 15px;
   margin-top: 20px;
 }
 .tendinaPrescrizioni{
-  width: 30%;
+  width: 20%;
   height: 2.5rem;
   border-radius: 8px;
   padding: 5px;
   outline: none;
   margin-right: 10px;
   border: 1px solid #ddd;
+}
+#tendina_terapie{
+  height: 2.5rem;
+  border-radius: 8px;
+  padding: 5px;
+  outline: none;
+  margin-right: 10px;
+  border: 1px solid #ddd;
+  width: 20%;
 }
 .barra-ricercaModale{
   width: 40%;

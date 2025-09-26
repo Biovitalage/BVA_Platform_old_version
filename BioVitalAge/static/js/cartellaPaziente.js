@@ -661,6 +661,32 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*  -----------------------------------------------------------------------------------------------
   Funzione fetch ICD11
   --------------------------------------------------------------------------------------------------- */
@@ -1109,7 +1135,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Funzione per la paginazione AJAX delle tabelle Farmaci e Diagnosi
-
 document.addEventListener("DOMContentLoaded", function () {
     // Paginazione Farmaci
     document.querySelectorAll('.pagination_tabella').forEach(function(pagination) {

@@ -1,20 +1,14 @@
-<!-- 
-    /CARTELLA PAZIENTE
--->
-
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
     <head>
-
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <!-- Favicon -->
         <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
         
-
         {% csrf_token %}
         <meta name="csrf-token" content="{{ csrf_token }}">
 
@@ -35,22 +29,18 @@
 
         <!-- CDN IMPORT -->
         <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js" defer></script>
-        <!-- GSAP CDN -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
-
         <!-- JS Import -->
-        <!-- Modale Prescrizioni -->
         <script src="{% static 'js/cartella_paziente/prescrizioni/PrescrizioniFarmaci.js' %}" defer type="module"></script>
         <script src="{% static 'js/cartellaPaziente.js' %}" defer type="module" data-user="{{user.id}}'" data-paziente="{{persona.name}}" ></script>
+
         <script>
             window.DOTTORE = "{{ dottore.nome }} {{ dottore.cognome }}";
             window.PAZIENTE = "{{ persona.name }} {{ persona.surname }}";
             window.DOB_PAZIENTE = "{{ persona.dob|date:'d/m/Y' }}";
             window.CF_PAZIENTE = "{{ persona.codice_fiscale }}";
         </script>
-
-
     </head>
 
     <body>
@@ -60,15 +50,11 @@
         <!-- NAVBAR -->
         {% include 'components/navBar.html' %}
 
-
         <main>
             <!-- MENU TRACE -->
             <div class="main-title-nav">
 
                 <div class="tools-menu-trace">   
-                    <!-- <div class="back-tittle">
-                        <a id="back" href="{% url 'HomePage' %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
-                    </div> -->
                     <button title="Prescrione esami" class="circle-btn" onclick="window.location.href='{% url 'esami' persona.id %}'">
                         <img src="{% static 'image/Prescrizione_color.png' %}" alt="Prescrizione Esami">
                         <p style="margin-bottom: 0;">Accertamenti</p>
@@ -92,8 +78,6 @@
                     <h3>C.F.: {{ persona.codice_fiscale }}</h3>
                     <h3>residenza: {{ persona.residence }} - età: {{ persona.chronological_age }} </h3>
 
-                    <!-- {{ persona.dob|date:'d.m.Y' }}, -->
-
                     {% if persona.email %}
                     <h3>{{ persona.email }}</h3>
                     {% endif %}
@@ -104,18 +88,7 @@
 
                 <div class="tools-container-left-side">
 
-<!--                     <div class="container-trace">
-                        <a href="{% url 'HomePage' %}">
-                            <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
-                        </a>
-                        <p>»</p>
-                        <p class="breadcrumb">Cartella Paziente</p>
-                    </div> 
- -->
                     <div class="tools-menu-trace">   
-                       <!--  <button title="Anamnesi"><img src="{% static 'image/Anamnesi_gray.png' %}" alt=""></button> 
-                        <button title="Esame Obbiettivo"><img src="{% static 'image/EsameObbiettivo.png' %}" alt=""></button> 
-                        <button title="Problemi"><img src="{% static 'image/Problemi.png' %}" alt=""></button> -->
 
                         <button type="button" id="modale-note" class="circle-btn">
                             <img src="{% static 'image/note_color.png' %}" alt="Note" title="Note">
@@ -148,33 +121,29 @@
             <!-- MESSAGGIO DI SUCCESSO CON PUNTEGGIO -->
             {% if success or errore %}
             <script>
-                    document.addEventListener("DOMContentLoaded", () => {
-                        setTimeout(() => {
-                            const modal = document.getElementById("modal_message");
-                            if (modal) {
-                                modal.style.transition = "opacity 0.3s ease";
-                                modal.style.opacity = "0";
-                                setTimeout(() => modal.remove(), 500); // rimuove dal DOM dopo fade out
-                            }
-                        }, 4000); // tempo in millisecondi prima che scompaia (4s)
-                    });
+                document.addEventListener("DOMContentLoaded", () => {
+                    setTimeout(() => {
+                        const modal = document.getElementById("modal_message");
+                        if (modal) {
+                            modal.style.transition = "opacity 0.3s ease";
+                            modal.style.opacity = "0";
+                            setTimeout(() => modal.remove(), 500); 
+                        }
+                    }, 4000); 
+                });
             </script>
             {% endif %}
 
             {% if success %}
             <div class="success_message" id="modal_message">
-
-                    <div class="header_message">
-                        <div class="contianer-title">
-                            <img src="{% static 'image/Success.png' %}" alt="">
-                            <p class="title_message">Success!</p>
-                        </div>
-                        <button class="close" onclick="closeModal()">x</button>
-                        
+                <div class="header_message">
+                    <div class="contianer-title">
+                        <img src="{% static 'image/Success.png' %}" alt="">
+                        <p class="title_message">Success!</p>
                     </div>
-
-                    <p>I dati delle informazioni personali sono state correttamente aggiornate!</p>
-
+                    <button class="close" onclick="closeModal()">x</button>   
+                </div>
+                <p>I dati delle informazioni personali sono state correttamente aggiornate!</p>
             </div>  
             {% endif %}
 
@@ -196,9 +165,6 @@
             </div>
             {% endif %}
 
-            <!-- Backdrop -->
-            <div class="backdrop-indici" id="backdropIndici"></div>
-            
             {% include 'dynamic_templates/cartella_paziente/modale_salute_cuore.html' %}
             {% include 'dynamic_templates/cartella_paziente/modale_salute_del_rene.html' %}
             {% include 'dynamic_templates/cartella_paziente/modale_salute_epatica.html' %}
@@ -207,7 +173,13 @@
             {% include 'dynamic_templates/cartella_paziente/modale_salute_del_sangue.html' %}
             {% include 'dynamic_templates/cartella_paziente/modale_salute_del_sistema_immunitario.html' %}
 
+            <!-- BACKDROP -->
+            <div class="backdrop-indici" id="backdropIndici"></div>
             <div class="backdrop-modale-note" id="backdropModaleNote"></div>
+            <div class="backdrop-modale-prescrizione-libera" id="backdropPrescrizioneLibera"></div>
+            <div class="backdrop-modale-problemi" id="backdropModaleProblemi"></div>
+            <div class="backdrop-modale-diario-clinico" id="backdrop-diario"></div>
+
 
             <!-- MODALE NOTE -->
             <div class="modale-note" id="modale_note">
@@ -268,11 +240,6 @@
                     <button class="button" id="savePrescrizioneLibera">Save</button>
                 </div>
             </div>
-            <div class="backdrop-modale-prescrizione-libera" id="backdropPrescrizioneLibera"></div>
-
-
-            <!-- Backdrop -->
-            <div class="backdrop-modale-problemi" id="backdropModaleProblemi"></div>
 
             <!-- MODALE DIAGNOSI + PROBLEMI -->
             <div class="modale-problemi" id="modale_problemi">
@@ -335,58 +302,7 @@
                 </form>
             </div>
 
-            <script>
-                // Gestione chiusura modale con la X
-                document.addEventListener('DOMContentLoaded', function() {
-                    var closeX = document.getElementById('close-problemi-x');
-                    var modaleProblemi = document.getElementById('modale_problemi');
-                    var backdropProblemi = document.getElementById('backdropModaleProblemi');
-                    if (closeX) {
-                        closeX.addEventListener('click', function() {
-                            if (modaleProblemi) modaleProblemi.style.display = 'none';
-                            if (backdropProblemi) backdropProblemi.style.display = 'none';
-                            document.body.style.overflow = 'auto';
-                        });
-                    }
-                });
-            </script>
-
-            <script>
-                // Mostra la sezione problemi solo dopo selezione diagnosi o inserimento nuova
-                document.addEventListener('DOMContentLoaded', function() {
-                    var diagnosiSelect = document.getElementById('diagnosi_select');
-                    var problemiStep = document.getElementById('problemi_step');
-                    var nuovaDiagnosiForm = document.getElementById('nuova_diagnosi_form');
-                    if (diagnosiSelect) {
-                        diagnosiSelect.addEventListener('change', function() {
-                            if (this.value === "__new__") {
-                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = '';
-                                if (problemiStep) problemiStep.style.display = '';
-                            } else if (this.value) {
-                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
-                                if (problemiStep) problemiStep.style.display = '';
-                            } else {
-                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
-                                if (problemiStep) problemiStep.style.display = 'none';
-                            }
-                        });
-                    }
-                    // Opzionale: inserisci descrizione ICD10 nella textarea al cambio select
-                    var icd10Select = document.getElementById('icd10_select');
-                    var textAreaProblemi = document.getElementById('text_area_problemi');
-                    if (icd10Select && textAreaProblemi) {
-                        icd10Select.addEventListener('change', function() {
-                            var selected = this.options[this.selectedIndex];
-                            if (selected && selected.value) {
-                                textAreaProblemi.value = selected.value + " - " + selected.text.replace(selected.value + " - ", "");
-                            }
-                        });
-                    }
-                });
-            </script>
-
             <!-- MODALE PRIVACY POLICY -->
-            <!-- Modale Privacy con input e firma -->
             <div id="privacy-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
                 <div id="privacy-modal-content" style="background:white; border-radius:10px; width:75vw; max-height:90vh; overflow-y:auto; position:relative;">
                     <div class="privacy-header" style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 2rem; border-bottom:1px solid #ccc;">
@@ -594,10 +510,15 @@
                 </div>
             </div>
 
+            <div class="wrap"></div>
 
-            <div class="wrap">
+
+
+          
             
-        </div>
+
+
+           
 
 
 
@@ -696,7 +617,6 @@
                     <p class="descrizione-vitale"><strong>Punteggio:</strong> {{ referti_test_recenti.microbiota|default:'n.a.' }}</p>
                 </div>
             </div>
-
 
             <!-- Diario clinico -->
             <div class="flex-container">
@@ -865,18 +785,6 @@
 
             </div>
 
-            <script>
-                document.querySelectorAll('.container-header-diario .button').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                    const target = btn.dataset.target; 
-                    document.querySelectorAll('.container-content').forEach(c => c.style.display = 'none');
-                    const el = document.querySelector(target);
-                    if (el) el.style.display = 'block';
-                    btn.parentElement.querySelectorAll('.button').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    });
-                });
-            </script>
 
 
             <!-- Indicatori di performance -->
@@ -1040,7 +948,8 @@
         </main>
 
 
-        <div class="backdrop-modale-diario-clinico" id="backdrop-diario"></div>
+
+
         <div class="modale-diario-clinico-full" id="diario-modal">
             <div class="header-modale">
                 <h3>Diario clinico - completo</h3>
@@ -1086,7 +995,6 @@
         </div>
 
        
-
         <!-- Mostra messaggi -->
         {% if messages %}
         {% for message in messages %}
@@ -1102,10 +1010,10 @@
         </script>
         {% endif %}
         <!-- BACKDROP -->
-        <div id="backdropModale" style="display: none;"></div>
+        <div id="backdropModale"></div>
 
         <!-- MODALE PRESCRIZIONE FARMACO -->
-        <div id="ModaleInserimento" style="display: none;">
+        <div id="ModaleInserimento" >
             <div class="title-header-container">
                 <h3>Aggiungi Prescrizione Farmaco</h3>
                 <button class="close" onclick="closeModal()" style="margin-top: -0.5rem;">X</button>
@@ -1143,6 +1051,15 @@
                         Cerca
                     </button>
                 </div>
+
+                <select name="" id="tendina_terapie">
+                    <option value="0">Pacchetti</option>
+                    <option value="1">Muscle</option>
+                    <option value="2">Detox + Energy + Brain</option>
+                    <option value="3">Nad+</option>
+                    <option value="4">Detox plus</option>
+                    <option value="5">Hangover</option>
+                </select>
         
                 <select name="" id="menu_tendina_prescrizioni" class="tendinaPrescrizioni">
                     <!-- DINAMICAMENTE POPOLATO CON JS -->
@@ -1157,7 +1074,7 @@
             <div class="table-content"></div>
 
             <div class="Modal-result-button">
-                <button class="button" id="conferma-prescrizione-farmaci"> 
+                <button class="button" id="conferma-prescrizione-farmaci" type="button"> 
                     <span class="button__icon-wrapper">
 
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg" width="14" height="14">
@@ -1836,6 +1753,70 @@
                 });
             });
         </script>
+
+
+          <script>
+                // Gestione chiusura modale con la X
+                document.addEventListener('DOMContentLoaded', function() {
+                    var closeX = document.getElementById('close-problemi-x');
+                    var modaleProblemi = document.getElementById('modale_problemi');
+                    var backdropProblemi = document.getElementById('backdropModaleProblemi');
+                    if (closeX) {
+                        closeX.addEventListener('click', function() {
+                            if (modaleProblemi) modaleProblemi.style.display = 'none';
+                            if (backdropProblemi) backdropProblemi.style.display = 'none';
+                            document.body.style.overflow = 'auto';
+                        });
+                    }
+                });
+            </script>
+
+            <script>
+                // Mostra la sezione problemi solo dopo selezione diagnosi o inserimento nuova
+                document.addEventListener('DOMContentLoaded', function() {
+                    var diagnosiSelect = document.getElementById('diagnosi_select');
+                    var problemiStep = document.getElementById('problemi_step');
+                    var nuovaDiagnosiForm = document.getElementById('nuova_diagnosi_form');
+                    if (diagnosiSelect) {
+                        diagnosiSelect.addEventListener('change', function() {
+                            if (this.value === "__new__") {
+                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = '';
+                                if (problemiStep) problemiStep.style.display = '';
+                            } else if (this.value) {
+                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+                                if (problemiStep) problemiStep.style.display = '';
+                            } else {
+                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+                                if (problemiStep) problemiStep.style.display = 'none';
+                            }
+                        });
+                    }
+                    // Opzionale: inserisci descrizione ICD10 nella textarea al cambio select
+                    var icd10Select = document.getElementById('icd10_select');
+                    var textAreaProblemi = document.getElementById('text_area_problemi');
+                    if (icd10Select && textAreaProblemi) {
+                        icd10Select.addEventListener('change', function() {
+                            var selected = this.options[this.selectedIndex];
+                            if (selected && selected.value) {
+                                textAreaProblemi.value = selected.value + " - " + selected.text.replace(selected.value + " - ", "");
+                            }
+                        });
+                    }
+                });
+            </script>
+
+            <script>
+                document.querySelectorAll('.container-header-diario .button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                    const target = btn.dataset.target; 
+                    document.querySelectorAll('.container-content').forEach(c => c.style.display = 'none');
+                    const el = document.querySelector(target);
+                    if (el) el.style.display = 'block';
+                    btn.parentElement.querySelectorAll('.button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    });
+                });
+            </script>
 
 
     </body>
