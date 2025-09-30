@@ -1,17 +1,113 @@
+// esami.js
 import { renderingRisultati } from "../prescrizioni/fetchDatiArchivio.js";
 import showAlert from "../../components/showAlert.js";
 import { confirmDeleteAction } from "../../components/deleteAction.js";
 
 let arrayFoglio1 = [];
 
-/* FUNZIONE DI POPOLAZIONE E RICERCA NELLA MODALE */
+/* =======================================================================================
+   PACCHETTI PRESCRIZIONI (supporto a prezzo + lista esami; case-insensitive matching)
+   ======================================================================================= */
+const pacchettiPrescrizioni = {
+  "PACCHETTO CHECKUP COMPLETO DONNA": {
+    prezzo: null,
+    esami: [
+      "EMOCROMO COMPLETO","SIDEREMIA","FERRITINA","TRANSFERRINA","AZOTEMIA","CREATININA","URICEMIA",
+      "COLESTEROLO TOTALE","COLESTEROLO LDL","COLESTEROLO HDL","TRIGLICERIDI","GLICEMIA","INSULINA",
+      "TRANSAMINASI (GOT)","TRANSAMINASI (GPT)","GAMMA-GT","FOSFATASI ALCALINA",
+      "BILIRUBINA (TOTALE)","BILIRUBINA (DIRETTA)","BILIRUBINA (INDIRETTA)",
+      "PCR-Proteina C Reattiva","ELETTROFORESI DELLE SIEROPROTEINE",
+      "SODIO (Na)","POTASSIO (K)","MAGNESIO (Mg)","CALCIO (Ca)","FOSFORO (F)",
+      "25OH VITAMINA D","TSH","ESAME DELLE URINE"
+    ]
+  },
+  "PACCHETTO CHECKUP COMPLETO UOMO": {
+    prezzo: null,
+    esami: [
+      "EMOCROMO COMPLETO","SIDEREMIA","FERRITINA","TRANSFERRINA","AZOTEMIA","CREATININA","URICEMIA",
+      "COLESTEROLO TOTALE","COLESTEROLO LDL","COLESTEROLO HDL","TRIGLICERIDI","GLICEMIA","INSULINA",
+      "TRANSAMINASI (GOT)","TRANSAMINASI (GPT)","GAMMA-GT","FOSFATASI ALCALINA",
+      "BILIRUBINA (TOTALE)","BILIRUBINA (DIRETTA)","BILIRUBINA (INDIRETTA)",
+      "PCR-Proteina C Reattiva","ELETTROFORESI DELLE SIEROPROTEINE",
+      "SODIO (Na)","POTASSIO (K)","MAGNESIO (Mg)","CALCIO (Ca)","FOSFORO (F)",
+      "PSA III GENERAZIONE","TSH","ESAME DELLE URINE"
+    ]
+  },
+
+  // 🔹 NUOVI PACCHETTI RICHIESTI
+  "CHECK UP TIROIDE BASE": {
+    prezzo: 25.00,
+    esami: ["FT3","FT4","TSH"]
+  },
+  "CHECK UP TIROIDE AVANZATO": {
+    prezzo: 45.00,
+    esami: ["FT3","FT4","TSH","ANTICORPI ANTI TPO","ANTICORPI ANTI TIREOGLOBULINA"]
+  },
+  "CHECK UP COAGULAZIONE": {
+    prezzo: 30.00,
+    esami: [
+      "EMOCROMO COMPLETO",
+      // ⚠️ Verifica denominazioni nel tuo Archivio (PT/PTT)
+      "TEMPO DI TROMBOPLASTINA PARZIALE (PTT)",
+      "TEMPO DI PROTROMBINA (PT)",
+      "ANTITROMBINA III","FIBRINOGENO","D-DIMERO"
+    ]
+  },
+  "CHECK UP GASTROENTEROLOGICO": {
+    prezzo: 56.00,
+    esami: [
+      "AMILASI","LIPASI","TRANSAMINASI (GOT)","TRANSAMINASI (GPT)","GAMMA-GT",
+      "HELICOBACTER PYLORI FECALE",
+      "RICERCA SANGUE OCCULTO FECI SU 3 CAMPIONI"
+    ]
+  },
+  "CHECK UP MALATTIE SESSUALMENTE TRASMISSIBILI": {
+    prezzo: 68.00,
+    esami: [
+      "TPHA","VDRL","ANTICORPI ANTI HIV","HBSAG","ANTICORPI ANTI HCV",
+      "ANTICORPI ANTI HERPES SIMPLEX 1/2 IGG","ANTICORPI ANTI HERPES SIMPLEX 1/2 IGM"
+    ]
+  },
+  "CHECK UP MENOPAUSA": {
+    prezzo: 50.00,
+    esami: [
+      "ORMONE FOLLICOLO STIMOLANTE (FSH)","ORMONE LUTEINIZZANTE (LH)",
+      "ESTRADIOLO (17-BETA ESTRADIOLO - EII)","PROGESTERONE"
+    ]
+  }
+};
+
+// Mappa sinonimi (se nell'Archivio hai varianti di nomenclatura, aggiungile qui)
+const sinonimi = {
+  "GOT": "TRANSAMINASI (GOT)",
+  "GPT": "TRANSAMINASI (GPT)",
+  "GAMMAGT": "GAMMA-GT",
+  "HELICOBACTER PYLORI FECALE": "HELICOBACTER PYLORI FECALE",
+  "SANGUE OCCULTO FECI SU 3 CAMPIONI": "RICERCA SANGUE OCCULTO FECI SU 3 CAMPIONI",
+  "PT": "TEMPO DI PROTROMBINA (PT)",
+  "PTT": "TEMPO DI TROMBOPLASTINA PARZIALE (PTT)"
+};
+function normalizza(str) {
+  return (str || "").toString().trim().toUpperCase();
+}
+function alias(descr) {
+  const n = normalizza(descr);
+  return sinonimi[n] || descr;
+}
+
+window.datiPacchettiEsami = {};
+let datiFiltratiCheckup = [];
+
+/* =======================================================================================
+   POPOLAZIONE MODALE → MENU A TENDINA + LISTA RISULTATI
+   ======================================================================================= */
 async function populateDropdown() {
   const data = await renderingRisultati();
   arrayFoglio1 = data[0].Foglio1;
 
-  const menuTendinaModale = document.getElementById(
-    "menu_tendina_prescrizioni"
-  );
+  const menuTendinaModale = document.getElementById("menu_tendina_prescrizioni");
+  if (!menuTendinaModale) return;
+
   menuTendinaModale.innerHTML = "";
 
   const placeholderOption = document.createElement("option");
@@ -27,6 +123,7 @@ async function populateDropdown() {
     menuTendinaModale.appendChild(option);
   });
 }
+
 async function populateResults(filteredData = null) {
   if (!filteredData) {
     const data = await renderingRisultati();
@@ -36,6 +133,7 @@ async function populateResults(filteredData = null) {
 
   const resultContainer = document.querySelector(".Modale-Result-content");
   const tableContainer = document.querySelector(".table-content");
+  if (!resultContainer) return;
 
   resultContainer.innerHTML = "";
 
@@ -44,54 +142,46 @@ async function populateResults(filteredData = null) {
     row.classList.add("rowModale");
 
     let rowContent = `
-          <div class="colModale">${
-            item.CODICE_UNIVOCO_ESAME_PIATTAFORMA || ""
-          }</div>
-          <div class="colModale nomeEsame">${item.DESCRIZIONE_ESAME || ""}</div>
-          <div class="colModale codici">${
-            item.COD_ASL ? `${item.COD_ASL} <span> (cod. asl) </span>` : ""
-          }</div>
-          <div class="colModale codici">${
-            item.COD_REG ? `${item.COD_REG}<span> (cod. reg)</span>` : ""
-          }</div>
-          <div class="colModale metodica">${item.METODICA || ""}</div>
-          <div class="colModale apparato">${(
-            item.APPARATO_or_I_SISTEMI || ""
-          ).slice(0, 25)}</div>
-          <div class="colModale">
-              <button class="add-btn" 
-                  data-id="${item.id}"
-                  data-nome="${item.DESCRIZIONE_ESAME}" 
-                  data-codice="${item.CODICE_UNIVOCO_ESAME_PIATTAFORMA || ""}"
-                  data-asl="${item.COD_ASL || ""}"
-                  data-reg="${item.COD_REG || ""}" 
-                  data-metodica="${item.METODICA || ""}"
-                  data-apparato="${item.APPARATO_or_I_SISTEMI || ""}">
-                  ➕
-              </button>
-          </div>
-      `;
+      <div class="colModale">${item.CODICE_UNIVOCO_ESAME_PIATTAFORMA || ""}</div>
+      <div class="colModale nomeEsame">${item.DESCRIZIONE_ESAME || ""}</div>
+      <div class="colModale codici">${item.COD_ASL ? `${item.COD_ASL} <span> (cod. asl) </span>` : ""}</div>
+      <div class="colModale codici">${item.COD_REG ? `${item.COD_REG}<span> (cod. reg)</span>` : ""}</div>
+      <div class="colModale metodica">${item.METODICA || ""}</div>
+      <div class="colModale apparato">${(item.APPARATO_or_I_SISTEMI || "").slice(0, 25)}</div>
+      <div class="colModale">
+        <button class="add-btn" 
+          data-id="${item.id}"
+          data-nome="${item.DESCRIZIONE_ESAME}" 
+          data-codice="${item.CODICE_UNIVOCO_ESAME_PIATTAFORMA || ""}"
+          data-asl="${item.COD_ASL || ""}"
+          data-reg="${item.COD_REG || ""}" 
+          data-metodica="${item.METODICA || ""}"
+          data-apparato="${item.APPARATO_or_I_SISTEMI || ""}">
+          ➕
+        </button>
+      </div>
+    `;
 
     row.innerHTML = rowContent;
     resultContainer.appendChild(row);
   });
 
+  // Gestione click "➕" su risultati modale
   document.querySelectorAll(".add-btn").forEach((button) => {
     button.addEventListener("click", (event) => {
-      const esameId = event.target.getAttribute("data-id");
-      const esameNome = event.target.getAttribute("data-nome");
-      const esameCodice = event.target.getAttribute("data-codice");
-      const esameAsl = event.target.getAttribute("data-asl");
-      const esameReg = event.target.getAttribute("data-reg");
-      const esameMetodica = event.target.getAttribute("data-metodica");
-      const esameApparato = event.target.getAttribute("data-apparato");
+      if (!tableContainer) return;
+      const esameId = event.currentTarget.getAttribute("data-id");
+      const esameNome = event.currentTarget.getAttribute("data-nome");
+      const esameCodice = event.currentTarget.getAttribute("data-codice");
+      const esameAsl = event.currentTarget.getAttribute("data-asl");
+      const esameReg = event.currentTarget.getAttribute("data-reg");
+      const esameMetodica = event.currentTarget.getAttribute("data-metodica");
+      const esameApparato = event.currentTarget.getAttribute("data-apparato");
 
-      // Verifica se l'esame è già stato aggiunto
+      // evita duplicati
       const alreadyExists = Array.from(tableContainer.children).some(
-        (row) =>
-          row.querySelector('[name="codiceEsame"]')?.textContent === esameCodice
+        (row) => row.querySelector('[name="codiceEsame"]')?.textContent === esameCodice
       );
-
       if (alreadyExists) {
         showAlert({
           type: "warning",
@@ -101,52 +191,40 @@ async function populateResults(filteredData = null) {
         return;
       }
 
-      // Creazione della riga per la tabella
+      // aggiunge riga alla tabella principale
       const tableRow = document.createElement("div");
       tableRow.classList.add("rowModale", "coda-item");
       tableRow.setAttribute("data-id", esameId);
       tableRow.innerHTML = `
-              <div class="colModale" name="codiceEsame">${esameCodice}</div>
-              <input type="hidden" id="codiceEsameInput" name="codiceEsame" value="${esameCodice}">
-              <div class="colModale nomeEsame">${esameNome}</div>
-              <div class="colModale codici">${
-                esameAsl ? `${esameAsl} (cod. asl)` : ""
-              }</div>
-              <div class="colModale codici">${
-                esameReg ? `${esameReg} (cod. reg)` : ""
-              }</div>
-              <div class="colModale metodica">${esameMetodica}</div>
-              <div class="colModale apparati">${esameMetodica}</div>
-              <div class="colModale">
-                  <button class="remove-btn">❌</button>
-              </div>
-          `;
-
+        <div class="colModale" name="codiceEsame">${esameCodice}</div>
+        <input type="hidden" id="codiceEsameInput" name="codiceEsame" value="${esameCodice}">
+        <div class="colModale nomeEsame">${esameNome}</div>
+        <div class="colModale codici">${esameAsl ? `${esameAsl} (cod. asl)` : ""}</div>
+        <div class="colModale codici">${esameReg ? `${esameReg} (cod. reg)` : ""}</div>
+        <div class="colModale metodica">${esameMetodica}</div>
+        <div class="colModale apparati">${esameApparato || ""}</div>
+        <div class="colModale"><button class="remove-btn">❌</button></div>
+      `;
       tableContainer.appendChild(tableRow);
 
-      // Aggiunge l'evento di rimozione alla riga
       tableRow.querySelector(".remove-btn").addEventListener("click", () => {
         tableRow.remove();
-        updatePagination(); // Aggiorna la paginazione dopo la rimozione
+        updatePagination(); // aggiorna paginazione dopo rimozione
       });
 
-      updatePagination(); // Aggiorna la paginazione dopo l'aggiunta
+      updatePagination(); // aggiorna paginazione dopo aggiunta
     });
   });
 
   updatePagination();
 }
-function filterResults() {
-  console.log("Filtraggio in corso...");
 
-  const searchText = document
-    .querySelector(".barra-ricercaModale input")
-    .value.toLowerCase();
-  const selectedFilter = document.querySelector(".ModaleHeader select").value;
+function filterResults() {
+  const searchText = document.querySelector(".barra-ricercaModale input")?.value.toLowerCase() || "";
+  const selectedFilter = document.querySelector(".ModaleHeader select")?.value || "0";
 
   let filteredData = arrayFoglio1.filter((item) => {
     if (!searchText) return true;
-
     return (
       item.DESCRIZIONE_ESAME?.toLowerCase().includes(searchText) ||
       item.METODICA?.toLowerCase().includes(searchText) ||
@@ -157,146 +235,62 @@ function filterResults() {
 
   switch (selectedFilter) {
     case "1":
-      filteredData.sort((a, b) =>
-        a.DESCRIZIONE_ESAME.localeCompare(b.DESCRIZIONE_ESAME)
-      );
-      break;
-
+      filteredData.sort((a, b) => a.DESCRIZIONE_ESAME.localeCompare(b.DESCRIZIONE_ESAME)); break;
     case "2":
-      filteredData.sort((a, b) =>
-        b.DESCRIZIONE_ESAME.localeCompare(a.DESCRIZIONE_ESAME)
-      );
-      break;
-
+      filteredData.sort((a, b) => b.DESCRIZIONE_ESAME.localeCompare(a.DESCRIZIONE_ESAME)); break;
     case "3":
-      filteredData.sort(
-        (a, b) =>
-          (a.METODICA || "").localeCompare(b.METODICA || "") ||
-          a.DESCRIZIONE_ESAME.localeCompare(b.DESCRIZIONE_ESAME)
-      );
-      break;
-
+      filteredData.sort((a, b) =>
+        (a.METODICA || "").localeCompare(b.METODICA || "") ||
+        a.DESCRIZIONE_ESAME.localeCompare(b.DESCRIZIONE_ESAME)
+      ); break;
     case "4":
-      filteredData.sort(
-        (a, b) =>
-          (a.COD_ASL?.toString() || "").localeCompare(
-            b.COD_ASL?.toString() || ""
-          ) || a.DESCRIZIONE_ESAME.localeCompare(b.DESCRIZIONE_ESAME)
-      );
-      break;
-
+      filteredData.sort((a, b) =>
+        (a.COD_ASL?.toString() || "").localeCompare(b.COD_ASL?.toString() || "") ||
+        a.DESCRIZIONE_ESAME.localeCompare(b.DESCRIZIONE_ESAME)
+      ); break;
     case "5":
-      filteredData.sort(
-        (a, b) =>
-          (a.COD_REG?.toString() || "").localeCompare(
-            b.COD_REG?.toString() || ""
-          ) || a.DESCRIZIONE_ESAME.localeCompare(b.DESCRIZIONE_ESAME)
-      );
-      break;
-
     case "6":
-      filteredData.sort(
-        (a, b) =>
-          (a.COD_REG?.toString() || "").localeCompare(
-            b.COD_REG?.toString() || ""
-          ) || a.DESCRIZIONE_ESAME.localeCompare(b.DESCRIZIONE_ESAME)
-      );
-      break;
-
+      filteredData.sort((a, b) =>
+        (a.COD_REG?.toString() || "").localeCompare(b.COD_REG?.toString() || "") ||
+        a.DESCRIZIONE_ESAME.localeCompare(b.DESCRIZIONE_ESAME)
+      ); break;
     default:
       break;
   }
 
   populateResults(filteredData);
 }
-function selectSingleResult() {
-  const selectedValue = document.getElementById(
-    "menu_tendina_prescrizioni"
-  ).value;
 
+function selectSingleResult() {
+  const selectedValue = document.getElementById("menu_tendina_prescrizioni")?.value;
   if (selectedValue) {
-    const selectedItem = arrayFoglio1.find(
-      (item) => item.DESCRIZIONE_ESAME === selectedValue
-    );
+    const selectedItem = arrayFoglio1.find((item) => item.DESCRIZIONE_ESAME === selectedValue);
     populateResults(selectedItem ? [selectedItem] : []);
   } else {
     populateResults();
   }
 }
 
-document
-  .querySelector(".barra-ricercaModale input")
-  .addEventListener("input", filterResults);
-document
-  .querySelector(".ModaleHeader select")
-  .addEventListener("change", filterResults);
-document
-  .getElementById("menu_tendina_prescrizioni")
-  .addEventListener("change", selectSingleResult);
+// Listeners (modale ricerche)
+document.querySelector(".barra-ricercaModale input")?.addEventListener("input", filterResults);
+document.querySelector(".ModaleHeader select")?.addEventListener("change", filterResults);
+document.getElementById("menu_tendina_prescrizioni")?.addEventListener("change", selectSingleResult);
 
+// bootstrap iniziale modale ricerche
 populateDropdown();
 populateResults();
 
-/* RICERCA PRESCRIZIONI TABELLA RISULTATI */
+/* =======================================================================================
+   RICERCA nella TAB PRINCIPALE (tabella di coda + paginazione per ricerca locale)
+   ======================================================================================= */
 document.addEventListener("DOMContentLoaded", function () {
   const searchInput = document.getElementById("inputRicerca");
   const filterSelect = document.getElementById("filtriTabellaResult");
   const tableContent = document.querySelector(".table-content");
   const rowsPerPage = 5;
   let currentPage = 1;
-  let allRows = Array.from(tableContent.querySelectorAll(".rowTable"));
 
-  function filterTable() {
-    const searchText = searchInput.value.toLowerCase();
-    const selectedFilter = filterSelect.value;
-
-    let filteredRows = [...allRows];
-
-    if (searchText) {
-      filteredRows = filteredRows.filter((row) =>
-        Array.from(row.children).some((cell) =>
-          cell.textContent.toLowerCase().includes(searchText)
-        )
-      );
-    }
-
-    switch (selectedFilter) {
-      case "1":
-        filteredRows.sort((a, b) =>
-          a.children[1].textContent.localeCompare(b.children[1].textContent)
-        );
-        break;
-      case "2":
-        filteredRows.sort((a, b) =>
-          b.children[1].textContent.localeCompare(a.children[1].textContent)
-        );
-        break;
-      case "3":
-        filteredRows.sort((a, b) =>
-          a.children[4].textContent.localeCompare(b.children[4].textContent)
-        );
-        break;
-      case "4":
-        filteredRows.sort((a, b) =>
-          a.children[2].textContent.localeCompare(b.children[2].textContent)
-        );
-        break;
-      case "5":
-        filteredRows.sort((a, b) =>
-          a.children[3].textContent.localeCompare(b.children[3].textContent)
-        );
-        break;
-      case "6":
-        filteredRows.sort((a, b) =>
-          a.children[5].textContent.localeCompare(b.children[5].textContent)
-        );
-        break;
-    }
-
-    currentPage = 1;
-    showPage(currentPage, filteredRows);
-    updatePaginationControls(filteredRows);
-  }
+  let allRows = Array.from(tableContent?.querySelectorAll(".rowTable") || []);
 
   function showPage(page, filteredRows) {
     allRows.forEach((row) => {
@@ -322,13 +316,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updatePaginationControls(filteredRows) {
-    let existingControls = tableContent.querySelector(".pagination-controls");
-
+    let existingControls = tableContent?.querySelector(".pagination-controls");
     if (existingControls) existingControls.remove();
 
-    const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
-
-    if (totalPages <= 1) return;
+    const totalPages = Math.ceil((filteredRows?.length || 0) / rowsPerPage);
+    if (!tableContent || totalPages <= 1) return;
 
     const controls = document.createElement("div");
     controls.classList.add("pagination-controls");
@@ -349,9 +341,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const btn = document.createElement("button");
       btn.classList.add("button-style-pagination");
       btn.textContent = i;
-      if (i === currentPage) {
-        btn.classList.add("active");
-      }
+      if (i === currentPage) btn.classList.add("active");
       btn.addEventListener("click", () => {
         currentPage = i;
         showPage(currentPage, filteredRows);
@@ -375,18 +365,69 @@ document.addEventListener("DOMContentLoaded", function () {
     tableContent.appendChild(controls);
   }
 
-  searchInput.addEventListener("input", filterTable);
-  filterSelect.addEventListener("change", filterTable);
+  function filterTable() {
+    if (!tableContent) return;
+    const searchText = (searchInput?.value || "").toLowerCase();
+    const selectedFilter = filterSelect?.value || "0";
+
+    let filteredRows = [...allRows];
+
+    if (searchText) {
+      filteredRows = filteredRows.filter((row) =>
+        Array.from(row.children).some((cell) =>
+          cell.textContent.toLowerCase().includes(searchText)
+        )
+      );
+    }
+
+    switch (selectedFilter) {
+      case "1":
+        filteredRows.sort((a, b) =>
+          a.children[1].textContent.localeCompare(b.children[1].textContent)
+        ); break;
+      case "2":
+        filteredRows.sort((a, b) =>
+          b.children[1].textContent.localeCompare(a.children[1].textContent)
+        ); break;
+      case "3":
+        filteredRows.sort((a, b) =>
+          a.children[4].textContent.localeCompare(b.children[4].textContent)
+        ); break;
+      case "4":
+        filteredRows.sort((a, b) =>
+          a.children[2].textContent.localeCompare(b.children[2].textContent)
+        ); break;
+      case "5":
+        filteredRows.sort((a, b) =>
+          a.children[3].textContent.localeCompare(b.children[3].textContent)
+        ); break;
+      case "6":
+        filteredRows.sort((a, b) =>
+          a.children[5].textContent.localeCompare(b.children[5].textContent)
+        ); break;
+    }
+
+    currentPage = 1;
+    showPage(currentPage, filteredRows);
+    updatePaginationControls(filteredRows);
+  }
+
+  searchInput?.addEventListener("input", filterTable);
+  filterSelect?.addEventListener("change", filterTable);
 
   showPage(1, allRows);
   updatePaginationControls(allRows);
 });
 
-/*  FUNZIONE DI PAGINAZIONE DELLA TABELLA */
+/* =======================================================================================
+   PAGINAZIONE per la TABELLA PRINCIPALE (riga aggiunte dalla modale)
+   ======================================================================================= */
 function updatePagination() {
   const tableContainer = document.querySelector(".table-content");
   const paginationContainer = document.getElementById("pagination_download");
-  const rows = tableContainer.querySelectorAll(".rowModale"); // Mantiene le tue classi
+  if (!tableContainer || !paginationContainer) return;
+
+  const rows = tableContainer.querySelectorAll(".rowModale");
   const rowsPerPage = 5;
 
   let currentPage = 1;
@@ -414,11 +455,7 @@ function updatePagination() {
   }
 
   function updatePaginationControls() {
-    let existingControls = paginationContainer.querySelector(
-      ".pagination-controls"
-    );
-
-    // Rimuove solo la paginazione, senza eliminare `downloadButton-Container`
+    let existingControls = paginationContainer.querySelector(".pagination-controls");
     if (existingControls) existingControls.remove();
 
     if (rows.length > rowsPerPage) {
@@ -429,9 +466,7 @@ function updatePagination() {
         const btn = document.createElement("button");
         btn.classList.add("button-style-pagination");
         btn.textContent = i;
-        if (i === currentPage) {
-          btn.classList.add("active");
-        }
+        if (i === currentPage) btn.classList.add("active");
         btn.addEventListener("click", () => {
           currentPage = i;
           showPage(currentPage);
@@ -439,8 +474,6 @@ function updatePagination() {
         });
         controls.appendChild(btn);
       }
-
-      // Aggiunge la paginazione senza toccare `downloadButton-Container`
       paginationContainer.appendChild(controls);
     }
   }
@@ -449,107 +482,36 @@ function updatePagination() {
   updatePaginationControls();
 }
 
-/* FUNZIONE PER INVIARE I CODICI UNIVOCHI EGLI ESAMI ALLA VIEW */
-document
-  .getElementById("btnPdfGeneralPrescrizioni")
-  .addEventListener("click", function (event) {
-    event.preventDefault();
+/* =======================================================================================
+   INVIO CODICI ESAMI ALLA VIEW (submit form)
+   ======================================================================================= */
+document.getElementById("btnPdfGeneralPrescrizioni")?.addEventListener("click", function (event) {
+  event.preventDefault();
 
-    const tableContainer = document.querySelector(".table-content");
-    const codiceEsami = [];
+  const tableContainer = document.querySelector(".table-content");
+  if (!tableContainer) return;
 
-    tableContainer
-      .querySelectorAll(".rowModale [name='codiceEsame']")
-      .forEach((cell) => {
-        codiceEsami.push(cell.textContent.trim());
-      });
-
-    if (codiceEsami.length === 0) {
-      showAlert({
-        type: "warning",
-        message: "Nessun esame presente per il salvataggio.",
-        borderColor: "#f97316",
-      });
-      return;
-    }
-
-    document.getElementById("codiciEsamiInput").value =
-      JSON.stringify(codiceEsami);
-    document.getElementById("saveForm").submit();
+  const codiceEsami = [];
+  tableContainer.querySelectorAll(".rowModale [name='codiceEsame']").forEach((cell) => {
+    codiceEsami.push(cell.textContent.trim());
   });
 
-/* FUNZIONE PER I PACCHETTI DELLE PRESCRIZIONI */
-const pacchettiPrescrizioni = {
-  "PACCHETTO CHECKUP COMPLETO DONNA": [
-    "EMOCROMO COMPLETO",
-    "SIDEREMIA",
-    "FERRITINA",
-    "TRANSFERRINA",
-    "AZOTEMIA",
-    "CREATININA",
-    "URICEMIA",
-    "COLESTEROLO TOTALE",
-    "COLESTEROLO LDL",
-    "COLESTEROLO HDL",
-    "TRIGLICERIDI",
-    "GLICEMIA",
-    "INSULINA",
-    "TRANSAMINASI (GOT)",
-    "TRANSAMINASI (GPT)",
-    "GAMMA-GT",
-    "FOSFATASI ALCALINA",
-    "BILIRUBINA (TOTALE)",
-    "BILIRUBINA (DIRETTA)",
-    "BILIRUBINA (INDIRETTA)",
-    "PCR-Proteina C Reattiva",
-    "ELETTROFORESI DELLE SIEROPROTEINE",
-    "SODIO (Na)",
-    "POTASSIO (K)",
-    "MAGNESIO (Mg)",
-    "CALCIO (Ca)",
-    "FOSFORO (F)",
-    "25OH VITAMINA D",
-    "TSH",
-    "ESAME DELLE URINE",
-  ],
-  "PACCHETTO CHECKUP COMPLETO UOMO": [
-    "EMOCROMO COMPLETO",
-    "SIDEREMIA",
-    "FERRITINA",
-    "TRANSFERRINA",
-    "AZOTEMIA",
-    "CREATININA",
-    "URICEMIA",
-    "COLESTEROLO TOTALE",
-    "COLESTEROLO LDL",
-    "COLESTEROLO HDL",
-    "TRIGLICERIDI",
-    "GLICEMIA",
-    "INSULINA",
-    "TRANSAMINASI (GOT)",
-    "TRANSAMINASI (GPT)",
-    "GAMMA-GT",
-    "FOSFATASI ALCALINA",
-    "BILIRUBINA (TOTALE)",
-    "BILIRUBINA (DIRETTA)",
-    "BILIRUBINA (INDIRETTA)",
-    "PCR-Proteina C Reattiva",
-    "ELETTROFORESI DELLE SIEROPROTEINE",
-    "SODIO (Na)",
-    "POTASSIO (K)",
-    "MAGNESIO (Mg)",
-    "CALCIO (Ca)",
-    "FOSFORO (F)",
-    "PSA III GENERAZIONE",
-    "TSH",
-    "ESAME DELLE URINE",
-  ],
-};
+  if (codiceEsami.length === 0) {
+    showAlert({
+      type: "warning",
+      message: "Nessun esame presente per il salvataggio.",
+      borderColor: "#f97316",
+    });
+    return;
+  }
 
-window.datiPacchettiEsami = {};
+  document.getElementById("codiciEsamiInput").value = JSON.stringify(codiceEsami);
+  document.getElementById("saveForm").submit();
+});
 
-let datiFiltratiCheckup = [];
-
+/* =======================================================================================
+   MODALE PACCHETTI — CARICAMENTO e RENDER
+   ======================================================================================= */
 async function caricaTuttiIPacchetti() {
   try {
     const response = await fetch("/static/includes/json/ArchivioEsami.json");
@@ -557,41 +519,50 @@ async function caricaTuttiIPacchetti() {
     const archivio = data.Foglio1;
 
     const container = document.getElementById("modalePacchettiContainer");
+    if (!container) return;
     container.innerHTML = "";
 
     for (let nomePacchetto in pacchettiPrescrizioni) {
-      const esami = pacchettiPrescrizioni[nomePacchetto];
+      const def = pacchettiPrescrizioni[nomePacchetto];
 
-      const datiFiltrati = archivio.filter((item) =>
-        esami.some(
-          (esame) =>
-            item.DESCRIZIONE_ESAME.trim().toUpperCase() ===
-            esame.trim().toUpperCase()
-        )
-      );
+      // retro-compatibilità: se è array → {prezzo:null, esami:[...]}
+      const esami = Array.isArray(def) ? def : def.esami;
+      const prezzo = Array.isArray(def) ? null : (def.prezzo ?? null);
 
-      creaBoxPacchetto(nomePacchetto, datiFiltrati);
+      const datiFiltrati = archivio.filter((item) => {
+        const de = normalizza(item.DESCRIZIONE_ESAME);
+        return esami.some((esame) => {
+          const target = normalizza(alias(esame));
+          return de === target;
+        });
+      });
+
+      creaBoxPacchetto(nomePacchetto, datiFiltrati, prezzo);
     }
   } catch (error) {
     console.error("Errore nel caricamento:", error);
   }
 }
 
-function creaBoxPacchetto(nomePacchetto, datiEsami) {
+function creaBoxPacchetto(nomePacchetto, datiEsami, prezzo = null) {
   const container = document.getElementById("modalePacchettiContainer");
+  if (!container) return;
   const idPacchetto = nomePacchetto.replaceAll(" ", "_");
 
-  // ✅ Salva gli esami in memoria globale
+  // memorizza per dettagli/aggiunta massiva
   window.datiPacchettiEsami[idPacchetto] = datiEsami;
 
   const box = document.createElement("div");
   box.classList.add("rowModale");
 
   box.innerHTML = `
-    <div class="colModale nomePacchetto">${nomePacchetto}</div>
+    <div class="colModale nomePacchetto">
+      ${nomePacchetto}
+      ${prezzo !== null ? `<div class="prezzoPacchetto">€${prezzo.toFixed(2)}</div>` : ""}
+    </div>
     <div class="colModale button-container-pacchetti">
       <button onclick='mostraDettagliPacchetto("${idPacchetto}")'>📋 Mostra Esami</button>
-      <button onclick='aggiungiTuttiGliEsami("${idPacchetto}")'>➕</button>
+      <button title="Aggiungi tutti" onclick='aggiungiTuttiGliEsami("${idPacchetto}")'>➕</button>
     </div>
   `;
 
@@ -600,6 +571,7 @@ function creaBoxPacchetto(nomePacchetto, datiEsami) {
 
 function mostraDettagliPacchetto(idPacchetto) {
   const dettagli = document.getElementById("dettagliEsamiPacchetto");
+  if (!dettagli) return;
   dettagli.innerHTML = "";
 
   const datiEsami = window.datiPacchettiEsami[idPacchetto];
@@ -608,55 +580,48 @@ function mostraDettagliPacchetto(idPacchetto) {
     return;
   }
 
-  // ✅ Titolo dinamico
-  document.querySelector(
-    "#modaleDettagliPacchetto h3"
-  ).textContent = `Esami del ${idPacchetto.replaceAll("_", " ")}`;
+  // titolo dinamico
+  const titolo = document.querySelector("#modaleDettagliPacchetto h3");
+  if (titolo) titolo.textContent = `Esami del ${idPacchetto.replaceAll("_", " ")}`;
 
   datiEsami.forEach((item) => {
     const row = document.createElement("div");
     row.classList.add("rowModale");
     row.innerHTML = `
-      <div class="colModale">${
-        item.CODICE_UNIVOCO_ESAME_PIATTAFORMA || ""
-      }</div>
+      <div class="colModale">${item.CODICE_UNIVOCO_ESAME_PIATTAFORMA || ""}</div>
       <div class="colModale nomeEsame">${item.DESCRIZIONE_ESAME || ""}</div>
-      <div class="colModale codici">${
-        item.COD_ASL ? `${item.COD_ASL} <span>(cod. asl)</span>` : ""
-      }</div>
-      <div class="colModale codici">${
-        item.COD_REG ? `${item.COD_REG}<span>(cod. reg)</span>` : ""
-      }</div>
+      <div class="colModale codici">${item.COD_ASL ? `${item.COD_ASL} <span>(cod. asl)</span>` : ""}</div>
+      <div class="colModale codici">${item.COD_REG ? `${item.COD_REG}<span>(cod. reg)</span>` : ""}</div>
       <div class="colModale metodica">${item.METODICA || ""}</div>
-      <div class="colModale apparato">${(
-        item.APPARATO_or_I_SISTEMI || ""
-      ).slice(0, 25)}</div>
+      <div class="colModale apparato">${(item.APPARATO_or_I_SISTEMI || "").slice(0, 25)}</div>
     `;
     dettagli.appendChild(row);
   });
 
-  document.getElementById("modaleDettagliPacchetto").style.display = "block";
-  document.getElementById("backdropSecondario").style.display = "block";
+  const modale = document.getElementById("modaleDettagliPacchetto");
+  const backdrop = document.getElementById("backdropSecondario");
+  if (modale) modale.style.display = "block";
+  if (backdrop) backdrop.style.display = "block";
 }
 
 function closeModalDettagli() {
-  document.getElementById("modaleDettagliPacchetto").style.display = "none";
-  document.getElementById("backdropSecondario").style.display = "none";
+  const modale = document.getElementById("modaleDettagliPacchetto");
+  const backdrop = document.getElementById("backdropSecondario");
+  if (modale) modale.style.display = "none";
+  if (backdrop) backdrop.style.display = "none";
 }
 
 function aggiungiTuttiGliEsami(idPacchetto) {
   const datiEsami = window.datiPacchettiEsami[idPacchetto];
-
   if (!datiEsami) {
     console.error(`❌ Nessun esame trovato per il pacchetto: ${idPacchetto}`);
     return;
   }
 
-  const tabella = document.querySelector(
-    ".tabella-prescrizioni .table-content"
-  );
+  const tabella = document.querySelector(".tabella-prescrizioni .table-content");
+  if (!tabella) return;
 
-  // ✅ Verifica se almeno 1 esame del pacchetto è già presente
+  // se almeno un esame è già presente → avvisa e non duplica
   const esisteGia = datiEsami.some((item) => {
     const codice = item.CODICE_UNIVOCO_ESAME_PIATTAFORMA || "";
     return Array.from(tabella.children).some(
@@ -667,13 +632,13 @@ function aggiungiTuttiGliEsami(idPacchetto) {
   if (esisteGia) {
     showAlert({
       type: "warning",
-      message: "Gli esami del pacchetto sono già presenti nella tabella.",
+      message: "Gli esami del pacchetto sono già presenti nella tabella.",
       borderColor: "#f97316",
     });
     return;
   }
 
-  // ✅ Se nessun esame esiste già → li aggiunge tutti
+  // aggiungi tutti
   datiEsami.forEach((item) => {
     const codice = item.CODICE_UNIVOCO_ESAME_PIATTAFORMA || "";
 
@@ -683,34 +648,30 @@ function aggiungiTuttiGliEsami(idPacchetto) {
       <div class="colModale" name="codiceEsame">${codice}</div>
       <input type="hidden" name="codiceEsame" value="${codice}">
       <div class="colModale nomeEsame">${item.DESCRIZIONE_ESAME || ""}</div>
-      <div class="colModale codici">${
-        item.COD_ASL ? `${item.COD_ASL} (cod. asl)` : ""
-      }</div>
-      <div class="colModale codici">${
-        item.COD_REG ? `${item.COD_REG} (cod. reg)` : ""
-      }</div>
+      <div class="colModale codici">${item.COD_ASL ? `${item.COD_ASL} (cod. asl)` : ""}</div>
+      <div class="colModale codici">${item.COD_REG ? `${item.COD_REG} (cod. reg)` : ""}</div>
       <div class="colModale metodica">${item.METODICA || ""}</div>
-      <div class="colModale apparato">${(
-        item.APPARATO_or_I_SISTEMI || ""
-      ).slice(0, 25)}</div>
+      <div class="colModale apparato">${(item.APPARATO_or_I_SISTEMI || "").slice(0, 25)}</div>
       <div class="colModale"><button class="remove-btn">❌</button></div>
     `;
     tabella.appendChild(row);
 
-    row
-      .querySelector(".remove-btn")
-      .addEventListener("click", () => row.remove());
+    row.querySelector(".remove-btn").addEventListener("click", () => row.remove());
   });
 
   updatePagination();
   closeModalDettagli();
 }
 
+// Esponi in window per onclick inline
 window.caricaTuttiIPacchetti = caricaTuttiIPacchetti;
 window.mostraDettagliPacchetto = mostraDettagliPacchetto;
 window.aggiungiTuttiGliEsami = aggiungiTuttiGliEsami;
 window.closeModalDettagli = closeModalDettagli;
 
+/* =======================================================================================
+   DELETE ALL — PULIZIA TABELLA
+   ======================================================================================= */
 document.addEventListener("DOMContentLoaded", () => {
   const deleteButton = document.getElementById("deleteButton");
 
@@ -719,7 +680,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const tableContent = document.querySelector(".tabella-prescrizioni .table-content");
       const pagination = document.querySelector(".pagination-controls");
 
-      // ✅ Controlla se ci sono figli dentro .table-content
       const hasRows = tableContent && tableContent.children.length > 0;
 
       if (!hasRows) {
@@ -766,3 +726,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+/* =======================================================================================
+   (OPZIONALE) SELECT INIZIALE PACCHETTI (se presente nell'HTML)
+   ======================================================================================= */
+function populateSelectPacchetti(selectId = "selectPacchettiIniziale") {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+
+  sel.innerHTML = "";
+  const ph = document.createElement("option");
+  ph.value = "";
+  ph.textContent = "Seleziona pacchetto";
+  ph.selected = true;
+  sel.appendChild(ph);
+
+  Object.keys(pacchettiPrescrizioni).forEach((nome) => {
+    const def = pacchettiPrescrizioni[nome];
+    const prezzo = Array.isArray(def) ? null : (def.prezzo ?? null);
+    const opt = document.createElement("option");
+    opt.value = nome;
+    opt.textContent = prezzo !== null ? `${nome} — €${prezzo.toFixed(2)}` : nome;
+    sel.appendChild(opt);
+  });
+
+  sel.addEventListener("change", () => {
+    const nome = sel.value;
+    if (!nome) return;
+    // Apri la modale Pacchetti e scrolla al pacchetto selezionato
+    if (typeof openModalPacchetti === "function") {
+      openModalPacchetti();
+      setTimeout(() => {
+        const id = nome.replaceAll(" ", "_");
+        const boxes = Array.from(document.querySelectorAll("#modalePacchettiContainer .rowModale"));
+        const box = boxes.find((row) => row.querySelector(".nomePacchetto")?.textContent?.includes(nome));
+        if (box) box.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 250);
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Popola la select se esiste nell'HTML
+  populateSelectPacchetti();
+});
