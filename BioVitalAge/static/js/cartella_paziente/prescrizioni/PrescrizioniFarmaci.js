@@ -4,8 +4,6 @@ import { renderingRisultati } from "./fetchDatiArchivioFarmaci.js";
 /*  -----------------------------------------------------------------------------------------------
   Utility / reset messaggi
 --------------------------------------------------------------------------------------------------- */
-
-/*  Pulisci eventuali alert server-side e client-side precedenti */
 function clearServerAlerts() {
   // 1) Messaggi Bootstrap/Django messages
   document.querySelectorAll(".alert").forEach((el) => el.remove());
@@ -18,10 +16,44 @@ function clearServerAlerts() {
     .forEach((el) => el.remove());
 }
 
+/* ------------------------------------------------------------------------------------------------
+  Helpers PDF
+--------------------------------------------------------------------------------------------------*/
+async function loadLogoBytes() {
+  const paths = [
+    "/static/includes/pdfTemplates/logo.png",
+    "/static/image/logo.png",
+  ];
+  for (const url of paths) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (res.ok) return await res.arrayBuffer();
+    } catch (_) {}
+  }
+  return null;
+}
+
+function wrapTextToLines(text, font, size, maxWidth) {
+  const words = String(text || "").split(/\s+/);
+  const lines = [];
+  let line = "";
+  for (const w of words) {
+    const test = line ? line + " " + w : w;
+    const width = font.widthOfTextAtSize(test, size);
+    if (width > maxWidth && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
 /*  -----------------------------------------------------------------------------------------------
   Paginazione tabella coda
 --------------------------------------------------------------------------------------------------- */
-
 function updatePagination() {
   const tableContainer = document.querySelector(".table-content");
   if (!tableContainer) return;
@@ -59,7 +91,6 @@ let arrayFoglio1 = [];
 /*  -----------------------------------------------------------------------------------------------
   Popolazione menu e risultati modale farmaci
 --------------------------------------------------------------------------------------------------- */
-
 async function populateDropdown() {
   const data = await renderingRisultati();
   arrayFoglio1 = data[0].Foglio1;
@@ -127,13 +158,11 @@ async function populateResults(filteredData = null) {
 
   document.querySelectorAll(".add-btn").forEach((button) => {
     button.addEventListener("click", (event) => {
-      const farmacoId = event.currentTarget.getAttribute("data-id");
       const farmacoNome = event.currentTarget.getAttribute("data-nome");
       const farmacoCodice = event.currentTarget.getAttribute("data-codice");
       const farmacoAic = event.currentTarget.getAttribute("data-aic");
       const farmacoAtc = event.currentTarget.getAttribute("data-atc");
       const farmacoDosaggio = event.currentTarget.getAttribute("data-dosaggio");
-      const farmacoPrincipio = event.currentTarget.getAttribute("data-principio");
       const farmacoApparato = event.currentTarget.getAttribute("data-apparato");
 
       // Dedup: per codice, oppure (nome + dosaggio) se codice mancante
@@ -162,7 +191,6 @@ async function populateResults(filteredData = null) {
       // Aggiunta riga in coda
       const tableRow = document.createElement("div");
       tableRow.classList.add("rowModale", "coda-item");
-      tableRow.setAttribute("data-id", farmacoId);
       tableRow.innerHTML = `
         <div class="colModale" name="codiceFarmaco">${farmacoCodice}</div>
         <input type="hidden" id="codiceFarmacoInput" name="codiceFarmaco" value="${farmacoCodice}">
@@ -193,7 +221,6 @@ async function populateResults(filteredData = null) {
 /*  -----------------------------------------------------------------------------------------------
   Filtri + Select singolo
 --------------------------------------------------------------------------------------------------- */
-
 function filterResults() {
   const searchText = document.querySelector(".barra-ricercaModale input")?.value.toLowerCase() || "";
   const selectedFilter = document.querySelector(".ModaleHeader select")?.value;
@@ -273,9 +300,8 @@ populateDropdown();
 populateResults();
 
 /*  -----------------------------------------------------------------------------------------------
-   Pacchetti → popolazione coda
+   Pacchetti → popolazione coda (immutato)
 --------------------------------------------------------------------------------------------------- */
-
 const TERAPIE_MAP = {
   muscle: [
     { nome: "vitamina H (biotina)", dosaggio: "1 mg" },
@@ -319,7 +345,7 @@ function normalizePackageValue(val) {
   if (!val) return "";
   const v = val.trim().toLowerCase();
   if (v.includes("detox") && v.includes("energy")) return "detox + energy";
-  return v; // muscle, nad+, detox plus, hangover
+  return v;
 }
 
 function createCodaRow({ nome, dosaggio }) {
@@ -353,7 +379,6 @@ function handleTerapieChange() {
   const raw = select.options[select.selectedIndex]?.text || select.value || "";
   const key = normalizePackageValue(raw);
 
-  // "0" = Pacchetti → svuoto la coda
   if (select.value === "0" || !key) {
     tableContainer.innerHTML = "";
     updatePagination();
@@ -367,7 +392,6 @@ function handleTerapieChange() {
     return;
   }
 
-  // Rimpiazzo completamente con i componenti del pacchetto
   tableContainer.innerHTML = "";
   components.forEach((comp) => {
     const row = createCodaRow(comp);
@@ -380,25 +404,271 @@ function handleTerapieChange() {
 document.getElementById("tendina_terapie")?.addEventListener("change", handleTerapieChange);
 
 /*  -----------------------------------------------------------------------------------------------
-   Salvataggio massivo (singoli + pacchetti) — hardened
+   Generatore PDF "Consenso IV Therapy" (layout identico al .docx)
 --------------------------------------------------------------------------------------------------- */
+async function buildConsensoPdfURL({ items }) {
+  const { PDFDocument, StandardFonts, rgb } = window.PDFLib || {};
+  const pdf = await PDFDocument.create();
+  const page = pdf.addPage([595.28, 841.89]); // A4
+  const { width, height } = page.getSize();
 
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+  const black = rgb(0, 0, 0);
+  const grey = rgb(0.65, 0.65, 0.65);
+
+  // ==== HEADER (logo + titolo con posizionamento "safe") ====
+  let headerBottomY = height - 30; // iniziale, verrà regolato
+  const leftMargin = 40;
+
+  // LOGO (opzionale)
+  try {
+    const logoBytes = await loadLogoBytes();
+    if (logoBytes) {
+      const png = await pdf.embedPng(logoBytes);
+      const logoW = 150;
+      const logoH = png.height * (logoW / png.width);
+      const logoY = height - logoH - 30; // 30px dal bordo alto
+      page.drawImage(png, { x: leftMargin, y: logoY, width: logoW, height: logoH });
+      headerBottomY = logoY; // il titolo deve stare SOTTO al logo
+    }
+  } catch (_) {}
+
+  // TITOLO centrato, 16px sotto il bordo inferiore dell'header
+  const title = "CONSENSO INFORMATO PER TERAPIA ENDOVENOSA (IV THERAPY)";
+  const titleSize = 14;
+  const titleWidth = fontBold.widthOfTextAtSize(title, titleSize);
+  const titleY = Math.min(headerBottomY - 16, height - 70); // minimo 70pt dal top
+  page.drawText(title, {
+    x: (width - titleWidth) / 2,
+    y: titleY,
+    size: titleSize,
+    font: fontBold,
+    color: black,
+  });
+
+  // spessore sotto titolo
+  let y = titleY - 24; // spazio dopo titolo
+  const lineH = 18;
+  const fieldLabelSize = 12;
+
+  // ==== DATI PAZIENTE ====
+  const paziente = String(window.PAZIENTE || "").trim();
+  const dob = String(window.DOB_PAZIENTE || "").trim();
+
+  page.drawText("Paziente:", { x: leftMargin, y, size: fieldLabelSize, font: fontBold });
+  const nameStartX = leftMargin + 70;
+  const nameLineW = 240;
+  page.drawLine({
+    start: { x: nameStartX, y: y - 2 },
+    end: { x: nameStartX + nameLineW, y: y - 2 },
+    color: grey,
+    thickness: 0.8,
+  });
+  if (paziente) {
+    page.drawText(paziente, { x: nameStartX + 4, y, size: fieldLabelSize, font });
+  }
+  y -= lineH;
+
+  page.drawText("Data di nascita:", { x: leftMargin, y, size: fieldLabelSize, font: fontBold });
+  const dobStartX = leftMargin + 110;
+  const dobLineW = 160;
+  page.drawLine({
+    start: { x: dobStartX, y: y - 2 },
+    end: { x: dobStartX + dobLineW, y: y - 2 },
+    color: grey,
+    thickness: 0.8,
+  });
+  if (dob) {
+    page.drawText(dob, { x: dobStartX + 4, y, size: fieldLabelSize, font });
+  }
+  y -= lineH * 1.4;
+
+  // ==== TERAPIA INDICATA ====
+  page.drawText("TERAPIA INDICATA:", { x: leftMargin, y, size: fieldLabelSize, font: fontBold });
+  y -= lineH;
+
+  const margin = leftMargin;
+  const maxW = width - margin * 2;
+  const bulletIndent = 12;
+
+  if (!items || !items.length) {
+    page.drawText("—", { x: margin + bulletIndent, y, size: 12, font });
+    y -= 16;
+  } else {
+    items.forEach((it) => {
+      const line = `${it.nome}${it.dosaggio ? " — " + it.dosaggio : ""}`;
+      const lines = wrapTextToLines(line, font, 12, maxW - bulletIndent);
+      lines.forEach((ln) => {
+        page.drawText(ln, { x: margin + bulletIndent, y, size: 12, font });
+        y -= 16;
+      });
+    });
+  }
+
+  y -= 10;
+
+  // ==== 1. Modalità di esecuzione ====
+  page.drawText("1. Modalità di esecuzione", { x: margin, y, size: 12, font: fontBold });
+  y -= lineH;
+
+  const bullets1 = [
+    "L’infusione viene eseguita da personale sanitario qualificato, tramite accesso venoso periferico con materiale sterile monouso.",
+    "La durata media del trattamento varia da 20 a 60 minuti, a seconda della miscela prescritta.",
+    "Durante la procedura il paziente è monitorato e assistito.",
+  ];
+  bullets1.forEach((t) => {
+    const lines = wrapTextToLines("• " + t, font, 12, maxW);
+    lines.forEach((ln) => {
+      page.drawText(ln, { x: margin, y, size: 12, font });
+      y -= 15;
+    });
+  });
+
+  y -= 6;
+
+  // ==== 2. Dichiarazioni del paziente ====
+  page.drawText("2. Dichiarazioni del paziente", { x: margin, y, size: 12, font: fontBold });
+  y -= lineH;
+
+  const bullets2Intro =
+    "Dichiaro di essere stato/a informato/a in modo chiaro e comprensibile riguardo a:";
+  wrapTextToLines(bullets2Intro, font, 12, maxW).forEach((ln) => {
+    page.drawText(ln, { x: margin, y, size: 12, font });
+    y -= 15;
+  });
+
+  const bullets2 = [
+    "la natura e finalità della IV Therapy,",
+    "i benefici attesi e i rischi potenziali,",
+    "le possibili alternative terapeutiche,",
+    "la libertà di revocare in qualsiasi momento il consenso.",
+  ];
+  bullets2.forEach((t) => {
+    wrapTextToLines("• " + t, font, 12, maxW).forEach((ln) => {
+      page.drawText(ln, { x: margin, y, size: 12, font });
+      y -= 15;
+    });
+  });
+
+  const confermo =
+    "Confermo di aver avuto la possibilità di porre domande e di aver ricevuto risposte esaurienti.";
+  wrapTextToLines(confermo, font, 12, maxW).forEach((ln) => {
+    page.drawText(ln, { x: margin, y, size: 12, font });
+    y -= 15;
+  });
+
+  y -= 6;
+
+  // Checkbox consenso
+  const cbSize = 10;
+  function drawCheckboxLine(text) {
+    page.drawRectangle({
+      x: margin,
+      y: y - (cbSize - 8),
+      width: cbSize,
+      height: cbSize,
+      borderColor: black,
+      borderWidth: 1,
+    });
+    page.drawText(text, { x: margin + cbSize + 6, y, size: 12, font });
+    y -= 18;
+  }
+  drawCheckboxLine("Acconsento alla terapia endovenosa proposta.");
+  drawCheckboxLine("Non acconsento alla terapia endovenosa.");
+
+  y -= 6;
+
+  // ==== 3. GDPR ====
+  page.drawText("3. Trattamento dei dati personali (GDPR)", {
+    x: margin,
+    y,
+    size: 12,
+    font: fontBold,
+  });
+  y -= lineH;
+
+  const gdprTxt =
+    "Autorizzo il trattamento dei miei dati personali e sanitari nel rispetto del Regolamento UE 2016/679 (GDPR) e delle normative vigenti, esclusivamente per finalità medico-assistenziali.";
+  wrapTextToLines(gdprTxt, font, 12, maxW).forEach((ln) => {
+    page.drawText(ln, { x: margin, y, size: 12, font });
+    y -= 15;
+  });
+
+  // ==== FOOTER (ancorato in basso, mai sovrapposto) ====
+  const bottomSafe = 100; // spazio riservato a firme & campi
+  if (y < bottomSafe + 20) y = bottomSafe + 20; // evita collisioni
+
+  const footerY = 85; // posizione fissa dal basso
+
+  // Luogo e data
+  page.drawText("Luogo e data:", { x: margin, y: footerY + 22, size: 12, font: fontBold });
+  page.drawLine({
+    start: { x: margin + 85, y: footerY + 20 },
+    end: { x: margin + 300, y: footerY + 20 },
+    color: grey,
+    thickness: 0.8,
+  });
+
+  // Firme (righe + etichette SOTTO le righe, non sovrapposte)
+  page.drawLine({
+    start: { x: width - 270, y: footerY + 20 },
+    end: { x: width - 60, y: footerY + 20 },
+    color: grey,
+    thickness: 0.8,
+  });
+  page.drawText("Firma del Paziente", {
+    x: width - 270,
+    y: footerY + 4,
+    size: 11,
+    font: fontBold,
+  });
+
+  page.drawLine({
+    start: { x: width - 270, y: footerY - 20 },
+    end: { x: width - 60, y: footerY - 20 },
+    color: grey,
+    thickness: 0.8,
+  });
+  page.drawText("Firma del Medico", {
+    x: width - 270,
+    y: footerY - 36,
+    size: 11,
+    font: fontBold,
+  });
+
+  const docName = String(window.DOTTORE || "");
+  if (docName) {
+    page.drawText(docName, {
+      x: width - 268,
+      y: footerY - 52,
+      size: 10,
+      font,
+      color: grey,
+    });
+  }
+
+  const pdfBytes = await pdf.save();
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  return URL.createObjectURL(blob);
+}
+
+/*  -----------------------------------------------------------------------------------------------
+   Salvataggio massivo con ANTEPRIMA (hardened + corretto flusso)
+--------------------------------------------------------------------------------------------------- */
 (function () {
   const oldBtn = document.getElementById("conferma-prescrizione-farmaci");
   if (!oldBtn) return;
 
-  // 0) Rimuovi qualsiasi listener preesistente clonando il bottone
+  // 🔒 rimuovi qualsiasi listener preesistente clonando il bottone
   const btn = oldBtn.cloneNode(true);
   oldBtn.parentNode.replaceChild(btn, oldBtn);
 
-  // 1) Evita re-bind multipli tra ricarichi parziali
-  if (window.__SAVE_PRESCRIZIONI_BOUND__) return;
-  window.__SAVE_PRESCRIZIONI_BOUND__ = true;
-
-  // 2) Assicura che il bottone non sia submit
+  // evita submit nativo
   btn.setAttribute("type", "button");
 
-  // 3) Blocca il submit nativo del form che contiene il bottone (evita doppio invio)
+  // blocca il submit del form contenitore (se esiste)
   const formEl = btn.closest("form");
   if (formEl && !formEl.dataset.boundPrevent) {
     formEl.dataset.boundPrevent = "1";
@@ -414,6 +684,10 @@ document.getElementById("tendina_terapie")?.addEventListener("change", handleTer
     );
   }
 
+  // evita rebind multipli cross-renders
+  if (window.__SAVE_PRESCRIZIONI_BOUND__) return;
+  window.__SAVE_PRESCRIZIONI_BOUND__ = true;
+
   let isSavingLocal = false;
 
   const getCsrfToken = () =>
@@ -424,7 +698,7 @@ document.getElementById("tendina_terapie")?.addEventListener("change", handleTer
   btn.addEventListener(
     "click",
     async (e) => {
-      // Intercetta prima di altri listener ed evita doppie esecuzioni
+      // intercetta prima e blocca tutto
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -432,17 +706,15 @@ document.getElementById("tendina_terapie")?.addEventListener("change", handleTer
       if (window.__SAVE_PRESCRIZIONI_IN_PROGRESS__ || isSavingLocal) return;
       window.__SAVE_PRESCRIZIONI_IN_PROGRESS__ = true;
       isSavingLocal = true;
-      btn.disabled = true;
 
       const tableContainer = document.querySelector(".table-content");
       if (!tableContainer) {
         window.__SAVE_PRESCRIZIONI_IN_PROGRESS__ = false;
         isSavingLocal = false;
-        btn.disabled = false;
         return;
       }
 
-      // Raccogli tutte le righe in coda (singoli + pacchetto)
+      // raccogli elementi in coda
       const rows = tableContainer.querySelectorAll(".coda-item");
       const items = Array.from(rows)
         .map((row) => {
@@ -453,6 +725,7 @@ document.getElementById("tendina_terapie")?.addEventListener("change", handleTer
         })
         .filter((i) => i.nome || i.codice);
 
+      // 👉 se non ci sono elementi, mostra solo il warning e FERMATI (nessuna modale)
       if (!items.length) {
         clearServerAlerts();
         showAlert({
@@ -462,101 +735,156 @@ document.getElementById("tendina_terapie")?.addEventListener("change", handleTer
         });
         window.__SAVE_PRESCRIZIONI_IN_PROGRESS__ = false;
         isSavingLocal = false;
-        btn.disabled = false;
         return;
       }
 
-      // Campi opzionali dalla modale (se presenti)
-      const data_inizio = document.getElementById("data_inizio")?.value || "";
-      const data_fine = document.getElementById("data_fine")?.value || "";
-      const diagnosi = document.getElementById("diagnosi")?.value || "";
-      const note_medico = document.getElementById("note_medico")?.value || "";
-      const posologia_personalizzata =
-        document.getElementById("posologia_personalizzata")?.value || "";
-
-      const formData = new FormData();
-      formData.append("action", "save_prescrizioni");
-      formData.append("items", JSON.stringify(items));
-      formData.append("data_inizio", data_inizio);
-      formData.append("data_fine", data_fine);
-      formData.append("diagnosi", diagnosi);
-      formData.append("note_medico", note_medico);
-      formData.append("posologia_personalizzata", posologia_personalizzata);
-
+      // === ANTEPRIMA PDF ===
       try {
-        // PULIZIA alert preesistenti (client + server-side)
-        clearServerAlerts();
+        const url = await buildConsensoPdfURL({ items });
 
-        const resp = await fetch(window.location.pathname, {
-          method: "POST",
-          headers: {
-            "X-CSRFToken": getCsrfToken(),
-            "X-Requested-With": "XMLHttpRequest", // forza JSON lato server
-          },
-          body: formData,
-        });
+        // apri modale
+        const modal = document.getElementById("previewPrescrizioniModal");
+        const backdrop = document.getElementById("previewPrescrizioniBackdrop");
+        const frame = document.getElementById("previewPrescrizioniFrame");
+        const closeBtn = document.getElementById("closePreviewPrescrizioni");
+        const downloadBtn = document.getElementById("downloadPrescrizioniPdf");
+        const confirmBtn = document.getElementById("confirmSavePrescrizioni");
 
-        let data = {};
-        try {
-          data = await resp.json();
-        } catch (_) {
-          data = {};
-        }
-
-        // Errore HTTP o success false -> SOLO errore
-        if (!resp.ok || data.success === false) {
-          showAlert({
-            type: "error",
-            message: (data && data.error) || "Errore nel salvataggio prescrizioni.",
-            borderColor: "#dc2626",
-          });
+        if (!modal || !backdrop || !frame || !downloadBtn || !confirmBtn || !closeBtn) {
+          // se manca la modale, non bloccare il flusso: salviamo direttamente (fallback)
+          await doRealSave(items);
           return;
         }
 
-        const created = Number(data.created || 0);
-        const skipped = Number(data.skipped || 0);
+        frame.src = url;
+        modal.style.display = "flex";
+        backdrop.style.display = "block";
+        document.body.style.overflow = "hidden";
 
-        // Pulizia extra prima di mostrare il risultato definitivo
-        clearServerAlerts();
+        downloadBtn.onclick = () => {
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "Consenso_IV_Therapy.pdf";
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            URL.revokeObjectURL(url);
+            a.remove();
+          }, 0);
+        };
 
-        if (created > 0) {
-        // SOLO SUCCESSO
+        const closeModal = () => {
+          modal.style.display = "none";
+          backdrop.style.display = "none";
+          document.body.style.overflow = "auto";
+          try { URL.revokeObjectURL(url); } catch (_) {}
+        };
+
+        closeBtn.onclick = closeModal;
+        backdrop.onclick = (ev) => {
+          if (ev.target === backdrop) closeModal();
+        };
+
+        confirmBtn.onclick = async () => {
+          closeModal();
+          await doRealSave(items);
+        };
+      } catch (err) {
+        // se la generazione anteprima fallisce, prova a salvare comunque
+        console.error(err);
+        await doRealSave(items);
+      } finally {
+        window.__SAVE_PRESCRIZIONI_IN_PROGRESS__ = false;
+        isSavingLocal = false;
+      }
+    },
+    { capture: true }
+  );
+
+  // === FUNZIONE di salvataggio reale (identica alla tua logica originaria, con messaggi corretti) ===
+  async function doRealSave(items) {
+    const tableContainer = document.querySelector(".table-content");
+    const data_inizio = document.getElementById("data_inizio")?.value || "";
+    const data_fine = document.getElementById("data_fine")?.value || "";
+    const diagnosi = document.getElementById("diagnosi")?.value || "";
+    const note_medico = document.getElementById("note_medico")?.value || "";
+    const posologia_personalizzata = document.getElementById("posologia_personalizzata")?.value || "";
+
+    const formData = new FormData();
+    formData.append("action", "save_prescrizioni");
+    formData.append("items", JSON.stringify(items));
+    formData.append("data_inizio", data_inizio);
+    formData.append("data_fine", data_fine);
+    formData.append("diagnosi", diagnosi);
+    formData.append("note_medico", note_medico);
+    formData.append("posologia_personalizzata", posologia_personalizzata);
+
+    try {
+      clearServerAlerts();
+
+      const resp = await fetch(window.location.pathname, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCsrfToken(),
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: formData,
+      });
+
+      let data = {};
+      try {
+        data = await resp.json();
+      } catch (_) {
+        data = {};
+      }
+
+      if (!resp.ok || data.success === false) {
+        showAlert({
+          type: "error",
+          message: (data && data.error) || "Errore nel salvataggio prescrizioni.",
+          borderColor: "#dc2626",
+        });
+        return;
+      }
+
+      const created = Number(data.created || 0);
+      const skipped = Number(data.skipped || 0);
+
+      clearServerAlerts();
+
+      if (created > 0) {
+        // ✅ SOLO SUCCESSO se abbiamo creato qualcosa
         showAlert({
           type: "success",
           message: `Prescrizioni salvate (${created})${skipped ? ` • Duplicati ignorati: ${skipped}` : ""}.`,
           borderColor: "#16a34a",
         });
 
-        // pulisco la coda
-        tableContainer.innerHTML = "";
-        updatePagination();
+        // pulizia coda
+        if (tableContainer) {
+          tableContainer.innerHTML = "";
+          updatePagination();
+        }
 
-        // 🔄 refresh automatico dopo 1.5s
         setTimeout(() => {
           location.reload();
         }, 1500);
       } else {
-          // Nessuna nuova creazione (tutti duplicati) → SOLO WARNING
-          showAlert({
-            type: "warning",
-            message: "Nessuna nuova prescrizione: tutti i farmaci erano già presenti.",
-            borderColor: "#f97316",
-          });
-        }
-      } catch (err) {
-        clearServerAlerts();
+        // ⚠️ Nessuna nuova creazione → WARNING, non success
         showAlert({
-          type: "error",
-          message: "Errore di rete nel salvataggio.",
-          borderColor: "#dc2626",
+          type: "warning",
+          message: "Nessuna nuova prescrizione: tutti i farmaci erano già presenti.",
+          borderColor: "#f97316",
         });
-        console.error(err);
-      } finally {
-        window.__SAVE_PRESCRIZIONI_IN_PROGRESS__ = false;
-        isSavingLocal = false;
-        btn.disabled = false;
       }
-    },
-    { capture: true } // intercetta prima di eventuali listener terzi
-  );
+    } catch (err) {
+      clearServerAlerts();
+      showAlert({
+        type: "error",
+        message: "Errore di rete nel salvataggio.",
+        borderColor: "#dc2626",
+      });
+      console.error(err);
+    }
+  }
 })();

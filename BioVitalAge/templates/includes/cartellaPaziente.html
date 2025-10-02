@@ -1409,6 +1409,20 @@
         <div id="dynamicModalBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
         
 
+        <div id="previewPrescrizioniModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content" style="width:80%;max-width:900px;">
+            <span class="custom-modal-close" id="closePreviewPrescrizioni">&times;</span>
+            <h3>Anteprima Prescrizioni</h3>
+            <iframe id="previewPrescrizioniFrame" style="width:100%;height:500px;border:1px solid #ccc;"></iframe>
+            <div style="margin-top:1rem;display:flex;justify-content:flex-end;gap:1rem;">
+            <button id="downloadPrescrizioniPdf" class="button">📄 Scarica PDF</button>
+            <button id="confirmSavePrescrizioni" class="button">✅ Conferma Salvataggio</button>
+            </div>
+        </div>
+        </div>
+        <div id="previewPrescrizioniBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
+
+
         <!-- ====== MODALE DINAMICA + PDF (NOTE + VISITE) ====== -->
         <script>
             // Carica logo con fallback
