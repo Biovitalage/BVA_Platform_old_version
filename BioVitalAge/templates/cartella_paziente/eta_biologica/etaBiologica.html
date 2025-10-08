@@ -91,6 +91,65 @@
 
         <!-- ====== Pannello: Età Biologica (standalone) ====== -->
         <div id="panel-eta-biologica" class="bio-panel">
+
+          <script>
+          (function () {
+            const form = document.getElementById('age-form');
+            if (!form) return;
+
+            const getById = (id) => {
+              const el = form.querySelector('#' + id);
+              return el ? (el.value || '').trim() : '';
+            };
+
+            const setHidden = (name, value) => {
+              if (value === '' || value == null) return;
+              let input = form.querySelector(`[name="${name}"]`);
+              if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                form.appendChild(input);
+              }
+              input.value = value;
+            };
+
+            form.addEventListener('submit', function () {
+              // ---- Emocromo (gender-specific richiesti dalla view) ----
+              const RBC = getById('rbc');
+              const HGB = getById('hgb');
+              const HCT = getById('hct');
+              setHidden('rbc_m', RBC); setHidden('rbc_w', RBC);
+              setHidden('hgb_m', HGB); setHidden('hgb_w', HGB);
+              setHidden('hct_m', HCT); setHidden('hct_w', HCT);
+
+              // RDW: la view preferisce rdwcv, fai fallback dal principale 'rdw'
+              const RDW = getById('rdw');
+              if (!form.querySelector('[name="rdwcv"]')?.value) setHidden('rdwcv', RDW);
+
+              // ---- Biochimica: alias che la view si aspetta ----
+              setHidden('albuminemia', getById('alb'));      // ALB
+              const CREA = getById('crea');                  // CREA
+              setHidden('creatinine_m', CREA);
+              setHidden('creatinine_w', CREA);
+
+              const AST = getById('ast');                    // AST/ALT/GGT
+              const ALT = getById('alt');
+              const GGT = getById('ggt');
+              setHidden('got_m', AST);  setHidden('got_w', AST);
+              setHidden('gpt_m', ALT);  setHidden('gpt_w', ALT);
+              setHidden('g_gt_m', GGT); setHidden('g_gt_w', GGT);
+
+              setHidden('glicemy',  getById('glu'));         // GLU
+              setHidden('tot_chol', getById('tc'));          // TC
+              setHidden('trigl',    getById('tg'));          // TG
+
+              // (hba1c ha già name="hba1c" quindi ok)
+            });
+          })();
+          </script>
+
+
           <form method="POST" action="{% url 'Calcolatore' persona.id %}" class="form-container" id="age-form">
             {% csrf_token %}
 
@@ -884,4 +943,3 @@
 
 </body>
 </html>
-+

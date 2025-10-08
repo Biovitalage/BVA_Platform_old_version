@@ -141,10 +141,147 @@
         </div>
       </div>
 
-      <<!-- HTML BASE, semplificato per la parte terapia domiciliare e in studio -->
+
       <div class="card-container mt-4" id="terapie-wrapper">
-        <!-- TERAPIA DOMICILIARE -->
-        <div class="sub-card">
+    
+        <div class="sub-card mt-4">
+          <h3>Terapie IV</h3>
+          <div class="table-wrapper" data-table="terapie-in-studio">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Descrizione</th>
+                  <th>Data Inizio</th>
+                  <th>Data Termine</th>
+                  <th>Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="tabella-terapie-studio">
+                {% if storico_studio and storico_studio.object_list %}
+                  {% for terapia in storico_studio %}
+                    <tr data-id="{{ terapia.id }}">
+                      <td>{{ terapia.descrizione|linebreaksbr }}</td>
+                      <td>{{ terapia.data_inizio|date:"d/m/Y" }}</td>
+                      <td>
+                        {% if terapia.data_fine %}
+                          {{ terapia.data_fine|date:"d/m/Y" }}
+                        {% else %} — {% endif %}
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary btn-modifica" data-id="{{ terapia.id }}" data-modale="studio">✎</button>
+                        <button class="btn btn-sm btn-outline-danger btn-elimina" data-id="{{ terapia.id }}">✖</button>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr class="no-terapie-row">
+                    <td colspan="4" class="text-center text-muted">Nessuna terapia in studio registrata.</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+
+            <div class="pagination_tabella mb-3" data-table="terapie-in-studio">
+              {% if storico_studio.has_previous %}
+              <a class="previous" href="?page={{ storico_studio.previous_page_number }}">Previous</a>
+              {% else %}
+              <span class="previous disabled">Previous</span>
+              {% endif %}
+            
+              {% for num in storico_studio.paginator.page_range %}
+              {% if storico_studio.number == num %}
+              <span class="current">{{ num }}</span>
+              {% else %}
+              <a href="?page={{ num }}">{{ num }}</a>
+              {% endif %}
+              {% endfor %}
+            
+              {% if storico_studio.has_next %}
+              <a class="next" href="?page={{ storico_studio.next_page_number }}">Next</a>
+              {% else %}
+              <span class="next disabled">Next</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <a href="" class="button mt-3" data-bs-toggle="modal" data-bs-target="#studioModal">
+      
+            <span class="button__icon-wrapper">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18"
+                class="button__icon-svg">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18"
+                class="button__icon-svg button__icon-svg--copy">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </span>
+
+            Aggiungi Terapia in Studio
+          </a>
+
+        </div>
+
+        <div class="modal fade" id="studioModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content p-3 rounded-4">
+              <form id="studio-terapia-form" method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="studio" />
+
+                <div class="modal-header border-0">
+                  <h3 class="modal-title" style="color: var(--contrast-color); font-weight: bold;">
+                    Nuova Terapia in Studio
+                  </h3>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                  <p class="mb-3 text-muted">Seleziona una terapia predefinita:</p>
+
+                  <!-- Usa SELECT (una sola scelta); se preferisci radio, dimmelo e te le preparo -->
+                  <div class="input-container mb-4">
+                    <label for="preset" class="form-label-custom w-100">Terapia*</label>
+                    <select id="preset" name="preset" class="form-control" required>
+                      <option value="" selected disabled>— Seleziona —</option>
+                      <option value="acetilcarnitina">L-acetilcarnitina 500 mg fiale IV — 250 ml fisiologica, 2–3/sett., 10 somministrazioni</option>
+                      <option value="fosfolipidi">Fosfolipidi ipotalamici 28 mg fiale IV — 250 ml fisiologica, 2–3/sett., 10 somministrazioni</option>
+                      <option value="glutatione">Glutatione 600 mg fiale IV — 100 ml fisiologica, 2–3/sett., 10 somministrazioni</option>
+                      <option value="vitamina_c">Vitamina C1 1 g fiale IV — 100 ml fisiologica, 2–3/sett., 10 somministrazioni</option>
+                    </select>
+                  </div>
+
+                  <div class="row">
+                    <div class="col input-container">
+                      <label for="data_fine_studio" class="form-label-custom w-100">Data fine (opzionale)</label>
+                      <input type="date" class="form-control" name="data_fine" id="data_fine_studio" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="modal-footer border-0 mt-3">
+                  <button type="submit" class="button">Salva</button>
+                  <button type="button" class="button" data-bs-dismiss="modal">Chiudi</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+
+
+
+
+
+<!--       <div class="card-container mt-4" id="terapie-wrapper">
+    --> 
+<!--         <div class="sub-card">
           <h3 style="margin-bottom: 2.5%;">Terapia Domiciliare</h3>
           <form id="terapia-domiciliare-form" method="post">
             {% csrf_token %}
@@ -180,15 +317,15 @@
               <div class="col input-container">
                 <label for="orari" id="label-default" class="form-label-custom w-100">Orari/o Assunzioni</label>
                 
-                <!-- Container Grid -->
+
                 <div id="orari-grid" class="orari-grid">
-                  <!-- Primo input -->
+ 
                   <input
                     type="time"
                     class="form-control"
                     name="orario1"
                   />
-                  <!-- Quelli successivi verranno aggiunti qui -->
+   
                 </div>
               </div>
             </div>
@@ -269,7 +406,6 @@
                 {% endif %}
               </tbody>
             </table>
-            <!-- Sezione paginazione -->
             <div class="pagination_tabella mb-3" data-table="terapie-domiciliari">
               {% if storico_terapie.has_previous %}
               <a class="previous" href="?page={{ storico_terapie.previous_page_number }}">Previous</a>
@@ -294,7 +430,7 @@
           </div>
         </div>
 
-        <!-- MODALE PER MODIFICA TERAPIA DOMICILIARE -->
+
         <div class="modal fade" id="modaleModificaTerapia" tabindex="-1">
           <div class="modal-dialog">
             <div class="modal-content">
@@ -315,7 +451,7 @@
                     <input type="number" class="form-control" id="assunzioni-modifica" name="assunzioni" min="1" max="4" required>
                   </div>
                   <div id="orari-modifica-container" class="row g-2 mt-1 position-relative">
-                    <!-- Input orari dinamici -->
+
                   </div>
                   <div class="row mt-3">
                     <div class="col position-relative">
@@ -335,9 +471,9 @@
               </form>
             </div>
           </div>
-        </div>
+        </div> -->
         
-        <!-- TERAPIA IN STUDIO -->
+<!-- 
         <div class="sub-card mt-4">
           <h3>Terapie in Studio</h3>
           <div class="table-wrapper" data-table="terapie-in-studio">
@@ -376,7 +512,7 @@
                 {% endif %}
               </tbody>
             </table>
-            <!-- Sezione paginazione -->
+
             <div class="pagination_tabella mb-3" data-table="terapie-in-studio">
               {% if storico_studio.has_previous %}
               <a class="previous" href="?page={{ storico_studio.previous_page_number }}">Previous</a>
@@ -417,59 +553,59 @@
 
             Aggiungi Terapia in Studio
           </a>
-        </div>
+        </div> -->
 
-      <!-- MODALE PER TERAPIA IN STUDIO -->
-      <div class="modal fade" id="studioModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-          <div class="modal-content p-3 rounded-4">
-            <form id="studio-terapia-form">
-              {% csrf_token %}
-              <input type="hidden" name="form_type" value="studio" />
-              <div class="modal-header border-0">
-                <h3 class="modal-title" style="color: var(--contrast-color); font-weight: bold;">Nuova Terapia in Studio</h3>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body">
 
-                <div class="row mb-5">
-                  <div class="col input-container">
-                    <label for="tipologia" class="form-label-custom w-100">Tipologia*</label>
-                    <select name="tipologia" class="form-control" id="tipologia" required>
-                      <option value="IV Therapy">IV Therapy</option>
-                    </select>
+        <div class="modal fade" id="studioModal" tabindex="-1">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content p-3 rounded-4">
+              <form id="studio-terapia-form">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="studio" />
+                <div class="modal-header border-0">
+                  <h3 class="modal-title" style="color: var(--contrast-color); font-weight: bold;">Nuova Terapia in Studio</h3>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+
+                  <div class="row mb-5">
+                    <div class="col input-container">
+                      <label for="tipologia" class="form-label-custom w-100">Tipologia*</label>
+                      <select name="tipologia" class="form-control" id="tipologia" required>
+                        <option value="IV Therapy">IV Therapy</option>
+                      </select>
+                    </div>
+
+                    <div class="col input-container">
+                      <label for="data_inizio_studio" class="form-label-custom w-100">Data inizio*</label>
+                      <input type="date" class="form-control" name="data_inizio" id="data_inizio_studio" required />
+                    </div>
+
+                    <div class="col input-container">
+                      <label for="data_fine_studio" class="form-label-custom w-100">Data fine</label>
+                      <input type="date" class="form-control" name="data_fine" id="data_fine_studio" />
+                    </div>
                   </div>
 
-                  <div class="col input-container">
-                    <label for="data_inizio_studio" class="form-label-custom w-100">Data inizio*</label>
-                    <input type="date" class="form-control" name="data_inizio" id="data_inizio_studio" required />
-                  </div>
-
-                  <div class="col input-container">
-                    <label for="data_fine_studio" class="form-label-custom w-100">Data fine</label>
-                    <input type="date" class="form-control" name="data_fine" id="data_fine_studio" />
+                  <div class="mb-3 input-container">
+                    <label for="descrizione" class="form-label-custom w-100">Descrizione*</label>
+                    <textarea name="descrizione" class="form-control" id="descrizione" rows="4" required></textarea>
                   </div>
                 </div>
 
-                <div class="mb-3 input-container">
-                  <label for="descrizione" class="form-label-custom w-100">Descrizione*</label>
-                  <textarea name="descrizione" class="form-control" id="descrizione" rows="4" required></textarea>
+                <div class="modal-footer border-0 mt-3">
+                  <button type="submit" class="button"> Salva </button>
+                  <button type="button" class="button" data-bs-dismiss="modal">Chiudi</button>
                 </div>
-              </div>
-
-              <div class="modal-footer border-0 mt-3">
-                <button type="submit" class="button"> Salva </button>
-                <button type="button" class="button" data-bs-dismiss="modal">Chiudi</button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
 
       </div>
 
-      <!-- PRESCRIZIONI FARMACI -->
-      <div class="card-container mt-4 mb-4">
+
+  <!--     <div class="card-container mt-4 mb-4">
         <div class="backdropModalePrescrizioni" id="backdropPrescrizioni"></div>
       
         <div class="ModalPrescrizione" id="modalePrescrizioni">
@@ -504,7 +640,7 @@
           </div>
         </div>
       
-        <!-- TABELLA PRESCRIZIONI ESAMI -->
+
         <div class="contenitore-tabella" style="margin-top: 0; ">
       
           <div class="recent-patients" id="card-style">
@@ -600,27 +736,28 @@
             </div>
           </div>
         </div>
-      </div>
+      </div>  -->
+
+
+
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Mostra messaggi -->
+
     {% if messages %}
         {% for message in messages %}
             <div class="alert {{ message.tags }}">{{ message }}</div>
         {% endfor %}
     {% endif %}
 
-    <!-- Mostra modale -->
     {% if mostra_modale %}
         <script>
             const modal = new bootstrap.Modal(document.getElementById('studioModal'));
             modal.show();
         </script>
     {% endif %}
-    <!-- BACKDROP -->
+
     <div id="backdropModale" style="display: none;"></div>
 
-    <!-- MODALE PRESCRIZIONE -->
     <div id="ModaleInserimento" style="display: none;">
       <div class="title-header-container">
         <h3>Aggiungi Prescrizione</h3>
@@ -656,13 +793,14 @@
         </div>
 
         <select name="" id="menu_tendina_prescrizioni" class="tendinaPrescrizioni">
-          <!-- DINAMICAMENTE POPOLATO CON JS -->
+      
         </select>
       </div>
 
       <div class="Modale-Result-content">
-        <!-- RISULTATI DINAMICI -->
+
       </div>
     </div>
+
   </body>
 </html>

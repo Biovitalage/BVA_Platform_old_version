@@ -56,6 +56,7 @@ from BioVitalAge.funzioni_python.calcolo_eta_biologica import *
 from BioVitalAge.funzioni_python.calcoloMetabolica import *
 from BioVitalAge.funzioni_python.calcolo_score import *
 
+
 from .models import *
 from BioVitalAge.error_handlers import catch_exceptions
 
@@ -2251,27 +2252,33 @@ class EsamiView(View):
         }
 
         return render(request, 'cartella_paziente/sezioni_storico/esami.html', context)
+    
 
-## VIEW TERAPIA
+
+
+
+from django.utils import timezone
+from django.contrib import messages
+from django.shortcuts import redirect
+
 @method_decorator(catch_exceptions, name='dispatch')
 class TerapiaView(View):
     def get(self, request, id):
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         persona = get_object_or_404(TabellaPazienti, id=id)
 
-        # Terape in studio (se vuoi mostrarle anche in GET)
         terapie_studio = TerapiaInStudio.objects.filter(paziente=persona).order_by('data_inizio')
         terapie_domiciliari = TerapiaDomiciliare.objects.filter(paziente=persona).order_by('data_inizio')
 
-        # Impostazione del paginatore (ad es. 10 referti per pagina)
-        paginator = Paginator(terapie_domiciliari, 4)
+        # paginazione domiciliare
+        paginator_dom = Paginator(terapie_domiciliari, 4)
         page_number = request.GET.get('page')
-        storico_terapie = paginator.get_page(page_number)
+        storico_terapie = paginator_dom.get_page(page_number)
 
-        # Impostazione del paginatore (ad es. 10 referti per pagina)
-        paginator = Paginator(terapie_studio, 4)
-        page_number = request.GET.get('page')
-        storico_studio = paginator.get_page(page_number)
+        # paginazione studio
+        paginator_stu = Paginator(terapie_studio, 4)
+        page_number_studio = request.GET.get('page')
+        storico_studio = paginator_stu.get_page(page_number_studio)
 
         context = {
             'persona': persona,
@@ -2280,24 +2287,47 @@ class TerapiaView(View):
             'terapie_domiciliari': terapie_domiciliari,
             'storico_terapie': storico_terapie,
             'storico_studio': storico_studio
-
         }
-
         return render(request, 'cartella_paziente/sezioni_storico/terapie.html', context)
 
     def post(self, request, id):
         form_type = request.POST.get("form_type")
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
 
-        # Salvataggio terapia in studio
         if form_type == "studio":
             persona = get_object_or_404(TabellaPazienti, id=id, dottore=dottore)
-            tipologia = request.POST.get("tipologia")
-            descrizione = request.POST.get("descrizione")
-            data_inizio = parse_date(request.POST.get("data_inizio"))
+
+            PRESETS = {
+                "acetilcarnitina": (
+                    "L-acetilcarnitina 500 mg fiale IV",
+                    "Somministrare in fisiologica 250 ml, 2–3 volte/settimana per un totale di 10 somministrazioni."
+                ),
+                "fosfolipidi": (
+                    "Fosfolipidi ipotalamici 28 mg fiale IV",
+                    "Somministrare in fisiologica 250 ml, 2–3 volte/settimana per un totale di 10 somministrazioni."
+                ),
+                "glutatione": (
+                    "Glutatione 600 mg fiale IV",
+                    "Somministrare in fisiologica 100 ml, 2–3 volte/settimana per un totale di 10 somministrazioni."
+                ),
+                "vitamina_c": (
+                    "Vitamina C1 1 g fiale IV",
+                    "Somministrare in fisiologica 100 ml, 2–3 volte/settimana per un totale di 10 somministrazioni."
+                ),
+            }
+
+            preset_key = request.POST.get("preset")
+            if preset_key not in PRESETS:
+                messages.error(request, "Selezione non valida. Riprova.")
+                return redirect(request.path)
+
+            tipologia, istruzioni = PRESETS[preset_key]
+            descrizione = f"{tipologia}\n{istruzioni}"
+
+            data_inizio = timezone.localdate()  # oggi
             data_fine = parse_date(request.POST.get("data_fine")) or None
 
-            terapia = TerapiaInStudio.objects.create(
+            TerapiaInStudio.objects.create(
                 paziente=persona,
                 tipologia=tipologia,
                 descrizione=descrizione,
@@ -2305,23 +2335,17 @@ class TerapiaView(View):
                 data_fine=data_fine,
             )
 
-            return JsonResponse({
-                'success': True,
-                'terapia': {
-                    'id': terapia.id,
-                    'descrizione': terapia.descrizione,
-                    'data_inizio': terapia.data_inizio.strftime('%d/%m/%Y'),
-                    'data_fine': terapia.data_fine.strftime('%d/%m/%Y') if terapia.data_fine else None
-                }
-            })
+            messages.success(request, "Terapia in studio salvata con successo.")
+            return redirect(request.path)
+
         elif form_type == "domiciliare":
+            # tuo blocco esistente invariato
             persona = get_object_or_404(TabellaPazienti, id=id, dottore=dottore)
             farmaco = request.POST.get("farmaco")
             assunzioni = int(request.POST.get("assunzioni"))
             data_inizio = parse_date(request.POST.get("data_inizio"))
             data_fine = parse_date(request.POST.get("data_fine")) or None
 
-            # Recupero dinamico degli orari
             orari_dict = {}
             for i in range(1, assunzioni + 1):
                 key = f"orario{i}"
@@ -2329,8 +2353,7 @@ class TerapiaView(View):
                 if orario_val:
                     orari_dict[key] = orario_val
 
-            # Creazione
-            terapia = TerapiaDomiciliare.objects.create(
+            TerapiaDomiciliare.objects.create(
                 paziente=persona,
                 farmaco=farmaco,
                 assunzioni=assunzioni,
@@ -2339,20 +2362,13 @@ class TerapiaView(View):
                 data_fine=data_fine
             )
 
-            return JsonResponse({
-                'success': True,
-                'terapia': {
-                    'id': terapia.id,
-                    'farmaco': terapia.farmaco,
-                    'assunzioni': terapia.assunzioni,
-                    'orari': terapia.orari,
-                    'data_inizio': terapia.data_inizio.strftime('%d/%m/%Y') if terapia.data_inizio else None,
-                    'data_fine': terapia.data_fine.strftime('%d/%m/%Y') if terapia.data_fine else None
-                }
-            })
+            messages.success(request, "Terapia domiciliare salvata con successo.")
+            return redirect(request.path)
+
+        messages.error(request, "Richiesta non valida.")
+        return redirect(request.path)
 
 
-        return JsonResponse({'success': False})
 
 # ELIMINA TERAPIA FUNZIONE
 @method_decorator(catch_exceptions, name='dispatch')
@@ -3800,7 +3816,26 @@ class StampaRefertoView(LoginRequiredMixin,View):
         return render(request, "cartella_paziente/capacita_vitale/EtaVitale.html", context)
 
 
-## SEZIONE ETA' BIOLOGICA
+# views.py (estratto) — ETA' BIOLOGICA (nuovo clock GBR)
+from django.shortcuts import render, get_object_or_404
+from django.views import View
+from django.utils.decorators import method_decorator
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from .models import (
+    UtentiRegistratiCredenziali,
+    TabellaPazienti,
+    RefertiEtaBiologica,
+    DatiEstesiRefertiEtaBiologica,
+)
+
+# DOPO (coerente con BioVitalAge/funzioni_python/…)
+from .funzioni_python.decorators import catch_exceptions   
+from .funzioni_python.calcolo_score import calcola_score_organi, genera_report
+from .funzioni_python.biovitalage_wrapper import calculate_biological_age
+
+
 def safe_float(data, key, default=0.0):
     try:
         return float(data.get(key, default))
@@ -3809,12 +3844,10 @@ def safe_float(data, key, default=0.0):
 
 @method_decorator(catch_exceptions, name='dispatch')
 class EtaBiologicaView(LoginRequiredMixin, View):
-
     def get(self, request, id):
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         persona = get_object_or_404(TabellaPazienti, id=id)
 
-        # 1) Recupera i 2 ultimi referti con select_related sui dati_estesi
         ultimi_referti = (
             RefertiEtaBiologica.objects
             .filter(paziente=persona)
@@ -3822,18 +3855,12 @@ class EtaBiologicaView(LoginRequiredMixin, View):
             .order_by('-data_referto', '-id')[:2]
         )
 
-        # 2) Estrai i 2 punteggi in due dizionari distinti
-        score1 = {}
-        score2 = {}
-
-        # Mappatura tra nome campo modello e chiave desiderata
+        score1, score2 = {}, {}
         campi_score = [
             'salute_cuore', 'salute_renale', 'salute_epatica',
             'salute_cerebrale', 'salute_ormonale',
             'salute_sangue', 'salute_s_i', 'salute_m_s',
         ]
-
-        # Scorri i due oggetti in ordine e assegna a score1/score2
         for idx, ref in enumerate(ultimi_referti, start=1):
             dati = getattr(ref, 'dati_estesi', None)
             target = score1 if idx == 1 else score2
@@ -3841,7 +3868,6 @@ class EtaBiologicaView(LoginRequiredMixin, View):
                 for campo in campi_score:
                     target[campo] = getattr(dati, campo)
             else:
-                # se non ci sono dati_estesi, metti None
                 for campo in campi_score:
                     target[campo] = None
 
@@ -3856,34 +3882,25 @@ class EtaBiologicaView(LoginRequiredMixin, View):
 
 
 @method_decorator(catch_exceptions, name='dispatch')
-class CalcolatoreRender(LoginRequiredMixin,View):
-    
+class CalcolatoreRender(LoginRequiredMixin, View):
+
     def get(self, request, id):
-
-        
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-
         persona = get_object_or_404(TabellaPazienti, id=id)
-
-        context = {
-            'dottore' : dottore,
-            'persona': persona,
-        }
-
+        context = {'dottore': dottore, 'persona': persona}
         return render(request, 'cartella_paziente/eta_biologica/calcolatore.html', context)
 
-
     def post(self, request, id):
-        # 1) Input base
+        # -----------------------------
+        # 1) Input & oggetti principali
+        # -----------------------------
         data = {k: v for k, v in request.POST.items() if k != 'csrfmiddlewaretoken'}
-
-        # 2) Oggetti principali: usa SEMPRE l'id passato alla view
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
         persona = get_object_or_404(TabellaPazienti, id=id)
-        paziente = persona  # <- niente lookup per codice_fiscale
+        paziente = persona
         paziente_id = paziente.id
 
-        # 3) Crea subito il referto (documento opzionale)
+        # crea referto (documento opzionale)
         referto = RefertiEtaBiologica(
             paziente=paziente,
             descrizione=data.get('descrizione'),
@@ -3891,7 +3908,7 @@ class CalcolatoreRender(LoginRequiredMixin,View):
         )
         referto.save()
 
-        # Helper per i float
+        # helper float
         def sf(key):
             val = data.get(key)
             try:
@@ -3899,9 +3916,11 @@ class CalcolatoreRender(LoginRequiredMixin,View):
             except (TypeError, ValueError):
                 return None
 
-        # 4) Estrazione valori (logica invariata)
         chronological_age = int(persona.chronological_age)
 
+        # -----------------------------------
+        # 2) Estrazione valori (come prima)
+        # -----------------------------------
         d_roms = sf('d_roms');   osi = sf('osi');     pat = sf('pat')
 
         my_acid = sf('my_acid'); p_acid = sf('p_acid'); st_acid = sf('st_acid'); ar_acid = sf('ar_acid')
@@ -3909,8 +3928,7 @@ class CalcolatoreRender(LoginRequiredMixin,View):
         a_linoleic_acid = sf('a_linoleic_acid'); eico_acid = sf('eico_acid'); doco_acid = sf('doco_acid'); lin_acid = sf('lin_acid')
         gamma_lin_acid = sf('gamma_lin_acid'); dih_gamma_lin_acid = sf('dih_gamma_lin_acid'); arachidonic_acid = sf('arachidonic_acid')
         sa_un_fatty_acid = sf('sa_un_fatty_acid'); o3o6_fatty_acid_quotient = sf('o3o6_fatty_acid_quotient')
-        aa_epa = sf('aa_epa')
-        o3_index = sf('o3_index')
+        aa_epa = sf('aa_epa'); o3_index = sf('o3_index')
 
         wbc = sf('wbc'); baso = sf('baso'); eosi = sf('eosi'); lymph = sf('lymph'); mono = sf('mono'); neut = sf('neut')
         neut_ul = sf('neut_ul'); lymph_ul = sf('lymph_ul'); mono_ul = sf('mono_ul'); eosi_ul = sf('eosi_ul'); baso_ul = sf('baso_ul')
@@ -3946,7 +3964,6 @@ class CalcolatoreRender(LoginRequiredMixin,View):
         g_gt_m = sf('g_gt_m'); g_gt_w = sf('g_gt_w')
         a_photo_m = sf('a_photo_m'); a_photo_w = sf('a_photo_w')
         tot_bili = sf('tot_bili'); direct_bili = sf('direct_bili')
-        # tollera typo del form "idirect_bili"
         indirect_bili = sf('indirect_bili') if sf('indirect_bili') is not None else sf('idirect_bili')
 
         ves = sf('ves'); pcr_c = sf('pcr_c'); sideremia = sf('sideremia')
@@ -3962,82 +3979,77 @@ class CalcolatoreRender(LoginRequiredMixin,View):
 
         telotest = sf('telotest')
 
-        # 5) Exams by gender (invariato)
-        exams = []
+        # ---------------------------------------------------------
+        # 3) (NEW) Prepara le 21 features per il modello GBR
+        # ---------------------------------------------------------
+        # prova a prendere SBP/DBP/BMI/WAIST dal form, altrimenti da persona.*
+        SBP = sf('sbp') or getattr(persona, 'systolic_bp', None)
+        DBP = sf('dbp') or getattr(persona, 'diastolic_bp', None)
+        BMI = sf('bmi') or getattr(persona, 'bmi', None)
+        WAIST = sf('waist') or getattr(persona, 'waist_circumference', None)
+
         if paziente.gender == 'M':
-            exams = [
-                {'my_acid': my_acid}, {'p_acid': p_acid}, {'st_acid': st_acid}, {'ar_acid': ar_acid},
-                {'beenic_acid': beenic_acid}, {'pal_acid': pal_acid}, {'ol_acid': ol_acid}, {'ner_acid': ner_acid},
-                {'a_linoleic_acid': a_linoleic_acid}, {'eico_acid': eico_acid}, {'doco_acid': doco_acid}, {'lin_acid': lin_acid},
-                {'gamma_lin_acid': gamma_lin_acid}, {'dih_gamma_lin_acid': dih_gamma_lin_acid}, {'arachidonic_acid': arachidonic_acid},
-                {'sa_un_fatty_acid': sa_un_fatty_acid}, {'o3o6_fatty_acid_quotient': o3o6_fatty_acid_quotient}, {'aa_epa': aa_epa},
-                {'o3_index': o3_index}, {'neut_ul': neut_ul}, {'lymph_ul': lymph_ul}, {'mono_ul': mono_ul}, {'eosi_ul': eosi_ul},
-                {'baso_ul': baso_ul}, {'rdwcv': rdwcv}, {'hct_m': hct_m}, {'hgb_m': hgb_m}, {'rbc_m': rbc_m}, {'azotemia': azotemia},
-                {'uric_acid': uric_acid}, {'creatinine_m': creatinine_m}, {'uricemy_m': uricemy_m}, {'cistatine_c': cistatine_c},
-                {'plt': plt}, {'mpv': mpv}, {'plcr': plcr}, {'pct': pct}, {'pdw': pdw}, {'d_dimero': d_dimero}, {'pai_1': pai_1},
-                {'tot_chol': tot_chol}, {'ldl_chol': ldl_chol}, {'hdl_chol_m': hdl_chol_m}, {'trigl': trigl}, {'na': na}, {'k': k},
-                {'mg': mg}, {'ci': ci}, {'ca': ca}, {'p': p}, {'dhea_m': dhea_m}, {'testo_m': testo_m}, {'tsh': tsh}, {'ft3': ft3},
-                {'ft4': ft4}, {'beta_es_m': beta_es_m}, {'prog_m': prog_m}, {'fe': fe}, {'transferrin': transferrin},
-                {'ferritin_m': ferritin_m}, {'glicemy': glicemy}, {'insulin': insulin}, {'homa': homa}, {'ir': ir},
-                {'albuminemia': albuminemia}, {'tot_prot': tot_prot}, {'tot_prot_ele': tot_prot_ele}, {'albumin_ele': albumin_ele},
-                {'a_1': a_1}, {'a_2': a_2}, {'b_1': b_1}, {'b_2': b_2}, {'gamma': gamma}, {'albumin_dI': albumin_dI},
-                {'a_1_dI': a_1_dI}, {'a_2_dI': a_2_dI}, {'b_1_dI': b_1_dI}, {'b_2_dI': b_2_dI}, {'gamma_dI': gamma_dI},
-                {'ag_rap': ag_rap}, {'got_m': got_m}, {'gpt_m': gpt_m}, {'g_gt_m': g_gt_m}, {'a_photo_m': a_photo_m},
-                {'tot_bili': tot_bili}, {'direct_bili': direct_bili}, {'indirect_bili': indirect_bili}, {'ves': ves},
-                {'pcr_c': pcr_c}, {'tnf_a': tnf_a}, {'inter_6': inter_6}, {'inter_10': inter_10}, {'scatolo': scatolo},
-                {'indicano': indicano}, {'s_weight': s_weight}, {'ph': ph}, {'proteins_ex': proteins_ex}, {'blood_ex': blood_ex},
-                {'ketones': ketones}, {'uro': uro}, {'bilirubin_ex': bilirubin_ex}, {'leuc': leuc}, {'glucose': glucose},
-                {'shbg_m': shbg_m}, {'nt_pro': nt_pro}, {'v_b12': v_b12}, {'v_d': v_d}, {'ves2': ves2}, {'telotest': telotest}
-            ]
-        elif paziente.gender == 'F':
-            exams = [
-                {'my_acid': my_acid}, {'p_acid': p_acid}, {'st_acid': st_acid}, {'ar_acid': ar_acid},
-                {'beenic_acid': beenic_acid}, {'pal_acid': pal_acid}, {'ol_acid': ol_acid}, {'ner_acid': ner_acid},
-                {'a_linoleic_acid': a_linoleic_acid}, {'eico_acid': eico_acid}, {'doco_acid': doco_acid}, {'lin_acid': lin_acid},
-                {'gamma_lin_acid': gamma_lin_acid}, {'dih_gamma_lin_acid': dih_gamma_lin_acid}, {'arachidonic_acid': arachidonic_acid},
-                {'sa_un_fatty_acid': sa_un_fatty_acid}, {'o3o6_fatty_acid_quotient': o3o6_fatty_acid_quotient}, {'aa_epa': aa_epa},
-                {'o3_index': o3_index}, {'neut_ul': neut_ul}, {'lymph_ul': lymph_ul}, {'mono_ul': mono_ul}, {'eosi_ul': eosi_ul},
-                {'baso_ul': baso_ul}, {'rdwcv': rdwcv}, {'hct_w': hct_w}, {'hgb_w': hgb_w}, {'rbc_w': rbc_w}, {'azotemia': azotemia},
-                {'uric_acid': uric_acid}, {'creatinine_w': creatinine_w}, {'uricemy_w': uricemy_w}, {'cistatine_c': cistatine_c},
-                {'plt': plt}, {'mpv': mpv}, {'plcr': plcr}, {'pct': pct}, {'pdw': pdw}, {'d_dimero': d_dimero}, {'pai_1': pai_1},
-                {'tot_chol': tot_chol}, {'ldl_chol': ldl_chol}, {'hdl_chol_w': hdl_chol_w}, {'trigl': trigl}, {'na': na}, {'k': k},
-                {'mg': mg}, {'ci': ci}, {'ca': ca}, {'p': p}, {'dhea_w': dhea_w}, {'testo_w': testo_w}, {'tsh': tsh}, {'ft3': ft3},
-                {'ft4': ft4}, {'beta_es_w': beta_es_w}, {'prog_w': prog_w}, {'fe': fe}, {'transferrin': transferrin},
-                {'ferritin_w': ferritin_w}, {'glicemy': glicemy}, {'insulin': insulin}, {'homa': homa}, {'ir': ir},
-                {'albuminemia': albuminemia}, {'tot_prot': tot_prot}, {'tot_prot_ele': tot_prot_ele}, {'albumin_ele': albumin_ele},
-                {'a_1': a_1}, {'a_2': a_2}, {'b_1': b_1}, {'b_2': b_2}, {'gamma': gamma}, {'albumin_dI': albumin_dI},
-                {'a_1_dI': a_1_dI}, {'a_2_dI': a_2_dI}, {'b_1_dI': b_1_dI}, {'b_2_dI': b_2_dI}, {'gamma_dI': gamma_dI},
-                {'ag_rap': ag_rap}, {'got_w': got_w}, {'gpt_w': gpt_w}, {'g_gt_w': g_gt_w}, {'a_photo_w': a_photo_w},
-                {'tot_bili': tot_bili}, {'direct_bili': direct_bili}, {'indirect_bili': indirect_bili}, {'ves': ves},
-                {'pcr_c': pcr_c}, {'tnf_a': tnf_a}, {'inter_6': inter_6}, {'inter_10': inter_10}, {'scatolo': scatolo},
-                {'indicano': indicano}, {'s_weight': s_weight}, {'ph': ph}, {'proteins_ex': proteins_ex}, {'blood_ex': blood_ex},
-                {'ketones': ketones}, {'uro': uro}, {'bilirubin_ex': bilirubin_ex}, {'leuc': leuc}, {'glucose': glucose},
-                {'shbg_w': shbg_w}, {'nt_pro': nt_pro}, {'v_b12': v_b12}, {'v_d': v_d}, {'ves2': ves2}, {'telotest': telotest}
-            ]
+            RBC_ = rbc_m; HGB_ = hgb_m; HCT_ = hct_m; AST_ = got_m; ALT_ = gpt_m; GGT_ = g_gt_m; CREA_ = creatinine_m
+        else:
+            RBC_ = rbc_w; HGB_ = hgb_w; HCT_ = hct_w; AST_ = got_w; ALT_ = gpt_w; GGT_ = g_gt_w; CREA_ = creatinine_w
 
-        # Padding anti-IndexError per calculate_biological_age
-        REQUIRED_MIN_LEN = 150
-        if len(exams) < REQUIRED_MIN_LEN:
-            exams.extend({} for _ in range(REQUIRED_MIN_LEN - len(exams)))
+        RDW_ = rdwcv if rdwcv is not None else rdwsd  # preferibile RDW-CV
 
-        # --- Mapping organi/tests (immutato) ---
+        features21 = {
+            "SBP": SBP,
+            "DBP": DBP,
+            "BMI": BMI,
+            "WAIST": WAIST,
+            "WBC": wbc,
+            "RBC": RBC_,
+            "HGB": HGB_,
+            "HCT": HCT_,
+            "MCV": mcv,
+            "RDW": RDW_,
+            "PLT": plt,
+            "ALB": albuminemia,
+            "AST": AST_,
+            "ALT": ALT_,
+            "GGT": GGT_,
+            "BUN": azotemia,               # alias Azotemia gestito comunque
+            "CREA": CREA_,
+            "GLU": glicemy,
+            "HBA1C": sf('hba1c'),          # ASSICURATI che arrivi dal form o calcolalo altrove
+            "TC": tot_chol,
+            "TG": trigl,
+        }
+
+        missing = [k for k, v in features21.items() if v is None]
+        if missing:
+            messages.error(request, f"Valori mancanti per: {', '.join(missing)}. Compila i 21 marcatori richiesti.")
+            return render(request, "cartella_paziente/orologi/orologi_home.html", {
+                "show_modal": False,
+                "id_persona": paziente_id,
+                "dottore": dottore,
+                "persona": persona,
+                "active_panel": "panel-eta-biologica",
+            })
+
+        # ---------------------------------------------------------
+        # 4) Score organi & report (come prima, sui tuoi raw_values)
+        # ---------------------------------------------------------
         organi_esami = {
             "Cuore": ["Colesterolo Totale", "Colesterolo LDL", "Colesterolo HDL", "Trigliceridi",
-                    "PCR", "NT-proBNP", "Omocisteina", "Glicemia", "Insulina",
-                    "HOMA Test", "IR Test", "Creatinina", "Stress Ossidativo", "Omega Screening"],
+                      "PCR", "NT-proBNP", "Omocisteina", "Glicemia", "Insulina",
+                      "HOMA Test", "IR Test", "Creatinina", "Stress Ossidativo", "Omega Screening"],
             "Reni": ["Creatinina", "Azotemia", "Sodio", "Potassio", "Cloruri", "Fosforo", "Calcio", "Esame delle Urine"],
             "Fegato": ["Transaminasi GOT", "Transaminasi GPT", "Gamma-GT", "Bilirubina Totale",
-                    "Bilirubina Diretta", "Bilirubina Indiretta", "Fosfatasi Alcalina", "Albumina", "Proteine Totali"],
+                       "Bilirubina Diretta", "Bilirubina Indiretta", "Fosfatasi Alcalina", "Albumina", "Proteine Totali"],
             "Cervello": ["Omocisteina", "Vitamina B12", "Vitamina D", "DHEA", "TSH", "FT3",
-                        "FT4", "Omega-3 Index", "EPA", "DHA",
-                        "Stress Ossidativo dROMS", "Stress Ossidativo PAT", "Stress Ossidativo OSI REDOX"],
+                         "FT4", "Omega-3 Index", "EPA", "DHA",
+                         "Stress Ossidativo dROMS", "Stress Ossidativo PAT", "Stress Ossidativo OSI REDOX"],
             "Sistema Ormonale": ["TSH", "FT3", "FT4", "Insulina", "HOMA Test", "IR Test", "Glicemia", "DHEA",
-                                "Testosterone", "17B-Estradiolo", "Progesterone", "SHBG"],
+                                 "Testosterone", "17B-Estradiolo", "Progesterone", "SHBG"],
             "Sangue": ["Emocromo - Globuli Rossi", "Emocromo - Emoglobina", "Emocromo - Ematocrito",
-                    "Emocromo - MCV", "Emocromo - MCH", "Emocromo - MCHC", "Emocromo - RDW",
-                    "Emocromo - Globuli Bianchi", "Emocromo - Neutrofili", "Emocromo - Linfociti",
-                    "Emocromo - Monociti", "Emocromo - Eosinofili", "Emocromo - Basofili",
-                    "Emocromo - Piastrine", "Ferritina", "Sideremia", "Transferrina"],
+                       "Emocromo - MCV", "Emocromo - MCH", "Emocromo - MCHC", "Emocromo - RDW",
+                       "Emocromo - Globuli Bianchi", "Emocromo - Neutrofili", "Emocromo - Linfociti",
+                       "Emocromo - Monociti", "Emocromo - Eosinofili", "Emocromo - Basofili",
+                       "Emocromo - Piastrine", "Ferritina", "Sideremia", "Transferrina"],
             "Sistema Immunitario": ["PCR", "Omocisteina", "TNF-A", "IL-6", "IL-10"],
         }
 
@@ -4048,7 +4060,7 @@ class CalcolatoreRender(LoginRequiredMixin,View):
             "Trigliceridi": "trigl",
             "PCR": "pcr_c",
             "NT-proBNP": "nt_pro",
-            "Omocisteina": "omocisteina",
+            "Omocisteina": "omocisteina",  # NB: tu mappavi a ves2; adegua se necessario
             "Glicemia": "glicemy",
             "Insulina": "insulin",
             "HOMA Test": "homa",
@@ -4113,7 +4125,7 @@ class CalcolatoreRender(LoginRequiredMixin,View):
         raw_values = {
             "tot_chol": tot_chol, "ldl_chol": ldl_chol, "hdl_chol_m": hdl_chol_m, "trigl": trigl,
             "pcr_c": pcr_c, "nt_pro": nt_pro,
-            "omocisteina": ves2,
+            "omocisteina": ves2,  # se davvero intendi usare ves2 per omocisteina, altrimenti sostituisci
             "glicemy": glicemy, "insulin": insulin, "homa": homa, "ir": ir,
             "creatinine_m": creatinine_m, "osi": osi, "o3o6_fatty_acid_quotient": o3o6_fatty_acid_quotient,
             "azotemia": azotemia, "na": na, "k": k, "ci": ci, "p": p, "ca": ca, "uro": uro,
@@ -4151,20 +4163,25 @@ class CalcolatoreRender(LoginRequiredMixin,View):
             if val is not None
         }
 
-        # 7) Calcoli invariati
         punteggi_organi, dettagli_organi = calcola_score_organi(valori_esami_raw, persona.gender)
         score_js = {o.replace(" ", "_"): v for o, v in punteggi_organi.items()}
         _ = genera_report(punteggi_organi, dettagli_organi, mostrar_dettagli=False)
 
-        biological_age = calculate_biological_age(
-            chronological_age,
-            d_roms=d_roms, osi=osi, pat=pat,
-            wbc=wbc, basophils=baso_ul, eosinophils=eosi, lymphocytes=lymph, monocytes=mono, neutrophils=neut,
-            rbc=rbc_m, hgb=hgb_m, hct=hct_m, mcv=mcv, mch=mch, mchc=mchc, rdw=rdwsd,
-            exams=exams, gender=paziente.gender
+        # ---------------------------------------------------------
+        # 5) (NEW) Calcolo età biologica con il modello GBR
+        # ---------------------------------------------------------
+        bva_out = calculate_biological_age(
+            chronological_age=chronological_age,
+            features21=features21,
+            return_full=True
         )
+        biological_age = int(round(bva_out["BA"]))
+        delta_age = bva_out["dBA"]
+        aging_class = bva_out["class"]
 
-        # 8) Salvataggio Dati Estesi (filtrando i campi effettivi del modello)
+        # ---------------------------------------------------------
+        # 6) Salvataggio Dati Estesi (come prima + nuovi campi)
+        # ---------------------------------------------------------
         allowed_fields = {
             f.name
             for f in DatiEstesiRefertiEtaBiologica._meta.get_fields()
@@ -4227,7 +4244,7 @@ class CalcolatoreRender(LoginRequiredMixin,View):
 
             biological_age=biological_age,
 
-            # SCORE
+            # SCORE organi
             salute_cuore=score_js.get('Cuore'),
             salute_renale=score_js.get('Reni'),
             salute_epatica=score_js.get('Fegato'),
@@ -4237,12 +4254,17 @@ class CalcolatoreRender(LoginRequiredMixin,View):
             salute_s_i=score_js.get('Sistema_Immunitario'),
         )
 
-        filtered_payload = {k: v for k, v in payload.items() if k in allowed_fields}
+        # se nel modello hai colonne per delta_ba / aging_class, aggiungile:
+        if 'delta_ba' in allowed_fields:
+            payload['delta_ba'] = delta_age
+        if 'aging_class' in allowed_fields:
+            payload['aging_class'] = aging_class
 
+        filtered_payload = {k: v for k, v in payload.items() if k in allowed_fields}
         dati_estesi = DatiEstesiRefertiEtaBiologica(**filtered_payload)
         dati_estesi.save()
 
-        # 9) Render + pannello attivo + messaggio successo
+        # 7) Render + pannello attivo + messaggio successo
         context = {
             "show_modal": True,
             "biological_age": biological_age,
@@ -4254,10 +4276,6 @@ class CalcolatoreRender(LoginRequiredMixin,View):
         }
         messages.success(request, "Calcolo età biologica salvato correttamente.")
         return render(request, "cartella_paziente/orologi/orologi_home.html", context)
-
-
-
-
 
 
 
