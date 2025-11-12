@@ -1,0 +1,1353 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+
+    <title>BioVitalAge - Inserisci Paziente</title>
+
+    <!-- Css Import -->
+    <link rel="stylesheet" href="{% static 'css/Componenti.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/InserisciPaziente.css' %}" />
+
+    <!-- Bootstrap import -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- Font Import  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet"/>
+
+    <!-- Js Import -->
+    <script src="{% static 'js/ricerca_pazienti/InserisciPaziente.js' %}" defer></script>
+     
+    <!-- CDN Import -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.0.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+
+  <body>
+    <!-- Loader -->
+    {% include 'components/loader.html' %}
+
+    <!-- NAVBAR -->
+    {% include 'components/navBar.html' %}
+
+    <main>
+      <div class="main-title-nav">
+        <div class="back-tittle">
+          <a id="back" href="{% url 'cartella_paziente' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}" alt="back_ico"
+              title="Torna alla sezione Pazienti"></a>
+          <h2 class="main-welcome-title">Pazienti</h2>
+        </div>
+        <div class="main-menu-trace">
+          <a href="{% url 'HomePage' %}">
+            <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+          </a>
+          <span>»</span>
+          <span>Inserisci Pazienti</span>
+        </div>
+      </div>
+
+      {% if success %}
+      <div class="successMessage" id="success">
+
+        <p>{{ success }}</p>
+        <div class="progressBarContainerSuccess">
+          <div class="progressBar" id="progressSuccess"></div>
+        </div>
+
+        <script>
+          const messaggios = document.getElementById('success');
+          const progressBars = document.getElementById('progressSuccess');
+          const durationSuccess = 6000; 
+          const intervalSuccess = 50; 
+
+          if (messaggios) {
+            let elapsedTimeSuccess = 0; 
+
+            const timerSuccess = setInterval(() => {
+              elapsedTimeSuccess += intervalSuccess;
+              const percentage = ((durationSuccess - elapsedTimeSuccess) / durationSuccess) * 100;
+              progressBars.style.width = `${percentage}%`;
+
+              if (elapsedTimeSuccess >= durationSuccess) {
+                clearInterval(timerSuccess); 
+                messaggios.style.display = 'none'; 
+              }
+            }, intervalSuccess);
+          }
+        </script>
+
+      </div>
+      {% else %}
+      {% if errore %}
+      <div class="errorSystemContainer" id="error">
+        <p>{{ errore }}</p>
+        <div class="progressBarContainer">
+          <div class="progressBar" id="progress"></div>
+        </div>
+
+        <script>
+          const messaggio = document.getElementById('error');
+          const progressBar = document.getElementById('progress');
+          const durationError = 6000; 
+          const intervalError = 50;
+
+          if (messaggio) {
+            let elapsedTimeError = 0; 
+
+            const timerError = setInterval(() => {
+              elapsedTimeError += intervalError;
+              const percentage = ((durationError - elapsedTimeError) / durationError) * 100;
+              progressBar.style.width = `${percentage}%`;
+
+              if (elapsedTimeError >= durationError) {
+                clearInterval(timerError); 
+                messaggio.style.display = 'none'; 
+              }
+            }, intervalError);
+          }
+        </script>
+
+      </div>
+      {% endif %}
+      {% endif %}
+
+      <form method="POST" action="#" class="form-container" id="age-form"> 
+        {% csrf_token %} 
+
+        <!-- INFORMAZIONI PERSONALI -->
+        <div class="section" style="margin-top: 1rem;" id="personal">
+          <div class="container-title">
+            <img src="{% static 'image/Personale.png' %}" alt="">
+            <h3>Patient Information</h3>
+          </div>
+
+          <div class="patient-info">
+                <div class="form-group">
+                  <label for="name">Nome</label>
+                  <input type="text" id="name" name="name" required placeholder="Inserisci il Nome"
+                        value="{{ persona.name|default_if_none:'' }}">
+                </div>
+
+                <div class="form-group">
+                  <label for="surname">Cognome</label>
+                  <input type="text" id="surname" name="surname" required placeholder="Inserisci il Cognome"
+                        value="{{ persona.surname|default_if_none:'' }}">
+                </div>
+
+                <div class="form-group">
+                  <label for="dob">Data di nascita</label>
+                  <input type="date" id="dob" name="dob"
+                        value="{{ persona.dob|date:'Y-m-d' }}">
+                </div>
+
+                <div class="form-group">
+                  <label for="gender">Genere</label>
+                  <select id="gender" name="gender">
+                    <option value="">-- Seleziona il Genere --</option>
+                    <option value="M" {% if persona and persona.gender == 'M' %}selected{% endif %}>Uomo</option>
+                    <option value="F" {% if persona and persona.gender == 'F' %}selected{% endif %}>Donna</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="place_of_birth">Città di nascita</label>
+                  <input type="text" id="place_of_birth" list="cities" name="place_of_birth" required placeholder="Inserisci la città di nascita" value="{{ persona.place_of_birth|default_if_none:'' }}">
+                 
+                </div>
+
+                <div class="form-group">
+                    <label for="residence">Città di residenza</label>
+                    <input type="text" id="residence" list="cities" name="residence" placeholder="Inserisci il paese di residenza"
+                          value="{{ persona.residence|default_if_none:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="cap">CAP</label>
+                    <input type="text" id="cap" name="cap" placeholder="Inserisci il CAP"
+                          value="{{ persona.cap|default_if_none:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="province">Provincia</label>
+                    <input type="text" id="province" name="province" required placeholder="Inserisci la provincia (e.g., RM)"
+                          value="{{ persona.province|default_if_none:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" placeholder="Inserisci l'email"
+                          value="{{ persona.email|default_if_none:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Telefono</label>
+                    <input type="text" id="phone" name="phone" placeholder="Inserisci il telefono"
+                          value="{{ persona.phone|default_if_none:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="codice_fiscale">Codice Fiscale</label>
+                    <input type="text" id="codice_fiscale" name="codice_fiscale" required placeholder="Inserisci il Codice Fiscale"
+                          value="{{ persona.codice_fiscale|default_if_none:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="chronological_age">Età Cronologica</label>
+                    <input type="number" id="chronological_age" name="chronological_age" required placeholder="Inserisci l'età cronologica"
+                          value="{{ persona.chronological_age|default_if_none:'' }}">
+                </div>
+          </div>
+        </div>
+
+        <!--  PROFESSIONE -->
+        <div class="container-card" style="margin-top: 1rem;" id="professione">
+          
+          <div class="container-title" style="margin-bottom: 15px;">
+            <img style="margin-top: -0.5rem;" src="{% static 'image/Professione.png' %}" alt="">
+            <h3>Professione</h3>
+          </div>
+            
+          <div class="container-content">
+            
+            <div class="flex-container">
+
+              <div class="container-celle-design">
+                <p class="subtitle">Professione: </p>
+                <input type="text" name="professione" id="" placeholder="Inserisci la professione">
+              </div>
+
+              <div class="container-celle-design">
+                <p class="subtitle">Pensionato:</p>
+
+                <div class="opzione-cella" style="margin-left: 15px;"> 
+                  <input type="radio" id="si" name="pensionato" value="SI">
+                  <label for="si">Sì</label>
+                </div>
+
+                <div class="opzione-cella">
+                  <input type="radio" id="no" name="pensionato" value="NO">
+                  <label for="no">No</label>
+                </div>
+                
+              </div>
+            
+            </div>
+   
+          </div>
+  
+        </div>
+
+        <!-- PER LA DONNA  -->
+        <div class="container-card hidden" style="margin-top: 1rem;" id="donna">
+          
+          <div class="container-title" style="margin-bottom: 15px;">
+            <img style="margin-top: -0.5rem;" src="{% static 'image/Donna.png' %}" alt="">
+            <h3>Per la Donna</h3>
+          </div>
+          
+          <div class="container-content">
+            
+            <!-- ABILITARE IL CHECK DEL GENERE -->
+            <div class="flex-container">
+
+              <div class="container-celle-design">
+                <p class="subtitle">Età del menarca in anni: </p>
+                <input type="text" name="menarca" placeholder="Inserire il numero"> 
+              </div>
+
+              <div class="container-celle-design">
+                <p class="subtitle">Ciclo:</p>
+                <div class="opzione-cella" style="margin-left: 15px;"> 
+                  <input type="radio" id="si" name="ciclo" value="SI">
+                  <label for="si">Regolare</label>
+                </div>
+
+                <div class="opzione-cella">
+                  <input type="radio" id="no" name="ciclo" value="NO">
+                  <label for="no">Irregolare</label>
+                </div>
+              </div>
+            </div>
+
+            <p style="font-weight: bold; margin-top: 30px; margin-bottom: 0px">Menopausa:</p>
+           
+            <div class="flex-container">
+            
+                <div class="container-celle-design">
+                  <p class="subtitle">Età dell’esordio:</p>
+                  <input type="text" placeholder="placeholder">
+                </div>
+              
+              
+                <div class="container-celle-design">
+                  <p class="subtitle">Manifestazioni e sintomi:</p>
+                  <input type="text" name="sintomi" placeholder="placeholder"> 
+                </div>           
+            </div>
+
+            <p style="font-weight: bold; margin-top: 30px; margin-bottom: 0px;">Gravidanze:</p>
+           
+            <div class="flex-container">
+              
+                <div class="container-celle-design">
+                  <p class="subtitle">Tipo di parto: </p>
+                  <input type="text" name="parto" placeholder="placeholder"> 
+                </div>
+
+                <div class="container-celle-design">
+                  <p class="subtitle" >Complicanze post-parto:</p>
+                  <input type="text" name="post_parto" placeholder="placeholder"> 
+                </div>
+            
+            </div>
+
+            <div class="container-celle-design">
+              <p class="subtitle">Aborti:</p>
+              <input type="text" name="aborto" placeholder="placeholder"> 
+            </div>
+           
+          </div>
+        </div>
+           
+        <!-- ANAMNESI -->
+        <div class="container-card" style="margin-top: 1rem;" id="anamnesi">
+          
+          <div class="container-title" style="margin-bottom: 15px;">
+            <img style="margin-top: -0.5rem;" src="{% static 'image/Anamnesi.png' %}" alt="">
+            <h3>Anamnesi</h3>
+          </div>
+        
+          <div class="container-content">
+            <p style="font-weight: bold; margin-top: 10px;">Anamnesi familiare:</p>
+            <p>C'è qualcuno in famiglia (padre, madre, fratelli, nonni) che soffre o abbia sofferto di:</p>
+            
+            <div class="flex-container">
+
+              <div class="container-celle-design radio-container">
+
+                <p class="subtitle">Malattie cardiache:</p>
+
+                <div class="container-radio-layout">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="cardiache" name="m_cardiache" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella" >
+                    <input type="radio" id="no" name="m_cardiache" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="m_cardiache" value="Non lo so">
+                    <label for="non">Non lo so</label>
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div class="container-celle-design  radio-container">
+
+                <p class="subtitle">Diabete mellito:</p>
+
+                <div class="container-radio-layout">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="si" name="diabete_m" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella">
+                    <input type="radio" id="no" name="diabete_m" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="diabete_m" value="Non lo so">
+                    <label for="no">Non lo so</label>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="flex-container">
+              
+              <div class="container-celle-design  radio-container">
+                <p class="subtitle">Obesità:</p>
+
+                <div class="container-radio-layout">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="si" name="obesita" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella">
+                    <input type="radio" id="no" name="obesita" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="obesita" value="Non lo so">
+                    <label for="no">Non lo so</label>
+                  </div>
+
+                </div>
+                
+              </div>
+
+              <div class="container-celle-design  radio-container">
+                <p class="subtitle">Epilessia:</p>  
+
+                <div class="container-radio-layout">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="si" name="epilessia" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella">
+                    <input type="radio" id="no" name="epilessia" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="epilessia" value="Non lo so">
+                    <label for="no">Non lo so</label>
+                  </div>
+
+                </div>
+                
+              </div>
+
+            </div>
+
+            <div class="flex-container">
+              
+              <div class="container-celle-design  radio-container">
+                <p class="subtitle">Ipertensione:</p>
+
+                <div class="container-radio-layout">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="si" name="ipertensione" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella">
+                    <input type="radio" id="no" name="ipertensione" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="ipertensione" value="NO">
+                    <label for="no">Non lo so</label>
+                  </div>
+                  
+                </div>
+
+              </div>
+
+              <div class="container-celle-design  radio-container">
+                <p class="subtitle">Malattie tiroidee:</p>
+
+                <div class="container-radio-layout">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="si" name="m_tiroidee" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella">
+                    <input type="radio" id="no" name="m_tiroidee" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="m_tiroidee" value="Non lo so">
+                    <label for="no">Non lo so</label>
+                  </div>
+
+                </div>
+              
+              </div>
+              
+            </div>
+
+            <div class="flex-container">
+
+              <div class="container-celle-design  radio-container">
+                <p class="subtitle">Malattie polmonari:</p>
+
+                <div class="container-radio-layout ">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="si" name="m_polmonari" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella"">
+                    <input type="radio" id="no" name="m_polmonari" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="m_polmonari" value="Non lo so">
+                    <label for="no">Non lo so</label>
+                  </div>
+                  
+                </div>
+
+              </div>
+
+              <div class="container-celle-design  radio-container">
+                <p class="subtitle">Tumori:</p>
+
+                <div class="container-radio-layout">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="si" name="tumori" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella">
+                    <input type="radio" id="no" name="tumori" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="tumori" value="Non lo so">
+                    <label for="no">Non lo so</label>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="flex-container">
+
+              <div class="container-celle-design  radio-container">
+                <p class="subtitle">Asma/allergie:</p>
+
+                <div class="container-radio-layout ">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="si" name="allergie" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella">
+                    <input type="radio" id="no" name="allergie" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="allergie" value="Non lo so">
+                    <label for="no">Non lo so</label>
+                  </div>
+
+                </div>
+                
+              </div>
+
+              <div class="container-celle-design  radio-container">
+                <p class="subtitle">Malattie psichiatriche:</p>
+
+                <div class="container-radio-layout">
+
+                  <div class="opzione-cella" style="margin-left: 10px;"> 
+                    <input type="radio" id="si" name="m_psichiatriche" value="SI">
+                    <label for="si">Sì</label>
+                  </div>
+
+                  <div class="opzione-cella">
+                    <input type="radio" id="no" name="m_psichiatriche" value="NO">
+                    <label for="no">No</label>
+                  </div>
+
+                  <div class="opzione-cella adjust">
+                    <input type="radio" id="no" name="m_psichiatriche" value="Non lo so">
+                    <label for="no">Non lo so</label>
+                  </div>
+
+                </div>
+
+              </div>
+              
+            </div>
+
+            <p style="font-weight: bold; margin-top: 30px; margin-bottom: 0px;">Anamnesi patologica prossima:</p>
+
+            <div class="flex-container">
+
+              <div class="container-celle-design">
+                <p class="subtitle">Al Momento è affetto: </p>
+                
+                <select name="patologie" id="malattie-select">
+                  <option>seleziona</option>
+                  <option>Malattie infettive</option>
+                  <option>Neoplasie (tumori)</option>
+                  <option>Malattie del sangue e degli organi ematopoietici</option>
+                  <option>Disturbi del sistema immunitario</option>
+                  <option>Malattie endocrine, nutrizionali e metaboliche</option>
+                  <option>Disturbi mentali, comportamentali e del neurosviluppo</option>
+                  <option>Malattie del sistema nervoso</option>
+                  <option>Malattie dell'occhio e degli annessi oculari</option>
+                  <option>Malattie dell'orecchio e del sistema uditivo</option>
+                  <option>Malattie del sistema circolatorio</option>
+                  <option>Malattie del sistema respiratorio</option>
+                  <option>Malattie dell'apparato digerente</option>
+                  <option>Malattie della pelle</option>
+                  <option>Malattie del sistema muscoloscheletrico</option>
+                  <option>Malattie del sistema genito-urinario</option>
+                  <option>Gravidanza, parto e puerperio</option>
+                  <option>Alcune condizioni perinatali</option>
+                  <option>Malformazioni congenite, deformità e anomalie cromosomiche</option>
+                  <option>Sintomi, segni e risultati clinici anormali</option>
+                  <option>Lesioni, avvelenamenti e altre conseguenze di cause esterne</option>
+                </select>
+              </div>
+
+              <div class="container-celle-design">
+                <p class="subtitle">Altro:</p>
+  
+                <input type="text" name="p_p_altro" placeholder="placeholder">
+              </div>
+            </div>
+
+            <p style="font-weight: bold; margin-top: 30px; margin-bottom: 0px;">Eventuali terapie in corso:</p>
+
+            <div class="flex-container">
+
+              <div class="container-celle-design">
+                <p class="subtitle">Farmaco:</p>
+  
+                <input type="text" name="t_farmaco" placeholder="placeholder">
+  
+              </div>
+
+              <div class="container-celle-design">
+                <p class="subtitle">Dosaggio:</p>
+  
+                <input type="text" name="t_dosaggio" placeholder="placeholder">
+  
+              </div>
+              
+            </div>
+
+            <div class="container-celle-design">
+              <p class="subtitle">Durata della terapia:</p>
+
+              <input type="text" name="t_durata" placeholder="placeholder">
+
+            </div>
+
+
+          </div>
+        </div>
+
+        <div class="container-card" style="margin-top: 1rem;" id="anamnesi2">
+          
+          <div class="container-title" style="margin-bottom: 15px;">
+            <img style="margin-top: -0.5rem;" src="{% static 'image/Anamnesi.png' %}" alt="">
+            <h3>Anamnesi</h3>
+          </div>
+        
+          <div class="container-content anamnesi-adjust">
+
+            <p style="font-weight: bold; margin-top: 20px;">Anamnesi patologica remota:</p>
+            <p>Ha mai sofferto di:</p>
+
+            <div class="flex-container">
+   
+                <p class="subtitle" >Problemi cardiovascolari:</p>
+                
+                <div class="opzione-cella" id="cardio" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                  <input type="radio" id="ipertensione" name="p_cardiovascolari" value="Ipertensione arteriosa">
+                  <label for="ipertensione">Ipertensione arteriosa</label>
+                </div>
+                
+                <div class="opzione-cella" id="cardio" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                  <input type="radio" id="infarto" name="p_cardiovascolari" value="Infarto del miocardio">
+                  <label for="infarto">Infarto del miocardio</label>
+                </div>
+                
+                <div class="opzione-cella" id="cardio" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                  <input type="radio" id="insufficienza" name="p_cardiovascolari" value="Insufficienza cardiaca">
+                  <label for="insufficienza">Insufficienza cardiaca</label>
+                </div>
+
+                <!-- Radio principale "Altro" -->
+                <div class="opzione-cella" id="cardio" style="width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                  <input type="radio" id="altro" name="p_cardiovascolari" value="Altro (specificare):" data-target="cardio">
+                  <label for="altro">Altro (specificare):</label>       
+                </div> 
+
+                <!-- Input che compare solo se selezioni "Altro" -->
+                <div class="container-input-comparsa">
+                  <button id="torna-indietro" type="button">← Indietro</button>
+                  <input type="text" class="input-comparsa" placeholder="Specifica qui...">
+                </div>
+                                
+            </div>
+
+            <div class="flex-container">
+
+              <p class="subtitle" >Una malattia metabolica:</p>
+              
+              <div class="opzione-cella" id="metabolica" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="mellito1" name="m_metabolica" value="Diabete mellito tipo 1">
+                <label for="si">Diabete mellito tipo 1</label>
+              </div>
+
+              <div class="opzione-cella" id="metabolica"   style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="mellito2" name="m_metabolica" value="Diabete mellito tipo 2">
+                <label for="si">Diabete mellito tipo 2</label>
+              </div>
+
+              <div class="opzione-cella" id="metabolica" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="ipercolesterolemia" name="m_metabolica" value="Ipercolesterolemia">
+                <label for="si">Ipercolesterolemia</label>
+              </div>
+
+              <!-- Radio principale "Altro" -->
+              <div class="opzione-cella" id="metabolica" style="width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="m_metabolica" name="m_metabolica" value="Altro (specificare):" data-target="metabolica">
+                <label for="altro">Altro (specificare):</label>       
+              </div> 
+
+              <!-- Input che compare solo se selezioni "Altro" -->
+              <div class="container-input-comparsa">
+                <button id="torna-indietro" type="button">← Indietro</button>
+                <input type="text" class="input-comparsa" placeholder="Specifica qui...">
+              </div>
+              
+            </div>
+
+            <div class="flex-container">
+
+              <p class="subtitle" >Problemi respiratori cronici:</p>
+              
+              <div class="opzione-cella" id="cronici" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="si" name="p_respiratori_cronici" value="Asma bronchiale">
+                <label for="si">Asma bronchiale</label>
+              </div>
+
+              <div class="opzione-cella" id="cronici" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="broncopneumopatia" name="p_respiratori_cronici" value="Broncopneumopatia cronica ostruttiva (BPCO)">
+                <label for="si">Broncopneumopatia cronica ostruttiva (BPCO)</label>
+              </div>
+
+              <div class="opzione-cella" id="cronici" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="respiratori" name="p_respiratori_cronici" value="ibrosi polmonare">
+                <label for="si">Fibrosi polmonare</label>
+              </div>
+
+               <!-- Radio principale "Altro" -->
+               <div class="opzione-cella" id="cronici" style="width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="p_resiratori_cronici" name="p_resiratori_cronici" value="Altro (specificare):" data-target="cronici">
+                <label for="altro">Altro (specificare):</label>       
+              </div> 
+
+              <!-- Input che compare solo se selezioni "Altro" -->
+              <div class="container-input-comparsa">
+                <button id="torna-indietro" type="button">← Indietro</button>
+                <input type="text" class="input-comparsa" placeholder="Specifica qui...">
+              </div>
+              
+            </div>
+
+            <div class="flex-container">
+
+              <p class="subtitle" >Una malattia neurologica:</p>
+              
+              <div class="opzione-cella" id="neurologica" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="epilessia" name="m_neurologica" value="Epilessia">
+                <label for="si">Epilessia</label>
+              </div>
+
+              <div class="opzione-cella" id="neurologica" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="morbo" name="m_neurologica" value="Morbo di Parkinson">
+                <label for="si">Morbo di Parkinson</label>
+              </div>
+
+              <div class="opzione-cella" id="neurologica" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="ictus" name="m_neurologica" value="Ictus cerebrale">
+                <label for="si">Ictus cerebrale</label>
+              </div>
+
+               <!-- Radio principale "Altro" -->
+               <div class="opzione-cella" id="neurologica" style="width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="m_neurologica" name="m_neurologica" value="Altro (specificare):" data-target="neurologica">
+                <label for="altro">Altro (specificare):</label>       
+              </div> 
+
+              <!-- Input che compare solo se selezioni "Altro" -->
+              <div class="container-input-comparsa">
+                <button id="torna-indietro" type="button">← Indietro</button>
+                <input type="text" class="input-comparsa" placeholder="Specifica qui...">
+              </div>
+              
+            </div>
+
+            <div class="flex-container">
+
+              <p class="subtitle" >Una malattia endocrina:</p>
+              
+              <div class="opzione-cella" id="endocrina" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="ipertiroidismo" name="m_endocrina" value="ipertiroidismo">
+                <label for="si">Ipertiroidismo</label>
+              </div>
+
+              <div class="opzione-cella"  id="endocrina" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="ipotiroidismo" name="m_endocrina" value="ipotiroidismo">
+                <label for="si">Ipotiroidismo</label>
+              </div>
+
+              <div class="opzione-cella" id="endocrina"  style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="sindrome" name="m_endocrina" value="Sindrome di Cushing">
+                <label for="si">Sindrome di Cushing</label>
+              </div>
+
+               <!-- Radio principale "Altro" -->
+               <div class="opzione-cella" id="endocrina" style="width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="m_endocrina" name="m_endocrina" value="Altro (specificare):" data-target="endocrina">
+                <label for="altro">Altro (specificare):</label>       
+              </div> 
+
+              <!-- Input che compare solo se selezioni "Altro" -->
+              <div class="container-input-comparsa">
+                <button id="torna-indietro" type="button">← Indietro</button>
+                <input type="text" class="input-comparsa" placeholder="Specifica qui...">
+              </div>
+              
+            </div>
+
+            <div class="flex-container">
+
+              <p class="subtitle" >Una malattia autoimmune:</p>
+              
+              <div class="opzione-cella" id="autoimmune" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="lupus" name="m_autoimmune" value="Lupus eritematoso sistemico">
+                <label for="si">Lupus eritematoso sistemico</label>
+              </div>
+
+              <div class="opzione-cella"  id="autoimmune" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="artrite" name="m_autoimmune" value="Artrite reumatoide">
+                <label for="si">Artrite reumatoide</label>
+              </div>
+
+              <div class="opzione-cella"  id="autoimmune" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="sclerosi" name="m_autoimmune" value="Sclerosi multipla">
+                <label for="si">Sclerosi multipla</label>
+              </div>
+
+               <!-- Radio principale "Altro" -->
+               <div class="opzione-cella" id="autoimmune" style="width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="m_autoimmune" name="m_autoimmune" value="Altro (specificare):" data-target="autoimmune">
+                <label for="altro">Altro (specificare):</label>       
+              </div> 
+
+              <!-- Input che compare solo se selezioni "Altro" -->
+              <div class="container-input-comparsa">
+                <button id="torna-indietro" type="button">← Indietro</button>
+                <input type="text" class="input-comparsa" placeholder="Specifica qui...">
+              </div>
+              
+            </div>
+
+            <div class="flex-container">
+
+              <p class="subtitle" >Problemi epatici:</p>
+              
+              <div class="opzione-cella" id="epatici" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="cirrosi" name="p_epatici" value="Cirrosi epatica"> 
+                <label for="si">Cirrosi epatica</label>
+              </div>
+
+              <div class="opzione-cella" id="epatici" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="epatite" name="p_epatici" value="Epatite cronica(B o C)">
+                <label for="si">Epatite cronica(B o C)</label>
+              </div>
+
+              <div class="opzione-cella" id="epatici" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="fegato" name="p_epatici" value="Fegato grasso non alcolico (NAFLD)">
+                <label for="si">Fegato grasso non alcolico (NAFLD)</label>
+              </div>
+
+               <!-- Radio principale "Altro" -->
+               <div class="opzione-cella" id="epatici" style="width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="p_epatici" name="p_epatici" value="Altro (specificare):" data-target="epatici">
+                <label for="altro">Altro (specificare):</label>       
+              </div> 
+
+              <!-- Input che compare solo se selezioni "Altro" -->
+              <div class="container-input-comparsa">
+                <button id="torna-indietro" type="button">← Indietro</button>
+                <input type="text" class="input-comparsa" placeholder="Specifica qui...">
+              </div>
+              
+            </div>
+
+            <div class="flex-container">
+
+              <p class="subtitle" >Una malattia renale:</p>
+              
+              <div class="opzione-cella" id="renale" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="insufficienza" name="m_renale" value="Insufficienza renale cronica">
+                <label for="si">Insufficienza renale cronica</label>
+              </div>
+
+              <div class="opzione-cella" id="renale"  style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="calcolosi" name="m_renale" value="Calcolosi renale ricorrente">
+                <label for="si">Calcolosi renale ricorrente</label>
+              </div>
+
+              <div class="opzione-cella" id="renale"  style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="glomerulonefrite" name="m_renale" value="Glomerulonefrite">
+                <label for="si">Glomerulonefrite</label>
+              </div>
+
+               <div class="opzione-cella" id="renale" style="width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="m_renale" name="m_renale" value="Altro (specificare):" data-target="renale">
+                <label for="altro">Altro (specificare):</label>       
+              </div> 
+
+              <!-- Input Comparsa -->
+              <div class="container-input-comparsa">
+                <button id="torna-indietro" type="button">← Indietro</button>
+                <input type="text" class="input-comparsa" placeholder="Specifica qui...">
+              </div>
+              
+            </div>
+
+            <div class="flex-container">
+
+              <p class="subtitle" style="font-size: 14px;">Disturbi gastrointestinali significativi:</p>
+              
+              <div class="opzione-cella" id="gastro" style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="reflusso" name="d_gastrointestinali" value="Malattia da reflusso gastroesofageo (MRGE)">
+                <label for="si">Malattia da reflusso gastroesofageo (MRGE)</label>
+              </div>
+
+              <div class="opzione-cella" id="gastro"  style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="colite" name="d_gastrointestinali" value="Colite ulcerosa">
+                <label for="si">Colite ulcerosa</label>
+              </div>
+
+              <div class="opzione-cella" id="gastro"  style=" width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="morbo" name="d_gastrointestinali" value="Morbo di Crohn">
+                <label for="si">Morbo di Crohn</label>
+              </div>
+
+              <div class="opzione-cella" id="gastro" id="cronici" style="width: 28%; display: flex; justify-content: center; align-items: center; gap: 15px; padding: 0; height: 4.2rem;"> 
+                <input type="radio" id="gastro_altro" name="d_gastrointestinali" value="Altro (specificare):" data-target="gastro">
+                <label for="altro">Altro (specificare):</label>       
+              </div> 
+
+              <!-- INPUT COMPARSA -->
+              <div class="container-input-comparsa">
+                <button id="torna-indietro" type="button">← Indietro</button>
+                <input type="text" class="input-comparsa" placeholder="Specifica qui...">
+              </div>
+              
+            </div>
+
+          </div>
+        </div>
+        
+        <!-- DATI BASE -->
+        <div class="container_data table_data" style="margin-top: 1rem;" id="datibase">
+
+          <div class="container-title">
+            <img style="margin-top: -0.5rem;" src="{% static 'image/Cartella.png' %}" alt="">
+            <h3>Dati Base</h3>
+          </div>
+
+          <div class="table-container">
+            <div>
+              <p class="table-title" style="margin-bottom: -20px; margin-top: 0px;">Dati Antropometrici</p>
+              <div class="responsive-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Altezza</th>
+                      <th>Peso</th>
+                      <th>BMI</th>
+                      <th>Data di rilevamento BMI</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input type="text" placeholder="165 cm" name="height" /></td>
+                      <td><input type="text" placeholder="60 kg" name="weight" /></td>
+                      <td><input type="text" placeholder="22.0" name="bmi" /></td>
+                      <td><input type="date" placeholder="2023-08-20" name="bmi_detection_date" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+        
+            <div>
+              <p class="table-title" style="margin-bottom: -20px; margin-top: 20px;">Circonferenza Addominale</p>
+              <div class="responsive-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Valore della circonferenza</th>
+                      <th>Note</th>
+                      <th>Data di misurazione</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input type="text" placeholder="85 cm" name="girth_value"/></td>
+                      <td><input type="text" placeholder="Nella norma" name="girth_notes"/></td>
+                      <td><input type="date" placeholder="2023-02-10" name="girth_date"/></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div> 
+
+        <div class="container_data table_data" style="margin-top: 1rem;" id="datibase2">
+
+          <div class="container-title">
+            <img style="margin-top: -0.5rem;" src="{% static 'image/Piantina.png' %}" alt="">
+            <h3>Stile di vita</h3>
+          </div>
+          
+          <div class="table-container-lifestyle">
+              <div class="table-title lifestyle">Alcohol</div>
+              <div class="container-card">
+                <div class="choose-buttons">
+                  <button class="button-style-choose" data-choice="yes">Si</button>
+                  <button class="button-style-choose" data-choice="no">No</button>
+                </div>
+
+                <div class="responsive-table" style="display: none;">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Quantità giornaliera</th>
+                        <th>Tipo</th>
+                        <th>Data</th>
+                        <th>Note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input type="text" id="alcol" placeholder="1 bottiglia" name="alcol" disabled/></td>
+                        <td><input type="text" id="alcol_type" placeholder="Vino" name="alcol_type" disabled/></td>
+                        <td><input type="date" id="data_alcol" placeholder="2023-01-01" name="data_alcol" disabled/></td>
+                        <td><input type="text" id="alcol_frequency" placeholder="Occasionalmente" name="alcol_frequency" disabled/></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+          </div>
+        
+          <div class="table-container-lifestyle">
+              <div class="table-title lifestyle">
+                <span>Fumo</span>
+              </div>
+              <div class="container-card">
+                <div class="choose-buttons">
+                  <button class="button-style-choose" data-choice="yes">Si</button>
+                  <button class="button-style-choose" data-choice="no">No</button>
+                </div>
+
+                <div class="responsive-table" style="display: none;">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Quantità giornaliera</th>
+                        <th>Giorni</th>
+                        <th>Note</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      <tr>
+                        <td><input type="text" placeholder="5 sigarette" name="smoke"/></td>
+                        <td><input type="text" placeholder="7 giorni" name="smoke_frequency"/></td>
+                        <td><input type="text" placeholder="Assunzione ridotta" name="reduced_intake"/></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+          </div>
+        
+          <div class="table-container-lifestyle">
+              <div class="table-title lifestyle">Sport</div>
+
+              <div class="container-card">
+
+                <div class="choose-buttons">
+                  <button class="button-style-choose" data-choice="yes">Si</button>
+                  <button class="button-style-choose" data-choice="no">No</button>
+                </div>
+
+                <div class="responsive-table" data-lifestyle="sporting-lifestyle">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Attività Fisica</th>
+                        <th>Livello</th>
+                        <th>Frequenza</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input type="text" id="sport" placeholder="Pallavolo" name="sport" /></td>
+                        <td><input type="text" id="sport_livello" placeholder="Amatoriale" name="sport_livello" /></td>
+                        <td><input type="text" id="sport_frequency" placeholder="Settimanale" name="sport_frequency" /></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="responsive-table" data-lifestyle="sedentary-lifestyle" style="display: none;">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Sedentarietà</th>
+                        <th>Livello</th>
+                        <th>Note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><input type="text" id="attivita_sedentaria" placeholder="Lavoro da ufficio" name="attivita_sedentaria" /></td>
+                        <td><input type="text" id="livello_sedentarieta" placeholder="Attività minima" name="livello_sedentarieta" /></td>
+                        <td><input type="text" id="sedentarieta_nota" placeholder="Raramente" name="sedentarieta_nota" /></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+          </div>
+        </div> 
+
+        <!-- ESAME OBBIETTIVO -->
+        <div class="container-card" style="margin-top: 1rem;" id="esameObbiettivo">
+          
+          <div class="container-title">
+            <img src="{% static 'image/Visite.png' %}" alt="">
+            <h3>Esame Obbiettivo</h3>     
+          </div>
+            
+          <div class="container-content" id="grid-container">
+            
+            <div class="cella-content-grid">
+                <p class="subtitle">Aspetto generale:</p>
+
+                <select name="a_generale" id="">
+                  <option>seleziona...</option>
+                  <option>Ottimo</option>
+                  <option>Buono</option>
+                  <option>Discreto</option>
+                  <option>Scadente</option>
+                  <option>Grave</option>
+                </select>
+            </div>
+              
+            <div class="cella-content-grid">
+              <p class="subtitle">Psiche:</p>
+
+              <select name="psiche" id="">
+                <option>seleziona...</option>
+                <option>Vigile e cosciente</option>
+                <option>Confuso</option>
+                <option>Obnubilato</option>
+                <option>Sonnolento</option>
+                <option>Letargico</option>
+              </select>
+            </div>
+
+            <div class="cella-content-grid">
+              <p class="subtitle">Relazione con l’ambiente:</p>
+
+              <select name="r_ambiente" id="">
+                <option>seleziona...</option>
+                <option>Collaborante</option>
+                <option>Non collaborante</option>
+                <option>Orientato nello spazio e nel tempo</option>
+                <option>Disorientato nello spazio e nel tempo</option>
+              </select>
+            </div>
+
+            <div class="cella-content-grid">
+              <p class="subtitle">Stato emotivo:</p>
+
+              <select name="s_emotivo" id="">
+                <option>seleziona...</option>
+                <option>Tranquillo</option>
+                <option>Irritato</option>
+                <option>Delirante</option>
+                <option>Depressione</option>
+                <option>Ansia</option>
+                <option>Euforia</option>
+                <option>Allucinazioni</option>
+               
+              </select>
+            </div>
+
+            <div class="cella-content-grid">
+              <p class="subtitle">Costituzione:</p>
+
+              <select name="costituzione" id="">
+                <option>seleziona...</option>
+                <option>Normotipica</option>
+                <option>Brachitipica</option>
+                <option>Longilinea</option>               
+              </select>
+            </div>
+           
+            <div class="cella-content-grid">
+              <p class="subtitle">Statura:</p>
+
+              <select name="statura" id="">
+                <option>seleziona...</option>
+                <option>Adeguata</option>
+                <option>Anormale per infantilismo</option>
+                <option>Anormale per nanismo armonico ipofisario</option> 
+                <option>Anormale per nanismo disarmonico tiroideo</option>  
+                <option>Anormale per nanismo disarmonico osseo</option>  
+                <option>Anormale per gigantismo acromegalico</option>   
+                <option>Aspetto marfanoide</option>             
+              </select>
+            </div>
+         
+            <div class="cella-content-grid">
+              <p class="subtitle">Stato nutrizionale:</p>
+
+              <select name="s_nutrizionale" id="">
+                <option>seleziona...</option>
+                <option>Eunutrito</option>
+                <option>Alterato per sovrappeso</option>
+                <option>Alterato per obesità androide</option> 
+                <option>Alterato per obesità ginoide</option>  
+                <option>Alterato per magrezza costituzionale</option>  
+                <option>Alterato per magrezza secondaria</option>   
+                <option>Cachessia</option>             
+              </select>
+            </div>
+            
+            <div class="cella-content-grid">
+              <p class="subtitle">Eloquio:</p>
+
+              <select name="eloquio" id="">
+                <option>seleziona...</option>
+                <option>Fluente e organizzato</option>
+                <option>Non fluente e disorganizzato</option>
+                <option>Disartria</option> 
+                <option>Disfasia</option>  
+                <option>Con frasi di senso compiuto</option>             
+              </select>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="toolkit">
+      
+          <button id="prevStep" type="button" class="button">Indietro</button>
+          <button id="nextStep" type="button" class="button">Avanti</button>  
+
+          <button id="salvaButton" type="submit" class="button">
+            <span class="button__icon-wrapper">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                class="button__icon-svg"
+              >
+                <!-- Cornice del floppy disk -->
+                <path
+                  d="M3 2C2.45 2 2 2.45 2 3V21C2 21.55 2.45 22 3 22H21C21.55 22 22 21.55 22 21V7.59C22 7.21 21.84 6.84 21.54 6.54L17.46 2.46C17.16 2.16 16.79 2 16.41 2H3Z"
+                  fill="#90CAF9"
+                />
+                <!-- Interno del floppy disk -->
+                <path
+                  d="M16 2V7C16 7.55 15.55 8 15 8H5C4.45 8 4 7.55 4 7V3C4 2.45 4.45 2 5 2H16Z"
+                  fill="#1E88E5"
+                />
+                <!-- Finestra del floppy disk -->
+                <path
+                  d="M6 10H14V14H6V10Z"
+                  fill="#BBDEFB"
+                />
+                <!-- Linea centrale per il dettaglio -->
+                <path
+                  d="M6 15H14V16H6V15Z"
+                  fill="#0D47A1"
+                />
+              </svg>
+
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                class="button__icon-svg button__icon-svg--copy"
+              >
+                <!-- Cornice del floppy disk -->
+                <path
+                  d="M3 2C2.45 2 2 2.45 2 3V21C2 21.55 2.45 22 3 22H21C21.55 22 22 21.55 22 21V7.59C22 7.21 21.84 6.84 21.54 6.54L17.46 2.46C17.16 2.16 16.79 2 16.41 2H3Z"
+                  fill="#90CAF9"
+                />
+                <!-- Interno del floppy disk -->
+                <path
+                  d="M16 2V7C16 7.55 15.55 8 15 8H5C4.45 8 4 7.55 4 7V3C4 2.45 4.45 2 5 2H16Z"
+                  fill="#1E88E5"
+                />
+                <!-- Finestra del floppy disk -->
+                <path
+                  d="M6 10H14V14H6V10Z"
+                  fill="#BBDEFB"
+                />
+                <!-- Linea centrale per il dettaglio -->
+                <path
+                  d="M6 15H14V16H6V15Z"
+                  fill="#0D47A1"
+                />
+              </svg>
+            </span>
+            Salva Visita
+          </button>
+        </div>
+      </form>
+    </main>
+
+    <!-- CDN Import -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JS import end of body -->
+    <script src="{% static 'js/CodiceFiscale.js' %}" defer></script> 
+  </body>
+</html>

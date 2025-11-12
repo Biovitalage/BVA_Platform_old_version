@@ -19,6 +19,7 @@ from django.db.models import DateField
 from django.contrib import messages
 
 # --- IMPORTS DI DJANGO ---
+from django.urls import reverse
 from django.core.cache import cache # type: ignore
 from django.core.paginator import Paginator # type: ignore
 from django.http import JsonResponse # type: ignore
@@ -1049,53 +1050,103 @@ class CreaPazienteView(LoginRequiredMixin,View):
 #----------------------------------------
 # ------ SEZIONE AGGIUNGI PAZIENTE -------
 #----------------------------------------
+@method_decorator(catch_exceptions, name='dispatch')
+class IniziaVisitaView(LoginRequiredMixin, View):
+
+    def get(self, request, id):
+        persona = get_object_or_404(TabellaPazienti, pk=id)
+        context = {"persona": persona}
+        return render(request, "cartella_paziente/visita.html", context)
+
+    def post(self, request, id):
+        paziente = get_object_or_404(TabellaPazienti, pk=id)
+
+        visita = Visita(paziente=paziente)
+        for field in [f.name for f in Visita._meta.get_fields()
+                      if f.name not in ['id', 'paziente', 'created_at', 'updated_at']]:
+            val = request.POST.get(field)
+            if val not in (None, ''):
+                setattr(visita, field, val)
+
+        visita.visita_numero = Visita.objects.filter(paziente=paziente).count() + 1
+        visita.data_visita = timezone.now()
+        visita.save()
+
+        messages.success(
+            request,
+            f"Visita n°{visita.visita_numero} salvata correttamente per {paziente.name} {paziente.surname}."
+        )
+
+        # IMPORTANTE: passa l'id perché la Cartella Paziente ha get(self, request, id)
+        return redirect(reverse('cartella_paziente', kwargs={'id': paziente.id}))
+
+
+
+
+
 
 @method_decorator(catch_exceptions, name='dispatch')
-class InserisciPazienteView(LoginRequiredMixin,View):
+class InserisciPazienteView(LoginRequiredMixin, View):
 
-    def get(self, request):
-
+    def get(self, request, id):
         role = get_user_role(request)
-        
         dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-        role = get_user_role(request)
         dottori = UtentiRegistratiCredenziali.objects.all() if role == "secretary" else UtentiRegistratiCredenziali.objects.filter(user=request.user)
 
+        # >>> NOVITÀ: pre-carica paziente se arriva l'id via querystring
+        paziente = None
+        paziente_id = request.GET.get('paziente_id')
+        if paziente_id:
+            qs = TabellaPazienti.objects.filter(pk=paziente_id)
+            if role != "secretary":
+                qs = qs.filter(dottore=dottore)
+            paziente = get_object_or_404(qs)
+
         context = {
-            'dottore' : dottore,
-            'isSecretary' : role == "secretary",
-            'dottori' : dottori,
+            'dottore': dottore,
+            'isSecretary': role == "secretary",
+            'dottori': dottori,
+            'paziente': paziente,  # -> usato per pre-compilare i campi
         }
-        return render(request, "includes/InserisciPaziente.html", context)  
-    
+        return render(request, "includes/InserisciPaziente.html", context)
+
     def post(self, request):
         print("POST DATA:", request.POST)
 
         role = get_user_role(request)
+        dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
+        dottori = UtentiRegistratiCredenziali.objects.all() if role == "secretary" else None
+
+        context = {
+            'dottore': dottore,
+            'isSecretary': role == "secretary",
+            'dottori': dottori
+        }
+
+        def parse_date(date_str):
+            return date_str if date_str else None
 
         try:
             success = None
             errore = None
+
+            paziente_id = request.POST.get('paziente_id')  # >>> NOVITÀ
             codice_fiscale = request.POST.get('codice_fiscale')
-            
-            dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-            dottori = UtentiRegistratiCredenziali.objects.all() if role == "secretary" else None
 
-            context = {
-                'dottore': dottore,
-                'isSecretary': role == "secretary",
-                'dottori': dottori
-            }
+            # Se arriva l'ID, priorità a quello (aggiorna quel record)
+            paziente = None
+            if paziente_id:
+                qs = TabellaPazienti.objects.filter(pk=paziente_id)
+                if role != "secretary":
+                    qs = qs.filter(dottore=dottore)
+                paziente = qs.first()
 
-            def parse_date(date_str):
-                return date_str if date_str else None
-
-            profile = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-
-            if role == "secretary":
-                paziente = TabellaPazienti.objects.filter(codice_fiscale=codice_fiscale).first()
-            else:
-                paziente = TabellaPazienti.objects.filter(dottore=dottore, codice_fiscale=codice_fiscale).first()
+            # Se non c'è id, usa la logica esistente su codice_fiscale
+            if not paziente:
+                if role == "secretary":
+                    paziente = TabellaPazienti.objects.filter(codice_fiscale=codice_fiscale).first()
+                else:
+                    paziente = TabellaPazienti.objects.filter(dottore=dottore, codice_fiscale=codice_fiscale).first()
 
             if paziente:
                 dati_modificati = False
@@ -1105,7 +1156,6 @@ class InserisciPazienteView(LoginRequiredMixin,View):
                     field_name = field.attname
                     if field_name in ['id', 'dottore', 'codice_fiscale', 'created_at']:
                         continue
-
                     val = request.POST.get(field_name)
                     if val is not None:
                         current_val = getattr(paziente, field_name)
@@ -1113,16 +1163,16 @@ class InserisciPazienteView(LoginRequiredMixin,View):
                         if str(current_val) != str(new_val):
                             setattr(paziente, field_name, new_val)
                             dati_modificati = True
-
                 if dati_modificati:
                     paziente.save()
                     success = "I dati del paziente sono stati aggiornati con successo!"
                 else:
                     errore = "⚠️ Il paziente esiste già e non sono stati forniti nuovi dati da aggiornare."
             else:
+                # Creazione nuovo
                 if role == "secretary":
                     paziente = TabellaPazienti(
-                        dottore_id = request.POST.get('dottore'),  
+                        dottore_id=request.POST.get('dottore'),
                         codice_fiscale=codice_fiscale,
                         name=request.POST.get('name'),
                         surname=request.POST.get('surname'),
@@ -1130,8 +1180,11 @@ class InserisciPazienteView(LoginRequiredMixin,View):
                         gender=request.POST.get('gender'),
                         cap=request.POST.get('cap'),
                         province=request.POST.get('province'),
+                        residence=request.POST.get('residence'),
                         place_of_birth=request.POST.get('place_of_birth'),
-                        chronological_age=request.POST.get('chronological_age')
+                        chronological_age=request.POST.get('chronological_age'),
+                        email=request.POST.get('email'),
+                        phone=request.POST.get('phone'),
                     )
                 else:
                     paziente = TabellaPazienti(
@@ -1143,37 +1196,39 @@ class InserisciPazienteView(LoginRequiredMixin,View):
                         gender=request.POST.get('gender'),
                         cap=request.POST.get('cap'),
                         province=request.POST.get('province'),
+                        residence=request.POST.get('residence'),
                         place_of_birth=request.POST.get('place_of_birth'),
-                        chronological_age=request.POST.get('chronological_age')
+                        chronological_age=request.POST.get('chronological_age'),
+                        email=request.POST.get('email'),
+                        phone=request.POST.get('phone'),
                     )
 
+                # Popola gli altri campi eventuali
                 for field in TabellaPazienti._meta.get_fields():
                     if not (hasattr(field, 'attname') and field.attname):
                         continue
                     field_name = field.attname
-                    if field_name in ['id', 'dottore', 'codice_fiscale', 'created_at', 'name', 'surname', 'dob', 'gender', 'cap', 'province', 'place_of_birth', 'chronological_age']:
+                    if field_name in [
+                        'id', 'dottore', 'codice_fiscale', 'created_at',
+                        'name', 'surname', 'dob', 'gender', 'cap', 'province',
+                        'residence', 'place_of_birth', 'chronological_age', 'email', 'phone'
+                    ]:
                         continue
-
                     val = request.POST.get(field_name)
                     if val:
                         setattr(paziente, field_name, parse_date(val) if isinstance(field, models.DateField) else val)
 
                 paziente.save()
-                print("Paziente salvato:", paziente)
                 success = "Nuovo paziente salvato con successo!"
 
-            # 🔽 CREAZIONE REFERTI ETA' METABOLICA SE PRESENTI
+            # ---- Referto Metabolico (invariato) ----
             referto_fields = [
                 f.attname for f in RefertiEtaMetabolica._meta.get_fields()
                 if hasattr(f, 'attname') and f.attname not in ['id', 'dottore', 'paziente', 'data_referto', 'storico_punteggi']
             ]
 
             if any(request.POST.get(field) for field in referto_fields):
-                nuovo_referto = RefertiEtaMetabolica(
-                    dottore=dottore,
-                    paziente=paziente,
-                )
-
+                nuovo_referto = RefertiEtaMetabolica(dottore=dottore, paziente=paziente)
                 for field in referto_fields:
                     val = request.POST.get(field)
                     if val:
@@ -1184,24 +1239,24 @@ class InserisciPazienteView(LoginRequiredMixin,View):
                             try:
                                 setattr(nuovo_referto, field, json.loads(val))
                             except:
-                                setattr(nuovo_referto, field, []) 
+                                setattr(nuovo_referto, field, [])
                         else:
                             setattr(nuovo_referto, field, val)
-
                 nuovo_referto.save()
-                success = (success or "") + "Aggiunto nuovo paziente e generato il primo referto metabolico con successo!"
+                success = (success or "") + " Aggiunto il primo referto metabolico con successo!"
 
             if success:
                 context["success"] = success
             if errore:
                 context["errore"] = errore
 
+            # RIMANDA IN PAGINA con il paziente corrente per tenere i valori
+            context['paziente'] = paziente
             return render(request, "includes/InserisciPaziente.html", context)
 
         except Exception as e:
             context["errore"] = f"Errore di sistema: {str(e)}. Verifica i campi e riprova."
             return render(request, "includes/InserisciPaziente.html", context)
-
 
 
 
@@ -1430,6 +1485,28 @@ class CartellaPazienteView(LoginRequiredMixin, View):
         )
         diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
 
+        # ==========================
+        #   VISITE DEL PAZIENTE
+        # ==========================
+        # Query base (ordina dalla più recente)
+        visite_qs = (
+            Visita.objects
+            .filter(paziente=persona)
+            .select_related('paziente')            # ottimizza FK
+            .order_by('-data_visita', '-visita_numero')
+        )
+
+        # Paginazione (se vuoi mostrarne un numero per pagina)
+        visite_paginator = Paginator(visite_qs, 5)
+        visite_page_number = request.GET.get('visite_page')
+        visite_page = visite_paginator.get_page(visite_page_number)
+
+        # Alcune utility utili al template
+        visite_count = visite_qs.count()
+        ultima_visita = visite_qs.first()                       # già ordinato desc
+        prossimo_numero_visita = visite_count + 1               # comodo per label “Visita n°”
+
+
         context = {
             'persona': persona,
             'dottore': dottore,
@@ -1449,12 +1526,14 @@ class CartellaPazienteView(LoginRequiredMixin, View):
             # sezioni Diario (tab)
             'farmaci_prescritti': farmaci_prescritti,
             'accertamenti_qs': accertamenti_qs,
-            'visite_qs': visite_qs,
             'diario_page': diario_page,
             'diario_full': diario_full,
 
-            # opzionale, se ti serve altrove
-            'visite_page': visite_page,
+            'visite_qs': visite_qs,                # lista completa (se serve)
+            'visite_page': visite_page,            # pagina corrente per tab/paginazione
+            'visite_count': visite_count,          # totale visite del paziente
+            'ultima_visita': ultima_visita,        # oggetto Visita più recente
+            'prossimo_numero_visita': prossimo_numero_visita,
 
             # Indicatori
             "Salute_del_cuore": lista_filtered_value[0],

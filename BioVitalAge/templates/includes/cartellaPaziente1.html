@@ -1,0 +1,1744 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- Favicon -->
+        <link rel="shortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
+        
+        {% csrf_token %}
+        <meta name="csrf-token" content="{{ csrf_token }}">
+
+        <title>BVA - Cartella Paziente</title>
+
+        <!-- Css Import -->
+        <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+        <link rel="stylesheet" href="{% static 'css/cartellaPaziente.css' %}">
+        <link rel="stylesheet" href="{% static 'css/homePage.css' %}">
+
+        <!-- Bootstrap import -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- Font Import  -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+
+        <!-- CDN IMPORT -->
+        <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+        <!-- JS Import -->
+        <script src="{% static 'js/cartella_paziente/prescrizioni/PrescrizioniFarmaci.js' %}" defer type="module"></script>
+        <script src="{% static 'js/cartellaPaziente.js' %}" defer type="module" data-user="{{user.id}}'" data-paziente="{{persona.name}}" ></script>
+
+        <script>
+            window.DOTTORE = "{{ dottore.nome }} {{ dottore.cognome }}";
+            window.PAZIENTE = "{{ persona.name }} {{ persona.surname }}";
+            window.DOB_PAZIENTE = "{{ persona.dob|date:'d/m/Y' }}";
+            window.CF_PAZIENTE = "{{ persona.codice_fiscale }}";
+        </script>
+    </head>
+
+    <body>
+        <!-- Loader -->
+        {% include 'components/loader.html' %}
+
+        <!-- NAVBAR -->
+        {% include 'components/navBar.html' %}
+
+        <main>
+            <!-- MENU TRACE -->
+            <div class="main-title-nav">
+
+                <div class="tools-menu-trace">   
+                    <button title="Prescrione esami" class="circle-btn" onclick="window.location.href='{% url 'esami' persona.id %}'">
+                        <img src="{% static 'image/Prescrizione_color.png' %}" alt="Prescrizione Esami">
+                        <p style="margin-bottom: 0;">Accertamenti</p>
+                    </button>
+                    <button title="Visite" class="circle-btn" onclick="window.location.href='{% url 'visite_paziente' persona.id %}'">
+                        <img src="{% static 'image/Visite_coloree.png' %}" alt="Prescrione certificati">
+                        <p style="margin-bottom: 0;">Visite</p>
+                    </button>
+                    <button title="Prescrione fermaci" id="openPrescrizioniBtn" class="circle-btn">
+                        <img src="{% static 'image/Prescrizione_Fermaci.png' %}" alt="Prescrizione Fermaci">
+                        <p style="margin-bottom: 0;">Farmaci</p>
+                    </button>
+                    <button title="Prescrione libera" id="openPrescrizioneLiberaBtn" class="circle-btn">
+                        <img src="{% static 'image/Prescrizione_colore.png' %}" alt="Prescrizione Libera">
+                        <p style="margin-bottom: 0;">Libera</p>
+                    </button>
+                </div>
+
+                <div class="informazioni-personali">
+                    <h3>{{ persona.surname }} {{ persona.name }}</h3>
+                    <h3>C.F.: {{ persona.codice_fiscale }}</h3>
+                    <h3>residenza: {{ persona.residence }} - età: {{ persona.chronological_age }} </h3>
+
+                    {% if persona.email %}
+                    <h3>{{ persona.email }}</h3>
+                    {% endif %}
+                    {% if persona.phone %}
+                    <h3>tel: {{ persona.phone }}</h3> 
+                    {% endif %}
+                </div>
+
+                <div class="tools-container-left-side">
+
+                    <div class="tools-menu-trace">   
+
+                        <button type="button" id="modale-note" class="circle-btn">
+                            <img src="{% static 'image/note_color.png' %}" alt="Note" title="Note">
+                            <p style="margin-bottom: 0;">Note</p>
+                        </button>
+                
+                        <button id="open-privacy-btn" class="circle-btn" title="Privacy Policy" style="cursor: pointer;">
+                            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAJtElEQVR4nO1b628bWRU34iXBF8TrOyuEAIH4BwDxDfYTK60Q8AH2A6KimUm6bdq03ULTbUsXbWbsOEkT24nvtR2/E7tuEudtx7GbNE8naR5um0e3aZuwtGXpFhYqUA86dzyO7dhxnHhqdzdHOvL4zsyde3733Ht/59wZlepADuSlFZE3/Vbk6QORJ5siT3+v+qSI5gj9ksBTk8hTSFaBJw7xaPOXVR9Xcf/C/WmBN/5a5Ok6GlxfaXq+2O+CeV8z1B+VgTBu1pTR31RXV39G9XGRGt7yDYEjRwSeLsu97RJa4fFiOzy754WPFnTw/nUdOC8Zk7yBrtbwxqPqw8ZXlGvYHyxfrykz/VjNkTdEjp4TOGIWOBoWORLFBsTH598FnvwPFY+xjJ3DazgaxnvwXqyjpoK8oeZMh0SelIkc/bPIU7fAk6VkNzeft8DCgAuerXuZ8TIAH803wb9uNMGs1wDkrDF9aGAdbqlOVvevaipavpe3wSJHvi+UGQ+LPLGIHFlJH4NKaWOVGXoMNlgedqcYng6ArAhErEsPXXUt0HCcZK+bIydzGi3w9NvYQyJPbqVXoD1mBfJOB9gbBsFjGYVu3xwEA7chfG0NRsfXYSy6AeNzf4Xo0iOmeIxleA6vCQZvQbdvlt2rrjCzOv06KwTMdhjzOCAWdMHmbBv8J4PROwGQDsa9IT3MXzXANYsB+nUtcLW2RfIMjnyQ3b1506sCR64nG9xw2gmOpiB0X5mBa6N3IRp7DNGbhVHNmxb2jA9XPDsamy8AmfRJtEn2gH9uN5yjPxE5OiIbXV9lB5chBEOh5W0GTy89hOHIGnR3zLFetNYPMo/Qn/Ww++oqraAuN215TKWVlV0+7QJr3cBWXUuPoO6EjV3zcL5dcQAejunkNq0nDNeWaz8vcPSywJPneBIb2dU+DVOLf9vWW51tU9B80QeaN817H9dn3In6+jrnE+XrE22KA/BgWC9PjjNSr1davihyNICFmgoT+BzjrHezuSuCIzcYj82aHmgzRqDLE4XBvhiEI2swOnWfjfmpha168D/qyMS9lPKxmQ3mMVjfctitOABrAxIAIk8G4xMd8crGhIZXc47XkfF1GOyPwfjMRsHmAIu2jzVqvs+lOAA3/TIA1K0SOfo6/sExiD1TKIPyVadhiDVqwutUHIAZj0EGoFElcCSIf9B9i2U8qs82xhqFS6DSAIRNzVs8QODIE/wzPrdZVAB6O2+wRnlqrYoD0KmN8wCe/FIlT2bFBgDnFTYPVZkzsr1CAtDyVpwdljV/MwFAl2e6qAAgx6g7Ia0EyP6UAoBxgHJm80NQwacSAGiP2xhFLSYItoYB1pYRt10xAMbs8gRILFKAk0x1TzkhFFopGgD93YusHbTaktcwyAcA63kpUlSXkZ+nAEBr/NKJCjNcsY3B1A5ESClF1ikTopWIu+AAvBdIEKD3kfmqkgFAPu5qGZbHB/MGpLyZqLCSijEFPt/5bmvBAfAK0uyP0e1WjM/HAYg3AIeA4W1vYljUn4gHQ8HbMB17pDgAyC4xaMJn3xxyFwyAlf4E+3uiLTd+LSsAUYzyYo+g378ILZc6UgKYhpMOsF0OMNIUHr2jCCBYp9sYZs9rPmOGp6uefQPw4awO6J+kpU/gaVVqloffDkCy9g7cArshDA1vubdFdNhTCBLO3l7LKPh9sxDAhAgGQ+PrcH36wbaECJaxhEhkjV2LuQWPZYTVgXXVHmtNeQYmSPYLACZB4q4/nxj7uwUgPL2Z0L7BZWi3jgNV90L9SWmyUkLrqhygu3QV1BWmXcUHOwEQbU/w/mcib/zB9jwfvzMTTAYgXYPX18HfvQTt9kmw6UJgru2D5kud0PjHdqg/5QRtZWtKj+IxluE5vAavxXvwXqwD6+oILoP/2ntM7Zbr8ZWJSonQPAGI+Q2gqUgA+7uMqS8xBxPcCQAlVDZeVnNjMAHCbI9z1wAsdOihVjaeI+9kzf2JOZhgsQFANemkUBmX6IjDkROAabcBNPHlXOCIwChvLgDELEywFABgnmDY4ii9zTb4911Pxn2BQHMi0nsu8KQ6q+HpANAsTLBUAEB1OiZAc8Sc2BmSM8gIwNPZpkS6W8SNGM50KKfxu2GCwxMPSgaAzuE1oA2DIMYzzaZzFni86IEPpnVgv5jYDXqKKX3VbkXMwQS1x+1gbQxCd/cSDE9tvHgAInegzTsHRDsAtcel1LnsqfirP23eiu95CnlveYl5MMH6KgeYtQPgcUxAX+C2IoCgwV7/AtjMo9Ci7gVtPEcga9N5LzhdU9AxcAsaqz3bOERexu+XCdYes4L+go+t5c6WCHhdU9DlX4Te/lswEFqFwcgdCI7egzACNbXBjrEMz+E1fv8ieJ2T4GgJszqwLs1RaYcoBfhTTrYceroWU7yjK3wHnPYJcNgnlAMgXCQmaKjxg800Al5/qtHZdN8AjCNnLzEmuFv19d/cPwBdJcoEd6OtJLJ/AGqPtbLM7MsGwJWeWMq8sWcAxPj293B49aUBwNNxA7THpeTJvgEwCd3sF3d8cXNU3rwsRQCQEJmagolwWXfBt38ApmMPWSZG3s/HjVK/dwZC4/eLCkDjOS80vX0lpUz/l85EcGSs7WfLYcGWwaGhZdAnMUFc61sbAtDdsySt5wUydGh0nWlyGRV6wPCuP+Pylh4dIglq884WbhmMJk9+sceMCeJLEOnvBFGxFzzOSUaQhid3Fyfoz/vAcMGXUoassv6kI6Usk7GZyhThAdEsRAgpr7VpKCMTVB8xg+6cl63ljuYwo8hdnQsQHLmb0bDdliUbhu7fmDYEXigA4aQG9gWWoa11jHkB9l42JodEJ6exGHWWp5ZdPuNmQO+FC+wZACHH9nguJohRosc+weIF9ATDxatg14dSrkP3R56fXIYRprVxKKUsNLnBJrR8je8I3JYB+Ef+HsBJ7wa9zEzQSkcYAAJHB/YCwOulnhPcmQkusZWKAcDT11R7EYEn7aWeE8yk7VdvQF18M1XgiUu1V9Ef0n8BXxkr9ZygrDhPYJJUXZ54T7EfbVDtR6qr3Z8TOKKVX5Qs1ZwgjvekXsfMr0Z/SP9ZVaFEzZMfiTyNlHpOENsolBl/qFJKxDL6M4Enoynre5W96DlBbJPAkZ+qXpQInPlbIkfPihyJpRMezCG8iJwg++CBo2exLapiSk258bu44SB9sLT9+4FCqcDRmyJHKH4Jpjls/o6qVEU4pP8qjkP8SCnuJVTgaEjkyBR+FiPw5D77TIaj/2UqHd9jX5vgNdK1FO/FOrCues78lWLbdSAHciAHciCqT4j8HxguvFBbPcxuAAAAAElFTkSuQmCC" alt="data-protection" title="Privacy & Policy">
+                            <p style="margin-bottom: 0;">Privacy&Policy</p>
+                        </button>
+
+                        <button onclick="window.location.href='{% url 'dati_base' persona.id %}'" class="circle-btn" title="Dati Pase Paziente">
+                            <img src="{% static 'image/Dati_Base_color.png' %}" alt="">
+                            <p style="margin-bottom: 0;">Dati Base</p>
+                        </button>
+
+                        <button title="Terapie" class="circle-btn" onclick="window.location.href='{% url 'terapie' persona.id %}'" >
+                            <img src="{% static 'image/Terapie_colore.png' %}" alt="Prescrione certificati">
+                            <p style="margin-bottom: 0;">Terapia IV</p>
+                        </button> 
+
+                        <button onclick="window.location.href='{% url 'allegati' persona.id %}'" class="circle-btn" title="Allegati">
+                            <img src="{% static 'image/Allegati_color.png' %}" alt="">
+                            <p style="margin-bottom: 0;">Allegati</p>
+                        </button>
+                    </div>
+                </div>
+            </div>  
+
+            <!-- MESSAGGIO DI SUCCESSO CON PUNTEGGIO -->
+            {% if success or errore %}
+            <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    setTimeout(() => {
+                        const modal = document.getElementById("modal_message");
+                        if (modal) {
+                            modal.style.transition = "opacity 0.3s ease";
+                            modal.style.opacity = "0";
+                            setTimeout(() => modal.remove(), 500); 
+                        }
+                    }, 4000); 
+                });
+            </script>
+            {% endif %}
+
+            {% if success %}
+            <div class="success_message" id="modal_message">
+                <div class="header_message">
+                    <div class="contianer-title">
+                        <img src="{% static 'image/Success.png' %}" alt="">
+                        <p class="title_message">Success!</p>
+                    </div>
+                    <button class="close" onclick="closeModal()">x</button>   
+                </div>
+                <p>I dati delle informazioni personali sono state correttamente aggiornate!</p>
+            </div>  
+            {% endif %}
+
+            <!-- MESSAGGIO ERRORE -->
+            {% if errore %}
+            <div class="erorre_message" id="modal_message">
+        
+                        <div class="header_message">
+                            <div class="contianer-title">
+                                <img src="{% static 'includes/images/unsuccess.png' %}" alt="">
+                                <p class="title_message_errore">Errore!</p>
+                            </div>
+                            <button class="close" onclick="closeModal()">x</button>
+                            
+                        </div>
+                        <p>Sembra che qualcosa sia andato storto.</p>
+                        <p style="margin-top: -1rem; color: #c74b5b; font-weight: bold;">X {{ errore }}</p>
+                    
+            </div>
+            {% endif %}
+
+            {% include 'dynamic_templates/cartella_paziente/modale_salute_cuore.html' %}
+            {% include 'dynamic_templates/cartella_paziente/modale_salute_del_rene.html' %}
+            {% include 'dynamic_templates/cartella_paziente/modale_salute_epatica.html' %}
+            {% include 'dynamic_templates/cartella_paziente/modale_salute_cerebrale.html' %}
+            {% include 'dynamic_templates/cartella_paziente/modale_salute_ormonale.html' %}
+            {% include 'dynamic_templates/cartella_paziente/modale_salute_del_sangue.html' %}
+            {% include 'dynamic_templates/cartella_paziente/modale_salute_del_sistema_immunitario.html' %}
+
+            <!-- BACKDROP -->
+            <div class="backdrop-indici" id="backdropIndici"></div>
+            <div class="backdrop-modale-note" id="backdropModaleNote"></div>
+            <div class="backdrop-modale-prescrizione-libera" id="backdropPrescrizioneLibera"></div>
+            <div class="backdrop-modale-problemi" id="backdropModaleProblemi"></div>
+            <div class="backdrop-modale-diario-clinico" id="backdrop-diario"></div>
+
+
+            <!-- MODALE NOTE -->
+            <div class="modale-note" id="modale_note">
+                <div class="note-container">
+                    <!-- Elenco Note -->
+                    <div class="note-list-container">
+                        <h4>Elenco Note</h4>
+                        <div class="note-list">
+                            {% for nota in note_list %}
+                                <div class="note-item" data-id="{{ nota.id }}" data-titolo="{{ nota.titolo }}" data-contenuto="{{ nota.contenuto }}">
+                                    <strong>{{ nota.titolo }}</strong>
+                                    <small>{{ nota.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                            {% empty %}
+                                <p>Nessuna nota presente.</p>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="button" id="new-note-btn">+ Nuova Nota</button>
+                    </div>
+
+                    <!-- Form Modifica/Creazione -->
+                    <div class="note-form-container">
+                        <form id="note-form" method="POST" action="{% url 'cartellaPaziente_note' persona.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="nota_id" id="nota_id_field">
+                            
+                            <h3 id="note-form-title">Crea Nuova Nota</h3>
+                            
+                            <label for="titolo_nota_field">Titolo</label>
+                            <input type="text" name="titolo_nota" id="titolo_nota_field" placeholder="Inserisci il titolo della nota" required>
+                            
+                            <label for="contenuto_nota_field">Contenuto</label>
+                            <textarea name="contenuto_nota" id="contenuto_nota_field" placeholder="Inserisci qui il testo della nota..." required></textarea>
+
+                            <div class="modale-button">
+                                <button type="submit" class="button" id="save-note-btn">Salva Nota</button>
+                                <button type="button" class="button" id="close-note-btn">Chiudi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODALE PRESCRIZIONE LIBERA -->
+            <div class="modale-prescrizione-libera" id="modalePrescrizioneLibera">
+                <div class="header-title">
+                    <h3>Prescrizione libera</h3>
+                    <button type="button" id="closePrescrizioneLiberaBtn">x</button>
+                </div>
+                <div class="header-button">
+                    <button class="button active" id="btnManuale">Manuale</button>
+                    <button class="button" id="btnPrecompilata">Pre-compilata</button>
+                    <select id="selectPrecompilata" style="display:none; margin-left: 1rem;"></select>
+                </div>
+                <textarea class="content-prescrione" id="textareaPrescrizioneLibera" placeholder="Scrivi qui il testo..."></textarea>
+                <div class="footer-button">
+                    <button class="button">Elenco Prescrizioni</button>
+                    <button class="button" id="savePrescrizioneLibera">Save</button>
+                </div>
+            </div>
+
+            <!-- MODALE DIAGNOSI + PROBLEMI -->
+            <div class="modale-problemi" id="modale_problemi">
+                <form method="POST" action="{% url 'cartella_paziente' persona.id %}">
+                    {% csrf_token %}
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin-bottom: 0;">Aggiungi Diagnosi e Problema</h3>
+                        <button type="button" class="close" id="close-problemi-x" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
+                    </div>
+
+                    <!-- Step 1: Selezione diagnosi esistente o aggiunta nuova -->
+                    <div class="step-diagnosi">
+                        <label for="diagnosi_select">Seleziona una diagnosi:</label>
+                        <select id="diagnosi_select" name="diagnosi_id">
+                            <option value="" selected>-- Scegli diagnosi --</option>
+                            {% for diagnosi in diagnosi_list %}
+                                <option value="{{ diagnosi.id }}">{{ diagnosi.data_diagnosi|date:"d/m/Y" }} - {{ diagnosi.descrizione|default:"(senza titolo)" }}</option>
+                            {% endfor %}
+                            <option value="__new__">+ Aggiungi nuova diagnosi</option>
+                        </select>
+                    </div>
+
+                    <!-- Step 1b: Form nuova diagnosi, appare solo se selezionato "nuova" -->
+                    <div id="nuova_diagnosi_form" style="display: none; margin-top: 1rem;">
+                        <label for="data_nuova_diagnosi">Data diagnosi:</label>
+                        <input type="date" id="data_nuova_diagnosi" name="data_nuova_diagnosi" />
+
+                        <label for="descrizione_nuova_diagnosi">Descrizione diagnosi:</label>
+                        <input type="text" id="descrizione_nuova_diagnosi" name="descrizione_nuova_diagnosi" placeholder="Inserisci descrizione diagnosi" />
+                    </div>
+
+                    <!-- Step 2: Appaiono solo dopo selezione diagnosi o inserimento nuova -->
+                    <div id="problemi_step" style="display: none;">
+                        <label for="text_area_problemi">Problemi associati</label>
+                        <textarea name="problemi" id="text_area_problemi" placeholder="Inserisci qui i problemi oppure seleziona dalla lista"></textarea>
+
+                        <div class="lista-ec10">
+                            <h3>Lista Problemi ICD10</h3>
+                            <div class="lista-problemi">
+                                {% if icd10_list %}
+                                    <select id="icd10_select" name="icd10_code">
+                                        <option value="" selected disabled>-- Seleziona problema ICD10 --</option>
+                                        {% for icd in icd10_list %}
+                                            <option value="{{ icd.Code }}">{{ icd.Code }} - {{ icd.Description }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <p>Nessun problema ICD10 disponibile.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="modale-button">
+                            <div class="sub-div-button">
+                                <button type="submit" class="button" id="save-problemi">Salva</button>
+                                <button type="button" class="button" id="close-problemi">Chiudi</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- MODALE PRIVACY POLICY -->
+            <div id="privacy-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                <div id="privacy-modal-content" style="background:white; border-radius:10px; width:75vw; max-height:90vh; overflow-y:auto; position:relative;">
+                    <div class="privacy-header" style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 2rem; border-bottom:1px solid #ccc;">
+                        <!-- Bottone chiudi -->
+                        <button id="privacy-modal-close" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
+                
+                        <!-- Titolo -->
+                        <h2 style="margin-top:0; margin-bottom:0;">Privacy Policy</h2>
+                    </div>
+                    
+                    <div class="modal-content-privacy">
+                        <!-- PDF della privacy -->
+                        <iframe src="{% static 'includes/pdfTemplates/Privacy&Policy.pdf' %}" width="100%" height="300px" style="border:1px solid #ccc; margin-bottom:1rem;"></iframe>
+                
+                        <!-- Input per i dati -->
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Nome e Cognome*:</label>
+                                <input type="text" id="privacy-nome" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.name }} {{ persona.surname }}" placeholder="Inserisci nome e cognome" >
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data di Nascita*:</label>
+                                <input type="date" id="privacy-data-nascita" required value="{{ persona.dob|date:'Y-m-d' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Codice Fiscale*:</label>
+                                <input type="text" id="privacy-codice-fiscale" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.codice_fiscale|default:'' }}" placeholder="Inserisci codice fiscale">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Data Firma*:</label>
+                                <input type="date" id="privacy-data" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Email*:</label>
+                                <input type="email" id="privacy-email" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" value="{{ persona.email|default:'' }}"  placeholder="email@esempio.com">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Telefono*:</label>
+                                <input type="tel" id="privacy-telefono" required value="{{ persona.phone|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="123-456-7890">
+                            </div>
+                        </div>
+    
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Luogo di Nascita*:</label>
+                                <input type="text" id="privacy-place-of-birth" required value="{{ persona.place_of_birth|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Luogo di nascita">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Residenza*:</label>
+                                <input type="text" id="privacy-residence" required value="{{ persona.residence|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Residenza">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Provincia*:</label>
+                                <input type="text" id="privacy-province" required value="{{ persona.province|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Provincia">
+                            </div>
+                        </div>
+    
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">CAP:</label>
+                                <input type="text" id="privacy-cap" required value="{{ persona.cap|default:'' }}" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="CAP">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Indirizzo:</label>
+                                <input type="text" id="privacy-address" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci indirizzo">
+                            </div>
+                        </div>
+    
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Documento di Identità:</label>
+                                <input type="text" id="privacy-identity-doc" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Documento di Identità">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Nr. Documento:</label>
+                                <input type="text" id="privacy-nr-identity" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci numero documento">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Rilasciato il:</label>
+                                <input type="date" id="privacy-relased-date" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci data rilascio">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Da comune:</label>
+                                <input type="text" id="privacy-relased-company" required style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci comune rilasciante">
+                            </div>
+                        </div>
+    
+                        <div style="margin-bottom:1rem; display:grid; grid-template-columns:1fr; gap:1rem;">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:bold;">Familiari (Nome e Cognome):</label>
+                            <textarea required id="privacy-family" cols="30" rows="4" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;" placeholder="Inserisci familiari"></textarea>
+                        </div>
+    
+                        <div id="consensiAccordion" style="margin-bottom:1rem;">
+                            <div class="card consenso-card">
+                                <div class="card-header consenso-header" id="headingInterventi" style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
+                                  <span style="display:flex; align-items:center;">
+                                    <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
+                                    Diritti e dati personali
+                                  </span>
+                                  <div class="form-chek ml-3">
+                                    <input class="form-check-input" type="radio" name="diritti-dati-personali" value="true" id="diritti-dati-personali-true" required>
+                                    <label class="form-check-label" for="diritti-dati-personali-true">Presta il consenso</label>
+                                    <input class="form-check-input" type="radio" name="diritti-dati-personali" value="false" id="diritti-dati-personali-false" required>
+                                    <label class="form-check-label" for="diritti-dati-personali-false">Nega il consenso</label>
+                                  </div>
+                                </div>
+                                <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
+                                  <small class="p-3">
+                                    - Essendo informato/a sui propri diritti nei confronti del trattamento dei dati personali (artt. 15 e
+                                    seguenti del regolamento UE 2016/679) definiti particolari e/o sensibili (‘dati personali idonei a
+                                    rivelare lo stato di salute e la vita sessuale’), il cui titolare è la società Elos srl con sede in Largo
+                                    Ignazio Ciaia, 19. <br>
+                                    - Consapevole che i dati saranno utilizzati nel pieno rispetto della normativa vigente, degli obblighi di
+                                    riservatezza e di segreto professionale per finalità di tipo medico-sanitario o comunque connesse allo
+                                    svolgimento di tali finalità;
+                                  </small>
+                                </div>
+                            </div>
+                            <div class="card consenso-card">
+                            <div class="card-header consenso-header" id="headingPatologie"
+                                style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
+                                <span style="display:flex; align-items:center;">
+                                    <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
+                                    Materiale Biologico e Referti
+                                </span>
+                                <div class="form-chek ml-3">
+                                    <input class="form-check-input" type="radio" name="materiale-biologico" value="true" id="materiale-biologico-true" required>
+                                    <label class="form-check-label" for="materiale-biologico-true">Presta il consenso</label>
+                                    <input class="form-check-input" type="radio" name="materiale-biologico" value="false" id="materiale-biologico-false" required>
+                                    <label class="form-check-label" for="materiale-biologico-false">Nega il consenso</label>
+                                </div>
+                            </div>
+                              <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
+                                <small class="p-3">
+                                    Consapevole che il materiale biologico e i referti anonimizzati possano essere utilizzati, nel rispetto
+                                    della normativa vigente in materia di protezione dei dati personali, per scopi di ricerca e/o per studi
+                                    finalizzati alla tutela della collettività in campo medico, biomedico ed epidemiologico e per
+                                    informazioni sulle prestazioni del laboratorio, per il tempo minimo necessario al perseguimento delle
+                                    finalità, anche attraverso il trattamento ulteriore che non consenta o non consenta più di
+                                    identificarti.
+                                </small>
+                              </div>
+                            </div>
+                            <div class="card consenso-card">
+                              <div class="card-header consenso-header" id="headingSalute" style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
+                                <span style="display:flex; align-items:center;">
+                                  <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
+                                  Consenso al trattamento ed alla trasmissione a mezzo posta elettronica dei referti
+                                </span>
+                                <div class="form-chek ml-3">
+                                    <input class="form-check-input" type="radio" name="referti-posta-elettronica" value="true" id="referti-posta-elettronica-true" required>
+                                    <label class="form-check-label" for="referti-posta-elettronica-true">Presta il consenso</label>
+                                    <input class="form-check-input" type="radio" name="referti-posta-elettronica" value="false" id="referti-posta-elettronica-false" required>
+                                    <label class="form-check-label" for="referti-posta-elettronica-false">Nega il consenso</label>
+                                </div>
+                              </div>
+                              <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
+                                <small class="p-3">
+                                    Il/la sottoscritta, vista l’informativa sul trattamento dei dati personali, considerato che in ogni
+                                    momento potrà revocare il presente consenso
+                                </small>
+                              </div>
+                            </div>
+                            <div class="card consenso-card">
+                              <div class="card-header consenso-header" id="headingSalute" style="display: flex; align-items: center; justify-content: space-between; cursor:pointer;">
+                                <span style="display:flex; align-items:center;">
+                                <span class="arrow" style="display:inline-block; transition:transform 0.3s; margin-right:10px;">&#9654;</span>
+                                 Consenso alla trasmissione a mezzo posta elettronica e WhatsApp di materiale pubblicitario
+                                </span>
+                                <div class="form-chek ml-3">
+                                    <input class="form-check-input" type="radio" name="trasmissione-materiale-pubblicitario" value="true" id="trasmissione-materiale-pubblicitario-true" required>
+                                    <label class="form-check-label" for="trasmissione-materiale-pubblicitario-true">Presta il consenso</label>
+                                    <input class="form-check-input" type="radio" name="trasmissione-materiale-pubblicitario" value="false" id="trasmissione-materiale-pubblicitario-false" required>
+                                    <label class="form-check-label" for="trasmissione-materiale-pubblicitario-false">Nega il consenso</label>
+                                </div>
+                              </div>
+                              <div class="card-body consenso-desc" style="overflow:hidden; height:0; opacity:0; margin-top:0; color:#444; font-size:1.2rem;">
+                                <small class="p-3">
+                                    Inoltre il/la sottoscritta, vista l’informativa sul trattamento dei dati personali, considerato che in
+                                    ogni momento potrà revocare il presente consenso
+                                </small>
+                              </div>
+                            </div>
+                        </div>
+                
+                        <!-- Area firma -->
+                        <p style="margin-top:1.5rem; margin-bottom:0.5rem; font-weight:bold;">Firma qui sotto per accettare la privacy
+                            policy*:</p>
+                        <canvas id="firma-canvas" width="500" height="150"
+                            style="border:2px solid #007bff; border-radius:4px; touch-action: none; width:100%; max-width:500px; cursor:crosshair;"></canvas>
+                
+                        <!-- Bottoni -->
+                        <div style="margin-top:1rem; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button id="clear-firma"
+                                style="padding:0.7rem 1.5rem; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer;">Cancella
+                                Firma</button>
+                            <button id="save-firma"
+                                style="padding:0.7rem 1.5rem; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer;">Salva
+                                e Scarica PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wrap"></div>
+
+
+
+          
+            
+
+
+           
+
+
+
+
+
+
+            <!-- Diario clinico -->
+            <div class="flex-container">
+
+                <div class="container-tabella" style="width: 50%;">
+
+                    <div class="container-header-diario">
+                    <h3 id="open-diario-modal" style="cursor:pointer;">Diario Clinico</h3>
+                    <div class="header-container">
+                        <button class="button active" data-target="#tab-diario">Diario</button>
+                        <button class="button" data-target="#tab-farmaci">Farmaci</button>
+                        <button class="button" data-target="#tab-accertamenti">Accertamenti</button>
+                        <button class="button" data-target="#tab-visite">Visite</button>
+                    </div>
+                    </div>
+                    
+                    <!-- DIARIO CLINICO (MIX) -->
+                    <div class="container-content diario-clinico" id="tab-diario" style="display: block;">
+                    <div class="header-table diario-clinico-header">
+                        <div class="header-cella"><p>Data</p></div>
+                        <div class="header-cella"><p>Tipo</p></div>
+                        <div class="header-cella"><p>Descrizione</p></div>
+                        <div class="header-cella"><p>Diagnosi</p></div>
+                        <div class="header-cella"><p>Nota</p></div>
+                    </div>
+
+                    <div class="container-table">
+                        {% for entry in diario_page %}
+                        <div class="row-table diario-clinico-row"
+                            data-id="{{ entry.id }}"
+                            data-type="{{ entry.tipo|lower }}"
+                            data-data="{{ entry.data|date:'d/m/Y H:i' }}"
+                            data-diariotipo="{{ entry.tipo }}"
+                            data-descrizione="{{ entry.descrizione }}"
+                            data-diagnosi="{{ entry.diagnosi|default_if_none:'' }}"
+                            data-nome="{{ entry.nome|default:'non inserito' }}"
+                            data-posologia="{{ entry.posologia|default:'non inserito' }}"
+                            data-nota="{{ entry.nota|default_if_none:'' }}">
+                            <div class="row-cella" title="{{ entry.data|date:'d/m/Y H:i' }}"><p>{{ entry.data|date:"d/m/Y H:i" }}</p></div>
+                            <div class="row-cella" title="{{ entry.tipo }}"><p>{{ entry.tipo }}</p></div>
+                            <div class="row-cella" title="{{ entry.descrizione }}"><p>{{ entry.descrizione }}</p></div>
+                            <div class="row-cella" title="{{ entry.diagnosi|default:'—' }}"><p>{{ entry.diagnosi|default:"—" }}</p></div>
+                            <div class="row-cella" title="{{ entry.nota|default:'—' }}"><p>{{ entry.nota|default:"—" }}</p></div>
+                        </div>
+                        {% empty %}
+                        <div class="row-table" style="grid-template-columns: 1fr;">
+                            <div class="row-cella"><p>Nessun evento nel diario clinico.</p></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    </div>
+
+                    <!-- FARMACI (SOLO FARMACI) -->
+                    <div class="container-content farmaci" id="tab-farmaci" style="display: none;">
+                    <div class="header-table">
+                        <div class="header-cella"><p>Data</p></div>
+                        <div class="header-cella"><p>Farmaco</p></div>
+                        <div class="header-cella"><p>Dose</p></div>
+                    </div>
+
+                    <div class="container-table">
+                        {% if farmaci_prescritti|length == 0 %}
+                        <div class="row-table" style="grid-template-columns: 1fr;">
+                            <div class="row-cella"><p>Nessun farmaco presente.</p></div>
+                        </div>
+                        {% else %}
+                        {% for prescrizione in farmaci_prescritti %}
+                            <div class="row-table"
+                                data-type="farmaco"
+                                data-id="{{ prescrizione.id }}"
+                                data-nome="{{ prescrizione.farmaco.nome_farmaco }}"
+                                data-posologia="{{ prescrizione.farmaco.dosaggio|default_if_none:'' }}">
+                            <div class="row-cella"><p>{{ prescrizione.data_prescrizione|date:"d/m/Y" }}</p></div>
+                            <div class="row-cella"><p>{{ prescrizione.farmaco.nome_farmaco }}</p></div>
+                            <div class="row-cella"><p>{{ prescrizione.farmaco.dosaggio|default:"—" }}</p></div>
+                            </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    </div>
+
+                    <!-- ACCERTAMENTI (SOLO ACCERTAMENTI) -->
+                    <div class="container-content accertamenti" style="display: none;" id="tab-accertamenti" >
+                    <div class="header-table" style="grid-template-columns: 25% 50% 25%;">
+                        <div class="header-cella"><p>Data</p></div>
+                        <div class="header-cella"><p>Accertamento</p></div>
+                        <div class="header-cella"><p>Descrizione</p></div>
+                    </div>
+
+                    <div class="container-table">
+                        {% if accertamenti_qs|length == 0 %}
+                        <div class="row-table" style="grid-template-columns: 1fr;">
+                            <div class="row-cella"><p>Nessun accertamento presente.</p></div>
+                        </div>
+                        {% else %}
+                        {% for accertamento in accertamenti_qs %}
+                            <div class="row-table"
+                                data-type="accertamento"
+                                data-id="{{ accertamento.id }}" style="grid-template-columns: 25% 50% 25%;">
+                            <div class="row-cella"><p>{{ accertamento.data_visita|date:"d/m/Y" }}</p></div>
+                            <div class="row-cella"><p>{{ accertamento.esami_prescritti }}</p></div>
+                            <div class="row-cella"><p>{{ accertamento.descrizione|default:"—" }}</p></div>
+                            </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    </div>
+
+                    <!-- VISITE (SOLO VISITE) -->
+                    <div class="container-content visite" id="tab-visite" style="display: none;">
+                    <div class="header-table" style="grid-template-columns: 25% 50% 25%;">
+                        <div class="header-cella"><p>Data</p></div>
+                        <div class="header-cella"><p>Visita</p></div>
+                        <div class="header-cella"><p>Descrizione</p></div>
+                    </div>
+
+                    <div class="container-table">
+                        {% if visite_qs|length == 0 %}
+                        <div class="row-table" style="grid-template-columns: 1fr;">
+                            <div class="row-cella"><p>Nessuna visita presente.</p></div>
+                        </div>
+                        {% else %}
+                        {% for visita in visite_qs %}
+                            <div class="row-table"
+                                data-type="visita"
+                                data-id="{{ visita.id }}"
+                                data-data="{{ visita.data_visita|date:'d/m/Y' }}"
+                                data-numero="{{ visita.visita_numero }}"
+                                data-descrizione="{{ visita.descrizione|default_if_none:'' }}"
+                                style="grid-template-columns: 25% 50% 25%;">
+                            <div class="row-cella"><p>{{ visita.data_visita|date:"d/m/Y" }}</p></div>
+                            <div class="row-cella"><p>Visita n° {{ visita.visita_numero }}</p></div>
+                            <div class="row-cella"><p>{{ visita.descrizione|default:"—" }}</p></div>
+                            </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    </div>
+
+
+                </div>
+
+                <!-- colonna destra (resta la tua) -->
+                <div class="container-tabella" style="width: 50%;">
+
+                    <div class="container-header-diario-second">
+                    <button class="button" id="modale-problemi">Aggiungi Problema</button>
+                    </div>
+                    
+                    <div class="container-content-second">
+                    <div class="second-table header-table">
+                        <div class="header-cella"><p>Fattori di Rischio Prevenzione</p></div>
+                        <div class="header-cella"><p>Problemi</p></div>
+                    </div>
+
+                    <div class="container-table">
+                        {% for diagnosi in diagnosi_list %}
+                        <div class="second-row row-table">
+                        <div class="row-cella"><p>{{ diagnosi.descrizione|default:"Nessun rischio riscontrato." }}</p></div>
+                        <div class="row-cella"><p>{{ diagnosi.problemi|default:"Nessun problema riscontrato." }}</p></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+
+            <!-- Indicatori di performance -->
+            <div class="container-indicatori containerStyle">
+
+                <div class="card card4" id="card-style">
+                    <h3 class="section-tittle">Indicatori di performance</h3>
+
+                    <div class="score-clock-graph">
+                    
+                        <div class="container-clock cardIndici"
+                            id="cardClick"
+                            card-name="Salute del Cuore"
+                            img-card="{% static 'image/Heart_Colorato.png' %}"
+                            dict-value="Cuore"                   
+                            >
+
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle class="progress-ring__background" cx="70" cy="70" r="65"></circle>
+                                <circle class="progress-ring__progress" id="heartClock" cx="70" cy="70" r="65" marker-end="url(#endDot)"></circle>
+                            </svg>
+                        
+                            
+                            <div class="percentage" id="heartPercentage"></div>
+                            
+                            <div class="descrizione-clock">
+                                <img src="{% static 'image/Heart_Colorato.png' %}" alt="">
+                                <p>Salute del Cuore</p>
+                            </div>
+                        </div>
+                        
+                        <div class="container-clock cardIndici" 
+                            id="cardClick" 
+                            card-name="Salute Renale"
+                            img-card="{% static 'image/Reni.png' %}"
+                            dict-value="Renale">
+
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle class="progress-ring__background" cx="70" cy="70" r="65"></circle>
+                                <circle class="progress-ring__progress" id="kidneyClock" cx="70" cy="70" r="65" marker-end="url(#endDot)"></circle>
+                            </svg>
+                        
+                            <div class="percentage" id="kidneyPercentage"></div>
+                        
+                            <div class="descrizione-clock">
+                                <img src="{% static 'image/Reni.png' %}" alt="">
+                                <p>Salute Renale</p>
+                            </div>
+                        </div>
+                         
+                        <div class="container-clock cardIndici"
+                            id="cardClick"
+                            card-name="Salute Epatica"
+                            img-card="{% static 'image/Fegato.png' %}"
+                            dict-value="Epatica">
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle class="progress-ring__background" cx="70" cy="70" r="65"></circle>
+                                <circle class="progress-ring__progress" id="liverClock" cx="70" cy="70" r="65" marker-end="url(#endDot)"></circle>
+                            </svg>
+
+                            <div class="percentage" id="liverPercentage"></div>
+                        
+                            <div class="descrizione-clock">
+                                <img src="{% static 'image/Fegato.png' %}" alt="">
+                                <p>Salute Epatica</p>
+                            </div>
+                        </div>    
+            
+                        <!-- <div class="container-clock cardIndici"
+                            id="cardClick"
+                            card-name="Salute Cerebrale" 
+                            img-card="{% static 'image/Cervello.png' %}"
+                            dict-value="Cerebrale">
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle class="progress-ring__background" cx="70" cy="70" r="65"></circle>
+                                <circle class="progress-ring__progress" id="brainClock" cx="70" cy="70" r="65" marker-end="url(#endDot)"></circle>
+                            </svg>
+
+                            <div class="percentage" id="brainPercentage"></div>
+                        
+                            <div class="descrizione-clock">
+                                <img src="{% static 'image/Cervello.png' %}" alt="">
+                                <p>Salute Cerebrale</p>
+                            </div>
+                        </div> -->
+                                  
+                        <div class="container-clock cardIndici" 
+                            id="cardClick"
+                            card-name="Salute Ormonale"
+                            img-card="{% static 'image/Cellula.png' %}"
+                            dict-value="Ormonale">
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle class="progress-ring__background" cx="70" cy="70" r="65"></circle>
+                                <circle class="progress-ring__progress" id="hormoneClock" cx="70" cy="70" r="65" marker-end="url(#endDot)"></circle>
+                            </svg>
+
+                            <div class="percentage" id="hormonePercentage"></div>
+                            
+                            <div class="descrizione-clock">
+                                <img src="{% static 'image/Cellula.png' %}" alt="">
+                                <p>Salute Ormonale</p>
+                            </div>
+                        </div>                
+        
+                        <!-- <div class="container-clock cardIndici"
+                            id="cardClick" 
+                            card-name="Salute del Sangue"
+                            img-card="{% static 'image/Blood_Colorato.png' %}"
+                            dict-value="Sangue">
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle class="progress-ring__background" cx="70" cy="70" r="65"></circle>
+                                <circle class="progress-ring__progress" id="bloodClock" cx="70" cy="70" r="65" marker-end="url(#endDot)"></circle>
+                            </svg>
+
+                            <div class="percentage" id="bloodPercentage"></div>
+                            
+                            <div class="descrizione-clock">
+                                <img src="{% static 'image/Blood_Colorato.png' %}" alt="">
+                                <p>Salute del Sangue</p>
+                            </div>
+                        </div> -->
+                    
+                        <div class="container-clock cardIndici" style="gap: 15px;" 
+                            card-name="Salute del Sistema Immunitario"
+                            img-card="{% static 'image/Sistema.png' %}"
+                            dict-value="Immunitario">
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle class="progress-ring__background" cx="70" cy="70" r="65"></circle>
+                                <circle class="progress-ring__progress" id="immuneClock" cx="70" cy="70" r="65" marker-end="url(#endDot)"></circle>
+                            </svg>
+
+                            <div class="percentage" id="immunePercentage" style="margin-top: 5px;"></div>
+                        
+                            <div class="descrizione-clock" style="margin-bottom: -14px;">
+                                <img src="{% static 'image/Sistema.png' %}" alt="">
+                                <p style="max-width: 60%; font-size: 14px;">Salute del Sistema Immunitario</p>
+                            </div>
+                        </div>
+                                  
+                        <div class="container-clock" onclick="window.location.href ='{% url 'microbiota_detail' persona.id %}'" style="cursor: pointer; height: 280px;">
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle class="progress-ring__background" cx="70" cy="70" r="65"></circle>
+                                <circle class="progress-ring__progress" id="muscleClock" cx="70" cy="70" r="65" marker-end="url(#endDot)"></circle>
+                            </svg>
+
+                            <div class="percentage" id="musclePercentage" style="margin-top: 5px;"></div>
+                    
+                            <div class="descrizione-clock" style="margin-top: 5px;">
+                                <img src="{% static 'image/Microbiota.png' %}" alt="">
+                                
+                                <a style="text-decoration: none; color: #3a255d;" href="{% url 'microbiota_detail' persona.id %}">Microbiota</a>
+                            
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                </div>
+                
+            </div> 
+        </main>
+
+
+
+
+        <div class="modale-diario-clinico-full" id="diario-modal">
+            <div class="header-modale">
+                <h3>Diario clinico - completo</h3>
+                <button id="close-diario-modal">x</button>
+            </div>
+
+            <div class="modal-diario-body">
+                   
+                <div class="header-table">
+                    <div class="header-cella"><p>Data</p></div>
+                    <div class="header-cella"><p>Tipo</p></div>
+                    <div class="header-cella"><p>Descrizione</p></div>
+                    <div class="header-cella"><p>Diagnosi</p></div>
+                    <div class="header-cella"><p>Nota</p></div>
+                </div>
+
+                <div class="container-table">
+                        {% for entry in diario_full %}
+                        <div class="row-table diario-clinico-row"
+                            data-id="{{ entry.id }}"
+                            data-type="{{ entry.tipo|lower }}"
+                            data-data="{{ entry.data|date:'d/m/Y H:i' }}"
+                            data-diariotipo="{{ entry.tipo }}"
+                            data-descrizione="{{ entry.descrizione }}"
+                            data-diagnosi="{{ entry.diagnosi|default_if_none:'' }}"
+                            data-nome="{{ entry.nome|default:'non inserito' }}"
+                            data-posologia="{{ entry.posologia|default:'non inserito' }}"
+                            data-nota="{{ entry.nota|default_if_none:'' }}">
+                        <div class="row-cella" title="{{ entry.data|date:'d/m/Y H:i' }}"><p>{{ entry.data|date:"d/m/Y H:i" }}</p></div>
+                        <div class="row-cella" title="{{ entry.tipo }}"><p>{{ entry.tipo }}</p></div>
+                        <div class="row-cella" title="{{ entry.descrizione }}"><p>{{ entry.descrizione }}</p></div>
+                        <div class="row-cella" title="{{ entry.diagnosi|default:'—' }}"><p>{{ entry.diagnosi|default:"—" }}</p></div>
+                        <div class="row-cella" title="{{ entry.nota|default:'—' }}"><p>{{ entry.nota|default:"—" }}</p></div>
+                        </div>
+                        {% empty %}
+                        <div class="row-table" style="grid-template-columns: 1fr;">
+                        <div class="row-cella"><p>Nessun evento nel diario clinico.</p></div>
+                        </div>
+                        {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+       
+        <!-- Mostra messaggi -->
+        {% if messages %}
+        {% for message in messages %}
+            <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Mostra modale -->
+        {% if mostra_modale %}
+        <script>
+            const modal = new bootstrap.Modal(document.getElementById('studioModal'));
+            modal.show();
+        </script>
+        {% endif %}
+        <!-- BACKDROP -->
+        <div id="backdropModale"></div>
+
+        <!-- MODALE PRESCRIZIONE FARMACO -->
+        <div id="ModaleInserimento" >
+            <div class="title-header-container">
+                <h3>Aggiungi Prescrizione Farmaco</h3>
+                <button class="close" onclick="closeModal()" style="margin-top: -0.5rem;">X</button>
+            </div>
+        
+            <div class="ModaleHeader">
+                <select name="filtri" id="filtri">
+                    <option value="0">Tutti</option>
+                    <option value="1">Nome Farmaco crescente</option>
+                    <option value="2">Nome Farmaco decrescente</option>
+                    <option value="3">Principio Attivo</option>
+                    <option value="4">Codice AIC</option>
+                    <option value="5">Codice ATC</option>
+                    <option value="6">Dosaggio</option>
+                </select>
+        
+                <div class="barra-ricercaModale">
+                    <input type="text" class="input" id="Email" name="inputField"
+                        placeholder="Cerca farmaco, principio attivo, codice..." required />
+                    <button class="button button--submit" type="submit">
+                        <span class="button__icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="15"
+                                class="button__icon-svg">
+                                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                                <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round"></line>
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="15"
+                                class="button__icon-svg button__icon-svg--copy">
+                                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                                <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round"></line>
+                            </svg>
+                        </span>
+                        Cerca
+                    </button>
+                </div>
+
+                <select name="" id="tendina_terapie">
+                    <option value="0">Pacchetti</option>
+                    <option value="1">Muscle</option>
+                    <option value="2">Detox + Energy + Brain</option>
+                    <option value="3">Nad+</option>
+                    <option value="4">Detox plus</option>
+                    <option value="5">Hangover</option>
+                </select>
+        
+                <select name="" id="menu_tendina_prescrizioni" class="tendinaPrescrizioni">
+                    <!-- DINAMICAMENTE POPOLATO CON JS -->
+                </select>
+            </div>
+        
+            <div class="Modale-Result-content">
+                <!-- RISULTATI DINAMICI -->
+            </div>
+
+            <!-- QUESTA È LA CODA DEI FARMACI SELEZIONATI -->
+            <div class="table-content"></div>
+
+            <div class="Modal-result-button">
+                <button class="button" id="conferma-prescrizione-farmaci" type="button"> 
+                    <span class="button__icon-wrapper">
+
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg" width="14" height="14">
+                            <path d="M5 3H19L21 7V21H3V3H5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M17 21V14H7V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7 3V8H13V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg button__icon-svg--copy" width="14" height="14">
+                            <path d="M5 3H19L21 7V21H3V3H5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M17 21V14H7V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7 3V8H13V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>                            
+
+                    </span>
+
+                    Salva Prescrizioni
+              </button>            
+            </div>
+        </div>
+
+
+        <!-- SCRIPT SCORE -->
+        <script>
+            // Anima un singolo cerchio di progresso
+            function animateClock(clockId, percentageId, targetPercentage) {
+                const clock = document.getElementById(clockId);
+                const pctEl = document.getElementById(percentageId);
+                if (!clock || !pctEl) return;
+
+                const radius = clock.r.baseVal.value;
+                const circumference = 2 * Math.PI * radius;
+                const pct = Math.min(Math.max(targetPercentage, 0), 100);
+                const offset = ((100 - pct) / 100) * circumference;
+
+                // 1) imposta dasharray
+                clock.style.strokeDasharray = `${circumference} ${circumference}`;
+
+                // 2) disabilita la transizione per il "reset"
+                clock.style.transition = 'none';
+                clock.style.strokeDashoffset = circumference;
+
+                // 3) forza il reflow per essere sicuri che il reset sia applicato subito
+                clock.getBoundingClientRect();
+
+                // 4) con un tick riattiva la transizione e porta al valore corretto
+                setTimeout(() => {
+                    clock.style.transition = 'stroke-dashoffset 0.35s ease-in-out';
+                    clock.style.strokeDashoffset = offset;
+                }, 50);
+
+                // 5) aggiorna la percentuale testuale
+                pctEl.textContent = `${pct}%`;
+            }
+
+        
+            // Genera i grafici (invariato)
+        
+
+        
+            // Al caricamento della pagina, anima tutti i clock e genera i grafici
+            document.addEventListener("DOMContentLoaded", () => {
+            animateClock("heartClock",    "heartPercentage",    {{ score.Cuore }});
+            animateClock("kidneyClock",   "kidneyPercentage",   {{ score.Reni }});
+            animateClock("liverClock",    "liverPercentage",    {{ score.Fegato }});
+            animateClock("brainClock",    "brainPercentage",    {{ score.Cervello }});
+            animateClock("hormoneClock",  "hormonePercentage",  {{ score.Sistema_Ormonale }});
+            animateClock("bloodClock",    "bloodPercentage",    {{ score.Sangue }});
+            animateClock("immuneClock",   "immunePercentage",   {{ score.Sistema_Immunitario }});
+            animateClock("muscleClock",   "musclePercentage",   75);
+        
+                // Chart 1: Livello BP
+                generateChart(
+                document.getElementById("chart1").getContext("2d"),
+                [2, 4, 6],
+                "Insulina"
+                );
+
+                // Chart 2: Glicemia (ultime 3 visite: 110,95,140)
+                generateChart(
+                document.getElementById("chart2").getContext("2d"),
+                [110, 95, 140],
+                "Glicemia"
+                );
+
+                // Chart 3: Emoglobina (ultime 3 visite: 22,26,28)
+                generateChart(
+                document.getElementById("chart3").getContext("2d"),
+                [22, 26, 28],
+                "Emoglobina"
+                );
+
+                // Chart 4: Colesterolo (ultime 3 visite: 260,280,255)
+                generateChart(
+                document.getElementById("chart4").getContext("2d"),
+                [260, 280, 255],
+                "Colesterolo"
+                );
+            });
+        </script>
+
+        <!-- SCRIPT CAPACITA' VITALE -->
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const wave1 = "M0,40 C150,100 350,-20 500,60 L500,100 L0,100 Z";
+                const wave2 = "M0,60 C150,40 350,120 500,30 L500,100 L0,100 Z";
+            
+                document.querySelectorAll(".capacita_vitale").forEach(card => {
+                    // Ottieni il punteggio, oppure assegna 1 se mancante (10%)
+                    const punteggio = parseFloat(card.dataset.punteggio);
+                    const punteggioFinale = isNaN(punteggio) ? 1 : punteggio;
+            
+                    // Se il punteggio è maggiore di 10, è in base 100, altrimenti in base 10
+                    const percentuale = punteggioFinale > 10 
+                        ? Math.min(punteggioFinale, 100) 
+                        : Math.min((punteggioFinale / 10) * 100, 100);
+            
+                    const backdrop = card.querySelector(".backdrop-riempimento");
+                    const wavePath = card.querySelector(".wavePath");
+            
+                    if (!wavePath || !backdrop) return;
+            
+                    // Animazione ondina
+                    gsap.to(wavePath, {
+                        duration: 2,
+                        repeat: -1,
+                        yoyo: true,
+                        ease: "sine.inOut",
+                        attr: { d: wave2 }
+                    });
+            
+                    // Altezza riempimento
+                    gsap.to(backdrop, {
+                        duration: 1.8,
+                        height: `${percentuale}%`,
+                        ease: "power2.out"
+                    });
+                });
+            });
+        </script>
+
+        <!-- IMPORT JS PRE DOBY CLOSE TAG -->
+        <script src="{% static 'js/cartellaPaziente.js' %}" type="module"></script>
+        
+
+        <script>
+            window.PAZIENTE_ID = "{{ persona.id }}";
+        </script>
+
+        <!-- CDN import -->
+        <script src="https://cdn.jsdelivr.net/npm/docx@7.7.0/build/index.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.0.2/docx.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script>
+        // --- PRESCRIZIONE LIBERA MODALE LOGIC ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // JSON dati farmaci/categorie
+            const prescrizioniData = [
+                {
+                    categoria: "TERAPIA ORALE",
+                    farmaci: [
+                        { nome: "NMN capsule lisosomiali Purovitalis 125 mg", posologia: "Una capsula a colazione ed una a pranzo" },
+                        { nome: "Resveratrolo Yamamoto cps da 150 mg", posologia: "Una capsula al giorno" },
+                        { nome: "Advanced Omega D3 perle soft gels", posologia: "Una perla dopo pranzo e una perla dopo cena" }
+                    ]
+                },
+                {
+                    categoria: "TERAPIA ORALE",
+                    farmaci: [
+                        { nome: "NEVRIDOL 800 cpr", posologia: "Una compressa al giorno" },
+                        { nome: "MELAFLOR cps", posologia: "Una capsula due volte al giorno, preferibilmente a stomaco vuoto" },
+                        { nome: "CARDIOLIPID 10 cpr", posologia: "Una compressa al giorno" }
+                    ]
+                },
+                {
+                    categoria: "IV THERAPY",
+                    farmaci: [
+                        { nome: "L-acetilcarnitina 500 mg in fiale IV", posologia: "Somministrare in fisiologica 250 ml 2-3 volte a settimana per un totale di 10 somministrazioni" },
+                        { nome: "Fosfolipidi ipotalamici 28 mg fiale IV", posologia: "Somministrare in fisiologica 250 ml 2-3 volte a settimana per un totale di 10 somministrazioni" },
+                        { nome: "Glutatione 600 mg fiale IV", posologia: "Somministrare in fisiologica 100 ml 2-3 volte a settimana per un totale di 10 somministrazioni" },
+                        { nome: "Vitamina C1 1 g fiale IV", posologia: "Somministrare in fisiologica 100 ml 2-3 volte a settimana per un totale di 10 somministrazioni" }
+                    ]
+                }
+            ];
+
+            // Elementi
+            const openBtn = document.getElementById('openPrescrizioneLiberaBtn');
+            const closeBtn = document.getElementById('closePrescrizioneLiberaBtn');
+            const modal = document.getElementById('modalePrescrizioneLibera');
+            const backdrop = document.getElementById('backdropPrescrizioneLibera');
+            const btnManuale = document.getElementById('btnManuale');
+            const btnPrecompilata = document.getElementById('btnPrecompilata');
+            const selectPrecompilata = document.getElementById('selectPrecompilata');
+            const textarea = document.getElementById('textareaPrescrizioneLibera');
+
+            // Unifica tutte le categorie (senza duplicati)
+            const categorie = [...new Set(prescrizioniData.map(d => d.categoria))];
+
+            // Mappa categoria -> farmaci
+            const farmaciByCategoria = {};
+            prescrizioniData.forEach(d => {
+                if (!farmaciByCategoria[d.categoria]) farmaciByCategoria[d.categoria] = [];
+                farmaciByCategoria[d.categoria].push(...d.farmaci);
+            });
+
+            // --- Apertura modale ---
+            if (openBtn) openBtn.addEventListener('click', function() {
+                modal.style.display = 'block';
+                backdrop.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                // Default: manuale attivo
+                btnManuale.classList.add('active');
+                btnPrecompilata.classList.remove('active');
+                selectPrecompilata.style.display = 'none';
+                textarea.value = '';
+            });
+            // --- Chiusura modale ---
+            if (closeBtn) closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                backdrop.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            if (backdrop) backdrop.addEventListener('click', function() {
+                modal.style.display = 'none';
+                backdrop.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            // --- Bottoni Manuale/Precompilata ---
+            if (btnManuale) btnManuale.addEventListener('click', function() {
+                btnManuale.classList.add('active');
+                btnPrecompilata.classList.remove('active');
+                selectPrecompilata.style.display = 'none';
+                textarea.value = '';
+                // Nascondi e svuota la select dei farmaci se presente
+                let farmacoSelect = document.getElementById('farmacoSelectPrescrizioneLibera');
+                if (farmacoSelect) {
+                    farmacoSelect.style.display = 'none';
+                    farmacoSelect.innerHTML = '';
+                }
+            });
+            if (btnPrecompilata) btnPrecompilata.addEventListener('click', function() {
+                btnManuale.classList.remove('active');
+                btnPrecompilata.classList.add('active');
+                // Popola select con tutte le categorie (senza duplicati)
+                selectPrecompilata.innerHTML = '<option value="">-- Scegli categoria --</option>';
+                categorie.forEach(cat => {
+                    selectPrecompilata.innerHTML += `<option value="${cat}">${cat}</option>`;
+                });
+                selectPrecompilata.style.display = 'inline-block';
+                textarea.value = '';
+            });
+            // --- Cambio categoria nella select ---
+            if (selectPrecompilata) selectPrecompilata.addEventListener('change', function() {
+                const categoria = selectPrecompilata.value;
+                if (!categoria) {
+                    textarea.value = '';
+                    // Nascondi la select farmaci se presente
+                    let farmacoSelect = document.getElementById('farmacoSelectPrescrizioneLibera');
+                    if (farmacoSelect) {
+                        farmacoSelect.style.display = 'none';
+                        farmacoSelect.innerHTML = '';
+                    }
+                    return;
+                }
+                // Mostra una seconda select per i farmaci della categoria
+                let farmaci = farmaciByCategoria[categoria] || [];
+                if (farmaci.length === 0) {
+                    textarea.value = '';
+                    // Nascondi la select farmaci se presente
+                    let farmacoSelect = document.getElementById('farmacoSelectPrescrizioneLibera');
+                    if (farmacoSelect) {
+                        farmacoSelect.style.display = 'none';
+                        farmacoSelect.innerHTML = '';
+                    }
+                    return;
+                }
+                // Se c'è più di un farmaco, mostra una select temporanea
+                let farmacoSelect = document.getElementById('farmacoSelectPrescrizioneLibera');
+                if (!farmacoSelect) {
+                    farmacoSelect = document.createElement('select');
+                    farmacoSelect.id = 'farmacoSelectPrescrizioneLibera';
+                    farmacoSelect.style.marginLeft = '1rem';
+                    selectPrecompilata.parentNode.insertBefore(farmacoSelect, selectPrecompilata.nextSibling);
+                }
+                // Rendi la select a selezione singola
+                farmacoSelect.removeAttribute('multiple');
+                farmacoSelect.size = 1;
+                farmacoSelect.innerHTML = '<option value="">-- Scegli farmaco --</option>';
+                farmaci.forEach((f, idx) => {
+                    farmacoSelect.innerHTML += `<option value="${idx}">${f.nome}</option>`;
+                });
+                farmacoSelect.style.display = 'inline-block';
+                // Non azzerare la textarea qui!
+                farmacoSelect.onchange = function() {
+                    const idx = this.value;
+                    if (idx === '') {
+                        return;
+                    }
+                    const f = farmaci[idx];
+                    // Se la textarea è vuota, aggiungi solo il farmaco, altrimenti aggiungi una riga vuota prima
+                    if (textarea.value.trim() === '') {
+                        textarea.value = `${f.nome}\n${f.posologia}`;
+                    } else {
+                        textarea.value += `\n\n${f.nome}\n${f.posologia}`;
+                    }
+                    // Reimposta la select sul placeholder
+                    this.value = '';
+                };
+            });
+        });
+        </script>
+
+        <!-- Popup successo prescrizione libera -->
+        <div id="popup-success-prescrizione-libera" style="display:none; position:fixed; left:2rem; bottom:2rem; z-index:9999; background:#3bb77e; color:white; padding:1rem 2rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); font-size:1.1rem; font-weight:500;">
+          Prescrizione salvata con successo!
+        </div>
+
+        <!-- Bootstrap 5 CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- MODALE DINAMICA GENERICA -->
+        <div id="dynamicModal" class="custom-modal" style="display:none;">
+          <div class="custom-modal-content">
+            <span class="custom-modal-close" id="closeDynamicModal">&times;</span>
+            <h3 id="dynamicModalTitle"></h3>
+            <div id="dynamicModalBody"></div>
+          </div>
+        </div>
+
+        <div id="dynamicModalBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
+        
+
+        <div id="previewPrescrizioniModal" class="custom-modal" style="display:none;">
+        <div class="custom-modal-content" style="width:80%;max-width:900px;">
+            <span class="custom-modal-close" id="closePreviewPrescrizioni">&times;</span>
+            <h3>Anteprima Prescrizioni</h3>
+            <iframe id="previewPrescrizioniFrame" style="width:100%;height:500px;border:1px solid #ccc;"></iframe>
+            <div style="margin-top:1rem;display:flex;justify-content:flex-end;gap:1rem;">
+            <button id="downloadPrescrizioniPdf" class="button">📄 Scarica PDF</button>
+            <button id="confirmSavePrescrizioni" class="button">✅ Conferma Salvataggio</button>
+            </div>
+        </div>
+        </div>
+        <div id="previewPrescrizioniBackdrop" class="custom-modal-backdrop" style="display:none;"></div>
+
+
+        <!-- ====== MODALE DINAMICA + PDF (NOTE + VISITE) ====== -->
+        <script>
+            // Carica logo con fallback
+            async function loadLogoBytes() {
+                const paths = [
+                    "{% static 'includes/pdfTemplates/logo.png' %}",
+                    // eventuali altri path fallback (aggiungili qui se ti servono)
+                ];
+                for (const url of paths) {
+                    try {
+                        const res = await fetch(url, { cache: 'no-store' });
+                        if (res.ok) return await res.arrayBuffer();
+                    } catch (_) {}
+                }
+                return null;
+            }
+
+            // Wrapping testo (globale, riusabile)
+            function wrapTextToLines(text, font, size, maxWidth) {
+                const words = String(text || '').split(/\s+/);
+                const lines = [];
+                let line = '';
+                for (const w of words) {
+                    const test = line ? line + ' ' + w : w;
+                    const width = font.widthOfTextAtSize(test, size);
+                    if (width > maxWidth && line) {
+                        lines.push(line);
+                        line = w;
+                    } else {
+                        line = test;
+                    }
+                }
+                if (line) lines.push(line);
+                return lines;
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const modal     = document.getElementById('dynamicModal');
+                const backdrop  = document.getElementById('dynamicModalBackdrop');
+                const titleEl   = document.getElementById('dynamicModalTitle');
+                const bodyEl    = document.getElementById('dynamicModalBody');
+                const closeEl   = document.getElementById('closeDynamicModal');
+
+                const { PDFDocument, StandardFonts, rgb } = window.PDFLib || {};
+
+                const escapeHtml = (str = '') =>
+                    String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+                function closeDynamic() {
+                    modal.style.display = 'none';
+                    backdrop.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    bodyEl.innerHTML = ''; 
+                }
+
+                if (closeEl) closeEl.addEventListener('click', closeDynamic);
+                if (backdrop) backdrop.addEventListener('click', closeDynamic);
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && modal.style.display !== 'none') closeDynamic();
+                });
+
+                // Modale riusabile per Nota e Visita
+                function openDynamicModal(title, text, { isNota = false, isVisita = false, visitaData = '', visitaNumero = '' } = {}) {
+                    titleEl.textContent = title || (isVisita ? 'Visita' : 'Nota');
+                    bodyEl.innerHTML = `<div style="white-space:pre-wrap; line-height:1.5">${escapeHtml(text || '')}</div>`;
+
+                    if (isNota || isVisita) {
+                        const footer = document.createElement('div');
+                        footer.id = 'dynamicModalFooter';
+                        footer.style = 'display:flex;justify-content:flex-end;gap:10px;margin-top:1rem;';
+                        const btn = document.createElement('button');
+                        btn.id = isVisita ? 'printVisitBtn' : 'printNoteBtn';
+                        btn.className = 'button';
+                        btn.textContent = 'Scarica PDF';
+                        btn.addEventListener('click', () => {
+                            if (isVisita) {
+                                generateVisitPdf({
+                                    titolo: title,
+                                    contenuto: text,
+                                    dataVisita: visitaData,
+                                    numeroVisita: visitaNumero
+                                });
+                            } else {
+                                generateNotePdf({ titolo: title, contenuto: text });
+                            }
+                        });
+                        footer.appendChild(btn);
+                        bodyEl.appendChild(footer);
+                    }
+
+                    modal.style.display = 'flex';
+                    backdrop.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                }
+
+                // ====== PDF NOTE ======
+                async function generateNotePdf({ titolo = 'Prescrizione', contenuto = '' } = {}) {
+                    if (!PDFDocument) return;
+
+                    const pdf  = await PDFDocument.create();
+                    const page = pdf.addPage([595.28, 841.89]); // A4
+                    const { width, height } = page.getSize();
+
+                    const font     = await pdf.embedFont(StandardFonts.Helvetica);
+                    const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+                    const black = rgb(0,0,0);
+                    const grey  = rgb(0.75,0.75,0.75);
+
+                    // LOGO grande e centrato
+                    try {
+                        const logoBytes = await loadLogoBytes();
+                        if (logoBytes) {
+                            const png  = await pdf.embedPng(logoBytes);
+                            const imgW = 220;
+                            const imgH = png.height * (imgW / png.width);
+                            page.drawImage(png, {
+                                x: (width - imgW) / 2,
+                                y: height - 130,
+                                width: imgW,
+                                height: imgH
+                            });
+                        }
+                    } catch (_) {}
+
+                    // helper centratura
+                    const drawCentered = (txt, y, fnt = font, size = 12, color = black) => {
+                        const w = fnt.widthOfTextAtSize(txt, size);
+                        const x = (width - w) / 2;
+                        page.drawText(txt, { x, y, size, font: fnt, color });
+                    };
+
+                    // Dati paziente centrati
+                    let y = height - 165;
+                    const lineH = 16;
+                    const size = 12;
+
+                    const paziente = window.PAZIENTE || '';
+                    const cf       = window.CF_PAZIENTE || '';
+                    const dob      = window.DOB_PAZIENTE || '';
+                    const docName  = window.DOTTORE || '';
+
+                    drawCentered(`Paziente: ${paziente}`, y, font, size); y -= lineH;
+                    drawCentered(`Codice Fiscale Paziente: ${cf}`, y, font, size); y -= lineH;
+                    drawCentered(`Data di Nascita Paziente: ${dob}`, y, font, size); y -= lineH;
+
+                    const now = new Date();
+                    const dd = String(now.getDate()).padStart(2, '0');
+                    const mm = String(now.getMonth() + 1).padStart(2, '0');
+                    const yyyy = now.getFullYear();
+                    drawCentered(`Data: ${dd}/${mm}/${yyyy}`, y, font, size);
+                    y -= 48; // spazio extra come richiesto
+
+                    // Box contenuto
+                    const margin = 40;
+                    const boxTopY = y;
+                    const boxHeight = 360;
+                    const boxY = boxTopY - boxHeight;
+
+                    page.drawRectangle({
+                        x: margin, y: boxY, width: width - margin * 2, height: boxHeight,
+                        borderColor: grey, borderWidth: 1, color: rgb(1,1,1)
+                    });
+
+                    const textX = margin + 12;
+                    let textY   = boxTopY - 18;
+                    const maxW  = width - (margin + 12) * 2;
+                    const fullText = `${titolo ? titolo + '\n' : ''}${contenuto || ''}`;
+                    const lines = wrapTextToLines(fullText, font, 12, maxW);
+
+                    for (const line of lines) {
+                        if (textY < boxY + 18) break; 
+                        page.drawText(line, { x: textX, y: textY, size: 12, font });
+                        textY -= lineH;
+                    }
+
+                    // Firma (solo testo a destra)
+                    const sigY = 90;
+                    page.drawText(`Firma: dott. ${docName}`, { x: width - 240, y: sigY + 30, size: 12, font: fontBold });
+
+                    // Download
+                    const bytes = await pdf.save();
+                    const blob  = new Blob([bytes], { type: 'application/pdf' });
+                    const a     = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `Prescrizione_${(paziente || 'paziente').replace(/\s+/g, '_')}_${yyyy}-${mm}-${dd}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+                }
+
+                // ====== PDF VISITE ======
+                async function generateVisitPdf({ titolo = 'Visita', contenuto = '', dataVisita = '', numeroVisita = '' } = {}) {
+                    if (!PDFDocument) return;
+
+                    const pdf  = await PDFDocument.create();
+                    const page = pdf.addPage([595.28, 841.89]); // A4
+                    const { width, height } = page.getSize();
+
+                    const font     = await pdf.embedFont(StandardFonts.Helvetica);
+                    const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+                    const black = rgb(0,0,0);
+                    const grey  = rgb(0.75,0.75,0.75);
+
+                    // LOGO
+                    try {
+                        const logoBytes = await loadLogoBytes();
+                        if (logoBytes) {
+                            const png  = await pdf.embedPng(logoBytes);
+                            const imgW = 220;
+                            const imgH = png.height * (imgW / png.width);
+                            page.drawImage(png, {
+                                x: (width - imgW) / 2,
+                                y: height - 130,
+                                width: imgW,
+                                height: imgH
+                            });
+                        }
+                    } catch (_) {}
+
+                    // helper centratura
+                    const drawCentered = (txt, y, fnt = font, size = 12, color = black) => {
+                        const w = fnt.widthOfTextAtSize(txt, size);
+                        const x = (width - w) / 2;
+                        page.drawText(txt, { x, y, size, font: fnt, color });
+                    };
+
+                    // Dati paziente centrati
+                    let y = height - 165;
+                    const lineH = 16;
+                    const size = 12;
+
+                    const paziente = window.PAZIENTE || '';
+                    const cf       = window.CF_PAZIENTE || '';
+                    const dob      = window.DOB_PAZIENTE || '';
+                    const docName  = window.DOTTORE || '';
+
+                    drawCentered(`Paziente: ${paziente}`, y, font, size); y -= lineH;
+                    drawCentered(`Codice Fiscale Paziente: ${cf}`, y, font, size); y -= lineH;
+                    drawCentered(`Data di Nascita Paziente: ${dob}`, y, font, size); y -= lineH;
+
+                    const now = new Date();
+                    const dd = String(now.getDate()).padStart(2, '0');
+                    const mm = String(now.getMonth() + 1).padStart(2, '0');
+                    const yyyy = now.getFullYear();
+                    drawCentered(`Data: ${dd}/${mm}/${yyyy}`, y, font, size);
+                    y -= 48; // spazio extra
+
+                    // Box contenuto + intestazione visita
+                    const margin   = 40;
+                    const boxTopY  = y;
+                    const boxH     = 360;
+                    const boxY     = boxTopY - boxH;
+
+                    page.drawRectangle({
+                        x: margin, y: boxY, width: width - margin * 2, height: boxH,
+                        borderColor: grey, borderWidth: 1, color: rgb(1,1,1)
+                    });
+
+                    const textX = margin + 12;
+                    let textY   = boxTopY - 18;
+                    const maxW  = width - (margin + 12) * 2;
+
+                    const header = `Visita${numeroVisita ? ' n° ' + numeroVisita : ''}${dataVisita ? ' — Data visita: ' + dataVisita : ''}`;
+                    page.drawText(header, { x: textX, y: textY, size: 12, font: fontBold, color: black });
+                    textY -= lineH;
+
+                    const lines = wrapTextToLines(`${titolo ? titolo + '\n' : ''}${contenuto || ''}`, font, 12, maxW);
+                    for (const line of lines) {
+                        if (textY < boxY + 18) break;
+                        page.drawText(line, { x: textX, y: textY, size: 12, font });
+                        textY -= lineH;
+                    }
+
+                    // Firma
+                    const sigY = 90;
+                    page.drawText(`Firma: dott. ${docName}`, { x: width - 240, y: sigY + 30, size: 12, font: fontBold });
+
+                    // Download
+                    const bytes = await pdf.save();
+                    const blob  = new Blob([bytes], { type: 'application/pdf' });
+                    const a     = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    const safeP = (paziente || 'paziente').replace(/\s+/g, '_');
+                    a.download = `Visita_${safeP}_${yyyy}-${mm}-${dd}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+                }
+
+                // ====== EVENTI: apri modale per NOTE ======
+                document.addEventListener('click', (e) => {
+                    const item = e.target.closest('.note-item');
+                    if (!item) return;
+                    const titolo    = item.dataset.titolo || 'Nota';
+                    const contenuto = item.dataset.contenuto || '';
+                    openDynamicModal(titolo, contenuto, { isNota: true });
+                });
+
+                // ====== EVENTI: apri modale per NOTE dal Diario (tipo = nota) ======
+                document.addEventListener('click', (e) => {
+                    const row = e.target.closest('.diario-clinico-row');
+                    if (!row) return;
+                    const type = (row.dataset.type || '').toLowerCase();
+                    if (type !== 'nota') return;
+                    const titolo    = row.dataset.descrizione || 'Nota';
+                    const contenuto = row.dataset.nota || '';
+                    openDynamicModal(titolo, contenuto, { isNota: true });
+                });
+
+                // ====== EVENTI: apri modale per VISITE (tab Visite + Diario se tipo=visita) ======
+                document.addEventListener('click', (e) => {
+                    const row = e.target.closest('.row-table[data-type="visita"], .diario-clinico-row[data-type="visita"]');
+                    if (!row) return;
+
+                    // 1) data-attrs se presenti
+                    let dataVisita   = row.dataset.data || '';
+                    let numeroVisita = row.dataset.numero || '';
+                    let descrizione  = row.dataset.descrizione || '';
+
+                    // 2) fallback: leggi dalle celle
+                    if (!dataVisita) {
+                        const c1 = row.querySelector('.row-cella:nth-child(1) p');
+                        dataVisita = c1 ? c1.textContent.trim() : '';
+                    }
+                    if (!numeroVisita) {
+                        const c2 = row.querySelector('.row-cella:nth-child(2) p');
+                        const t2 = c2 ? c2.textContent.trim() : '';
+                        const m  = t2.match(/\d+/);
+                        numeroVisita = m ? m[0] : '';
+                    }
+                    if (!descrizione) {
+                        const c3 = row.querySelector('.row-cella:nth-child(3) p');
+                        descrizione = c3 ? c3.textContent.trim() : '';
+                    }
+
+                    const titolo = numeroVisita ? `Visita n° ${numeroVisita}` : 'Visita';
+                    const testo  = descrizione || '(nessuna descrizione)';
+
+                    openDynamicModal(titolo, testo, { isVisita: true, visitaData: dataVisita, visitaNumero: numeroVisita });
+                });
+            });
+        </script>
+
+
+          <script>
+                // Gestione chiusura modale con la X
+                document.addEventListener('DOMContentLoaded', function() {
+                    var closeX = document.getElementById('close-problemi-x');
+                    var modaleProblemi = document.getElementById('modale_problemi');
+                    var backdropProblemi = document.getElementById('backdropModaleProblemi');
+                    if (closeX) {
+                        closeX.addEventListener('click', function() {
+                            if (modaleProblemi) modaleProblemi.style.display = 'none';
+                            if (backdropProblemi) backdropProblemi.style.display = 'none';
+                            document.body.style.overflow = 'auto';
+                        });
+                    }
+                });
+            </script>
+
+            <script>
+                // Mostra la sezione problemi solo dopo selezione diagnosi o inserimento nuova
+                document.addEventListener('DOMContentLoaded', function() {
+                    var diagnosiSelect = document.getElementById('diagnosi_select');
+                    var problemiStep = document.getElementById('problemi_step');
+                    var nuovaDiagnosiForm = document.getElementById('nuova_diagnosi_form');
+                    if (diagnosiSelect) {
+                        diagnosiSelect.addEventListener('change', function() {
+                            if (this.value === "__new__") {
+                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = '';
+                                if (problemiStep) problemiStep.style.display = '';
+                            } else if (this.value) {
+                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+                                if (problemiStep) problemiStep.style.display = '';
+                            } else {
+                                if (nuovaDiagnosiForm) nuovaDiagnosiForm.style.display = 'none';
+                                if (problemiStep) problemiStep.style.display = 'none';
+                            }
+                        });
+                    }
+                    // Opzionale: inserisci descrizione ICD10 nella textarea al cambio select
+                    var icd10Select = document.getElementById('icd10_select');
+                    var textAreaProblemi = document.getElementById('text_area_problemi');
+                    if (icd10Select && textAreaProblemi) {
+                        icd10Select.addEventListener('change', function() {
+                            var selected = this.options[this.selectedIndex];
+                            if (selected && selected.value) {
+                                textAreaProblemi.value = selected.value + " - " + selected.text.replace(selected.value + " - ", "");
+                            }
+                        });
+                    }
+                });
+            </script>
+
+            <script>
+                document.querySelectorAll('.container-header-diario .button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                    const target = btn.dataset.target; 
+                    document.querySelectorAll('.container-content').forEach(c => c.style.display = 'none');
+                    const el = document.querySelector(target);
+                    if (el) el.style.display = 'block';
+                    btn.parentElement.querySelectorAll('.button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    });
+                });
+            </script>
+
+
+    </body>
+</html>

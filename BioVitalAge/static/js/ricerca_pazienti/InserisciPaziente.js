@@ -151,7 +151,6 @@ $(document).ready(function () {
     const gender = $("#gender").val();
     stepIds = [
       "personal",
-      "professione",
       ...(gender === "F" ? ["donna"] : []),
       "anamnesi",
       "anamnesi2",
