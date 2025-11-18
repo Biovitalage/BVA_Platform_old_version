@@ -50,7 +50,9 @@
 .side-navbar a:hover{
     background-color: var(--contrast-color);
 }
-
+.main-menu-trace{
+  justify-content: flex-start!important;
+}
 
 
 
