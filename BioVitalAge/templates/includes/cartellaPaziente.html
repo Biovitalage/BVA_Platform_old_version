@@ -50,6 +50,14 @@
     <!-- NAVBAR -->
     {% include 'components/navBar.html' %}
 
+    {% include 'dynamic_templates/cartella_paziente/modale_salute_cuore.html' %}
+    {% include 'dynamic_templates/cartella_paziente/modale_salute_del_rene.html' %}
+    {% include 'dynamic_templates/cartella_paziente/modale_salute_epatica.html' %}
+    {% include 'dynamic_templates/cartella_paziente/modale_salute_cerebrale.html' %}
+    {% include 'dynamic_templates/cartella_paziente/modale_salute_ormonale.html' %}
+    {% include 'dynamic_templates/cartella_paziente/modale_salute_del_sangue.html' %}
+    {% include 'dynamic_templates/cartella_paziente/modale_salute_del_sistema_immunitario.html' %}
+
     <div class="tools-menu">
         <div class="main-menu-trace">
             <a href="{% url 'HomePage' %}"><img src="{% static 'image/home.png' %}" alt="Home" /></a>
@@ -231,7 +239,7 @@
         </div>
 
         <div class="container-card-score capacita_vitale"
-            data-punteggio="{{ referti_test_recenti.eta_biologica|default:'-1' }}" onclick="window.location.href='{% url "Calcolatore" persona.id %}'" style="cursor: pointer;">
+            data-punteggio="{{ referti_test_recenti.eta_biologica|default:'-1' }}" onclick="window.location.href='{% url "eta_biologica" persona.id %}'" style="cursor: pointer;">
             <div class="backdrop-riempimento" aria-hidden="true">
                 <svg class="ondina" viewBox="0 0 500 100" preserveAspectRatio="none">
                     <path class="wavePath"
@@ -398,14 +406,14 @@
             <img src="{% static 'image/prescrizioni.png' %}" alt="">
             <div class="content-card-azione">
                 <h3>Prescrizioni</h3>
-                <a href="#" id="openPrescrizioneLiberaBtn">Vai alla Sezione 🠖</a>
+                <a href="{% url 'prescrizioni' persona.id %}">Vai alla Sezione 🠖</a>
             </div>
         </div>
         <div class="card-card-azioni">
             <img src="{% static 'image/terapia.png' %}" alt="">
             <div class="content-card-azione">
                 <h3>Terapie IV</h3>
-                <a href="">Vai alla Sezione 🠖</a>
+                <a href="{% url 'piano_terapeutico' persona.id %}">Vai alla Sezione 🠖</a>
             </div>
         </div>
     </div>
@@ -467,17 +475,17 @@
         </div>
         {% endfor %}
 
-        {% if visite_page.paginator.num_pages > 1 %}
-        <div class="add-cella">
-            {% if visite_page.has_previous %}
-            <a class="page-link" href="?visite_page={{ visite_page.previous_page_number }}">«</a>
+            {% if visite_page.paginator.num_pages > 1 %}
+            <div class="add-cella">
+                {% if visite_page.has_previous %}
+                <a class="page-link" href="?visite_page={{ visite_page.previous_page_number }}">«</a>
+                {% endif %}
+                <span class="page-current">{{ visite_page.number }} / {{ visite_page.paginator.num_pages }}</span>
+                {% if visite_page.has_next %}
+                <a class="page-link" href="?visite_page={{ visite_page.next_page_number }}">»</a>
+                {% endif %}
+            </div>
             {% endif %}
-            <span class="page-current">{{ visite_page.number }} / {{ visite_page.paginator.num_pages }}</span>
-            {% if visite_page.has_next %}
-            <a class="page-link" href="?visite_page={{ visite_page.next_page_number }}">»</a>
-            {% endif %}
-        </div>
-        {% endif %}
         {% endif %}
     </template>
 
@@ -1285,6 +1293,85 @@
                 });
             }
         });
+    </script>
+
+    <!-- SCRIPT SCORE -->
+    <script>
+            // Anima un singolo cerchio di progresso
+            function animateClock(clockId, percentageId, targetPercentage) {
+                const clock = document.getElementById(clockId);
+                const pctEl = document.getElementById(percentageId);
+                if (!clock || !pctEl) return;
+
+                const radius = clock.r.baseVal.value;
+                const circumference = 2 * Math.PI * radius;
+                const pct = Math.min(Math.max(targetPercentage, 0), 100);
+                const offset = ((100 - pct) / 100) * circumference;
+
+                // 1) imposta dasharray
+                clock.style.strokeDasharray = `${circumference} ${circumference}`;
+
+                // 2) disabilita la transizione per il "reset"
+                clock.style.transition = 'none';
+                clock.style.strokeDashoffset = circumference;
+
+                // 3) forza il reflow per essere sicuri che il reset sia applicato subito
+                clock.getBoundingClientRect();
+
+                // 4) con un tick riattiva la transizione e porta al valore corretto
+                setTimeout(() => {
+                    clock.style.transition = 'stroke-dashoffset 0.35s ease-in-out';
+                    clock.style.strokeDashoffset = offset;
+                }, 50);
+
+                // 5) aggiorna la percentuale testuale
+                pctEl.textContent = `${pct}%`;
+            }
+
+        
+            // Genera i grafici (invariato)
+        
+
+        
+            // Al caricamento della pagina, anima tutti i clock e genera i grafici
+            document.addEventListener("DOMContentLoaded", () => {
+            animateClock("heartClock",    "heartPercentage",    {{ score.Cuore }});
+            animateClock("kidneyClock",   "kidneyPercentage",   {{ score.Reni }});
+            animateClock("liverClock",    "liverPercentage",    {{ score.Fegato }});
+            animateClock("brainClock",    "brainPercentage",    {{ score.Cervello }});
+            animateClock("hormoneClock",  "hormonePercentage",  {{ score.Sistema_Ormonale }});
+            animateClock("bloodClock",    "bloodPercentage",    {{ score.Sangue }});
+            animateClock("immuneClock",   "immunePercentage",   {{ score.Sistema_Immunitario }});
+            animateClock("muscleClock",   "musclePercentage",   75);
+        
+                // Chart 1: Livello BP
+                generateChart(
+                document.getElementById("chart1").getContext("2d"),
+                [2, 4, 6],
+                "Insulina"
+                );
+
+                // Chart 2: Glicemia (ultime 3 visite: 110,95,140)
+                generateChart(
+                document.getElementById("chart2").getContext("2d"),
+                [110, 95, 140],
+                "Glicemia"
+                );
+
+                // Chart 3: Emoglobina (ultime 3 visite: 22,26,28)
+                generateChart(
+                document.getElementById("chart3").getContext("2d"),
+                [22, 26, 28],
+                "Emoglobina"
+                );
+
+                // Chart 4: Colesterolo (ultime 3 visite: 260,280,255)
+                generateChart(
+                document.getElementById("chart4").getContext("2d"),
+                [260, 280, 255],
+                "Colesterolo"
+                );
+            });
     </script>
 
     <script src="{% static 'js/cartellaP.js' %}"></script>

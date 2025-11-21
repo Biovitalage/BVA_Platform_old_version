@@ -309,10 +309,8 @@
     background-color: var(--contrast-color)!important;
     color: white!important;
 }
-
-
 .table-diario{
-    height: 400px;
+    height: 440px;
     box-shadow: 0 0 8px 2px rgba(0,0,0,0.08);
     background-color: white;
     border-radius: 4px 0px 4px 4px;
@@ -338,22 +336,57 @@
 }
 .cella{
     border: 1px solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 .cella p{
-    padding: 10px 20px;
     color: black;
     font-weight: lighter;
+    padding: 0;
+    margin: 0;
 }
+
+.cella button{
+  border: none;
+  background: none;
+  color: var(--contrast-color);
+  cursor: pointer;
+}
+.cella button img{
+  width: 40px;
+  height: 40px;
+}
+
 .add-cella{
     width: 100%;
     padding: 10px 20px;
     border-bottom: 1px solid #ddd;
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    gap: 10px;
 }
-.add-cella:hover{
-    background-color: var(--neutral-bg-color);
-    cursor: pointer;
+.page-link{
+  padding: 5px 10px!important;
+  background-color: var(--contrast-color-shadow)!important;
+  color: var(--dark1)!important;
+  border-radius: 8px;
 }
+.page-current{
+  padding: 5px 10px;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -529,5 +562,163 @@
   text-decoration: none;
 }
 .content-card-azione a:hover{
-  color: var(--contrast-color-shadow);
+  color: var(--dark1);
 }
+
+
+
+
+/* MODALE INDICI STYLE */
+.modale-indici{
+  background-color: var(--card-color);
+  border-radius: 8px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 850px;
+  height: 600px;
+  z-index: 9999;
+  padding: 20px;
+  overflow: auto;
+  display: none;
+}
+.backdrop-indici{
+  background-color: rgba(0,0,0,0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9998;
+  display: none;
+}
+.modale-indici h3{
+  color: var(--contrast-color);
+}
+.modale-indici h5{
+  color: var(--dark1);
+  background-color: var(--contrast-color-shadow);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 18px;
+  width: 13rem;
+}
+.sub-sub-title{
+  font-weight: bold;
+  color: var(--dark1);
+}
+.modale-indici .title-container{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 10px;
+}
+.container-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#closeModale{
+  background-color: white;
+  border-radius: 8px;
+  border: none;
+  padding: 5px 10px;
+  margin-top: -1rem;
+  margin-right: 0.5rem;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+#closeModale:hover{
+  transform: scale(1.1);
+}
+.modale-indici .title-container img{
+  width: 30px;
+  height: 30px;
+  margin-top: -0.5rem;
+}
+.content-container-modale-indici{
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  width: 98%;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.content-container-modale-indici .subtitle{
+  background-color: var(--contrast-color-shadow);
+  border-radius: 8px;
+  padding: 5px 10px;
+  width: 20%;
+  text-align: center;
+}
+.celle-indici{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.arrow {
+  display: inline-block;
+  position: relative;
+}
+.arrow.upper::before{
+    content: '↑';
+    left: 0;
+    font-size: 18px;
+    font-weight: bold;
+    margin-right: 20px;
+    top: 0;
+    color: var(--positive-color);
+}
+.arrow.down::before{
+    content: '↓';
+    font-size: 18px;
+    font-weight: bold;
+    margin-right: 20px;
+    left: 0;
+    top: 0;
+    color: var(--negative-color-right);
+}
+.grid-container-indici{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.body--no-scroll {
+  overflow: hidden;
+  padding-right: calc(var(--scrollbar-width, 0px));
+}
+.container-clock.cardIndici{
+  cursor: pointer;
+  height: 280px;
+}
+
+/* Style scrollbar modale indici */
+.modale-indici {
+  scrollbar-width: thin;
+  scrollbar-color: #ddd #eeeeee;
+  scrollbar-gutter: stable; 
+}
+.modale-indici::-webkit-scrollbar {
+  width: 10px;               
+  height: 8px;            
+}
+.modale-indici::-webkit-scrollbar-track {
+  background: #eeeeee;    
+  border-radius: 4px;
+}
+.modale-indici::-webkit-scrollbar-thumb {
+  background-color: #888888;
+  border-radius: 4px;      
+  border: 2px solid #eeeeee;
+}
+.modale-indici::-webkit-scrollbar-thumb:hover {
+  background-color: #555555;
+}
+
+
+
