@@ -174,3 +174,66 @@ document.addEventListener("DOMContentLoaded", function () {
   if (closeBtn) closeBtn.addEventListener("click", closeModal);
   if (backdrop) backdrop.addEventListener("click", closeModal);
 });
+
+
+
+
+/*----------------------------------------------------
+  GESTION PULSANTE AGGIORNA / SALVA DATI PAZIENTE
+-----------------------------------------------------*/
+
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('form-dati-paziente');
+    if (!form) {
+        console.warn('form-dati-paziente non trovato');
+        return;
+    }
+
+    const btnEdit = document.getElementById('btn-edit-dati');
+    const imgEdit = document.getElementById('img-edit-dati');
+
+    if (!btnEdit || !imgEdit) {
+        console.warn('btn-edit-dati o img-edit-dati non trovati');
+        return;
+    }
+
+    const inputs = form.querySelectorAll('[data-editable="true"]');
+
+    const editIconUrl = btnEdit.dataset.editIcon || imgEdit.getAttribute('src');
+    const saveIconUrl = btnEdit.dataset.saveIcon || editIconUrl;
+
+    let isEditing = false;
+
+    btnEdit.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        // console.log per vedere che il click arriva
+        console.log('Click su btn-edit-dati, isEditing =', isEditing);
+
+        if (!isEditing) {
+            // ENTRA IN MODIFICA
+            isEditing = true;
+            imgEdit.setAttribute('src', saveIconUrl);
+            btnEdit.setAttribute('title', 'Salva dati paziente');
+
+            inputs.forEach(function (input) {
+                input.disabled = false;
+                input.classList.remove('input-disabled');
+                input.classList.add('input-enabled');
+            });
+
+        } else {
+            // SALVA: invio form con action dedicata
+            let actionInput = form.querySelector('input[name="action"]');
+            if (!actionInput) {
+                actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                form.appendChild(actionInput);
+            }
+            actionInput.value = 'update_dati_paziente';
+
+            form.submit();
+        }
+    });
+});

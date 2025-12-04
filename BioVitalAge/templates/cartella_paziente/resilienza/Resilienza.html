@@ -1,216 +1,324 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Resilienza — BioVitalAge</title>
+<html lang="en">
 
-  <!-- Css Import -->
-  <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
-  <link rel="stylesheet" href="{% static 'css/cartellaPaziente.css' %}">
-  <link rel="stylesheet" href="{% static 'css/homePage.css' %}">
-  <link rel="stylesheet" href="{% static 'css/cartella_paziente/orologi.css' %}">
-  <link rel="stylesheet" href="{% static 'css/cartella_paziente/eta_biologica/calcolatore.css' %}">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="{{ csrf_token }}">
+        <!-- Favicon -->
+        <link rel="sortcut icon" href='{% static "image/Favicon.png" %}' type="image/x-icon">
 
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <title>BVA - Resilienza</title>
 
-  <!-- Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+        <!-- Css Import -->
+        <link rel="stylesheet" href="{% static 'css/Componenti.css' %}">
+        <link rel="stylesheet" href="{% static 'css/cartella_paziente/resilienza/Resilienza.css' %}">
+        <link rel="stylesheet" href="{% static 'css/homePage.css' %}">
 
-  <!-- CDN -->
-  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+        <!-- Bootstrap import -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- JS -->
-  <script src="{% static 'js/cartella_paziente/orologi.js' %}" type="module" defer></script>
-  <script src="{% static 'js/cartellaPaziente.js' %}" defer type="module" data-user="{{user.id}}" data-paziente="{{persona.name}}"></script>
+        <!-- Font Import  -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    
+    </head>
 
-  <script>
-    window.DOTTORE = "{{ dottore.nome }} {{ dottore.cognome }}";
-    window.PAZIENTE = "{{ persona.name }} {{ persona.surname }}";
-    window.DOB_PAZIENTE = "{{ persona.dob|date:'d/m/Y' }}";
-    window.CF_PAZIENTE = "{{ persona.codice_fiscale }}";
-  </script>
-</head>
-<body>
-  {% include 'components/loader.html' %}
-  {% include 'components/navBar.html' %}
 
-  <main>
-    <div class="main-title-nav">
-      <div class="back-tittle">
-        <a id="back" href="{% url 'cartella_paziente' persona.id %}">
-          <img src="{% static 'image/Arrow_Back.png' %}" alt="Indietro">
-        </a>
-        <h2 class="main-welcome-title">
-          <span>{{ persona.surname|title }}</span>
-          <span>{{ persona.name|title }}</span> |
-          <span>Età: {{ persona.chronological_age }}</span>
-        </h2>
-      </div>
-      <div class="main-menu-trace">
-        <a href="{% url 'HomePage' %}"><img src="{% static 'image/home.png' %}" alt="Home" /></a>
-        <p>»</p>
-        <p><a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a></p>
-        <p>»</p>
-        <p class="breadcrumb">Resilienza</p>
-      </div>
-    </div>
+    <body>
+        <!-- Loader -->
+        {% include 'components/loader.html' %}
 
-    {% if messages %}
-      {% for message in messages %}
-        <div class="flash {{ message.tags }}" id="flash-{{ forloop.counter }}">
-          <p>{{ message }}</p>
-          <div class="progressBarContainer">
-            <div class="progressBar" id="progress-{{ forloop.counter }}"></div>
+        <!-- NAVBAR -->
+        {% include 'components/navBarPatient.html' %}
+
+        <!-- MODALE MISURAZIONE -->
+        <div class="backdrop-modale" id="backdrop"></div>
+
+        <div class="modale-misurazione" id="modale">
+            <div class="header-modale">
+                <h3>Misurazione Resilienza</h3>
+                <button id="close-btn">X</button>
+            </div>
+
+            <form id="resilienza-form" method="post" action="{% url 'resilienza' persona.id %}">
+                {% csrf_token %}
+
+                <!-- Barra protocollo -->
+                <div class="toolbar-protocollo">
+                  <div class="protocollo-div">
+                    <label for="protocollo-select"><strong>Protocollo</strong></label>
+                    <select id="protocollo-select" name="protocollo" required>
+                        <option value="">— Seleziona —</option>
+                        <option value="30m">30 m</option>
+                        <option value="60m">60 m</option>
+                        <option value="24h">24 h</option>
+                    </select>
+                  </div>
+
+                
+                  <div id="test-picker">
+                      <span style="opacity:.8;">Mostra card:</span>
+                      <div><input type="checkbox" class="test-check" name="selected_tests" value="hrv"> HRV</div>
+                      <div><input type="checkbox" class="test-check" name="selected_tests" value="bp"> Pressione arteriosa</div>
+                      <div><input type="checkbox" class="test-check" name="selected_tests" value="holter"> Holter/Stabilità</div>
+                      <small id="test-picker-hint" style="margin-left:8px;opacity:.75;">(min 1)</small>
+                  </div>
+                </div>
+
+                <!-- Messaggio iniziale -->
+                <div id="placeholder-msg">
+                  <p style="margin:0;text-align:center;">Nessun protocollo selezionato</p>
+                </div>
+
+                
+                <div id="resilienza-kpi" style="display:none;">
+                  <div id="kpi-overall" data-overall=""></div>
+                </div>
+                
+
+                <!-- CARDS -->
+                <div id="cards-container" style="display:none;gap:18px;">
+
+                <!-- HRV -->
+                  <section id="card-hrv" data-card="hrv" style="display:none;">
+                      <h4>HRV</h4>
+                      <div class="grid">
+                      <label>rMSSD (ms) <input type="number" name="hrv_rmssd" value=""></label>
+                      <label>SDNN (ms) <input type="number" name="hrv_sdnn" value=""></label>
+                      <label>pNN50 (%) <input type="number" name="hrv_pnn50" value=""></label>
+                      <label>LF power <input type="number" name="hrv_lf_power" value=""></label>
+                      <label>HF power <input type="number" name="hrv_hf_power" value=""></label>
+                      <label>LF/HF (override) <input type="number" step="0.01" name="hrv_lf_hf" value=""></label>
+                      </div>
+                  </section>
+
+                  <!-- Pressione arteriosa -->
+                  <section id="card-bp" data-card="bp" style="display:none;">
+                      <h4>Pressione arteriosa</h4>
+                      <div class="grid">
+                      <label>SBP media (mmHg) <input type="number" name="bp_sbp_mean" value=""></label>
+                      <label>DBP media (mmHg) <input type="number" name="bp_dbp_mean" value=""></label>
+                      <label>Pulse Pressure (calc) <input type="number" name="bp_pp_calc" value=""></label>
+                      <label>SD SBP (mmHg) <input type="number" name="bp_sd_sbp" value=""></label>
+                      <label>SD DBP (mmHg) <input type="number" name="bp_sd_dbp" value=""></label>
+                      <label>Morning surge (mmHg) <input type="number" name="bp_morning_surge" value=""></label>
+                      <label>Dipping notturno (%) <input type="number" name="bp_nocturnal_dip" value=""></label>
+                      </div>
+                  </section>
+
+                  <!-- Holter / Stabilità cardiaca -->
+                  <section id="card-holter" data-card="holter" style="display:none;">
+                      <h4>Holter / Stabilità cardiaca</h4>
+                      <div class="grid">
+                      <label>HR media riposo (bpm) <input type="number" name="holter_hr_mean" value=""></label>
+                      <label>HR minima (bpm) <input type="number" name="holter_hr_min" value=""></label>
+                      <label>HR massima (bpm) <input type="number" name="holter_hr_max" value=""></label>
+                      <label>PAC / ora <input type="number" name="holter_pac_hour" value=""></label>
+                      <label>PVC / ora <input type="number" name="holter_pvc_hour" value=""></label>
+                      <label>AF burden (%) <input type="number" name="holter_af_burden" value=""></label>
+                      <label>Eventi ST (n°) <input type="number" name="holter_st_events" value=""></label>
+                      </div>
+                  </section>
+                </div>
+
+                <!-- Salva -->
+                <div class="footer-modale" style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+                  <button type="submit" id="save-btn" class="btn btn-primary" disabled>Salva</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- MODALE VIEW MORE -->
+        <div class="backdrop-modale" id="view-backdrop" style="display:none;"></div>
+        <div class="modale-misurazione" id="view-modal" style="display:none;">
+          <div class="header-modale">
+              <h3>Dettaglio misurazione</h3>
+              <button id="view-close-btn">X</button>
+          </div>
+          <div id="view-modal-content" style="padding:12px;">
+              <!-- qui iniettiamo i dettagli -->
           </div>
         </div>
-        <script>
-          (function(){
-            const box = document.getElementById('flash-{{ forloop.counter }}');
-            const bar = document.getElementById('progress-{{ forloop.counter }}');
-            const duration = 5000, step = 50;
-            let elapsed = 0;
-            const t = setInterval(() => {
-              elapsed += step;
-              const pct = Math.max(0, 100 - (elapsed / duration) * 100);
-              bar.style.width = pct + '%';
-              if (elapsed >= duration) { clearInterval(t); if (box) box.style.display = 'none'; }
-            }, step);
-          })();
-        </script>
-      {% endfor %}
-    {% endif %}
-
-    <section class="bio-main">
-      <div class="main-content">
-
-        <!-- ====== Pannello: Resilienza (standalone) ====== -->
-        <div id="panel-resilienza" class="bio-panel">
-          <form method="POST" action="{% url 'resilienza' persona.id %}">
-            {% csrf_token %}
-
-            <div class="card-container">
-
-              <div class="title-container">
-                <img src="{% static 'image/Stress.png' %}" alt="">
-                <h3>Stress e Recupero</h3>
-              </div>
-
-              <div class="grid-container">
-                <div class="form-group">
-                  <label for="hrv">HRV (Variabilità Cardiaca)</label>
-                  <input type="text" id="hrv" name="hrv" required placeholder="Inserisci il valore">
-                </div>
-                <div class="form-group">
-                  <label for="cortisolo">Cortisolo (Stress Cronico)</label>
-                  <input type="text" id="cortisolo" name="cortisolo" required placeholder="Inserisci il valore">
-                </div>
-              </div>
+        
+        {% if messages %}
+        <div class="container" style="margin-top:10px;">
+            {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}" role="alert">
+                {{ message }}
             </div>
-
-            <div class="card-container">
-              <div class="title-container">
-                <img src="{% static 'image/Stress_Ossidativo.png' %}" alt="">
-                <h3>Bilancio Redox e Stress Ossidativo</h3>
-              </div>
-
-              <div class="grid-container2">
-                <div class="form-group">
-                  <label for="ros">ROS (Specie Reattive dell'Ossigeno)</label>
-                  <input type="text" id="ros" name="ros" required placeholder="Inserisci il valore">
-                </div>
-                <div class="form-group">
-                  <label for="osi">OSI Index (Oxidative Stress Index)</label>
-                  <input type="text" id="osi" name="osi" required placeholder="Inserisci il valore">
-                </div>
-                <div class="form-group">
-                  <label for="dRoms">dROMS (Danni da Radicali Liberi)</label>
-                  <input type="text" id="dRoms" name="dRoms" required placeholder="Inserisci il valore">
-                </div>
-              </div>
-            </div>
-
-            <div class="card-container">
-              <div class="title-container">
-                <img src="{% static 'image/Risposta_Immunitaria.png' %}" alt="">
-                <h3>Infiammazione e Risposta Immunitaria</h3>
-              </div>
-
-              <div class="grid-container">
-                <div class="form-group">
-                  <label for="pcr">Proteina C-reattiva (PCR)</label>
-                  <input type="text" id="pcr" name="pcr" required placeholder="Inserisci il valore">
-                </div>
-                <div class="form-group">
-                  <label for="nlr">Rapporto Neutrofili/Linfociti (NLR)</label>
-                  <input type="text" id="nlr" name="nlr" required placeholder="Inserisci il valore">
-                </div>
-              </div>
-            </div>
-
-            <div class="card-container">
-              <div class="title-container">
-                <img src="{% static 'image/Profilo_Metabolico.png' %}" alt="">
-                <h3>Metabolismo e Nutrizione</h3>
-              </div>
-
-              <div class="grid-container2">
-                <div class="form-group">
-                  <label for="homa_t">HOMA Test (Sensibilità Insulinica)</label>
-                  <input type="text" id="homa_t" name="homa_t" required placeholder="Inserisci il valore">
-                </div>
-                <div class="form-group">
-                  <label for="ir_t">IR Test (Resistenza Insulinica)</label>
-                  <input type="text" id="ir_t" name="ir_t" required placeholder="Inserisci il valore">
-                </div>
-                <div class="form-group">
-                  <label for="omega_3">Indice Omega-3 (EPA/DHA)</label>
-                  <input type="text" id="omega_3" name="omega_3" required placeholder="Inserisci il valore">
-                </div>
-              </div>
-            </div>
-
-            <div class="card-container">
-              <div class="title-container">
-                <img src="{% static 'image/Capacita_Fisica.png' %}" alt="">
-                <h3>Capacità Fisica e Resilienza Strumentale</h3>
-              </div>
-
-              <div class="grid-container">
-                <div class="form-group">
-                  <label for="vo2">VO2 Max (Capacità Aerobica)</label>
-                  <input type="text" id="vo2" name="vo2" required placeholder="Inserisci il valore">
-                </div>
-              </div>
-            </div>
-
-            <div class="toolkit">
-              <button id="calculateButton" type="submit" class="button">
-                <span class="button__icon-wrapper">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg">
-                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
-                    <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                  </svg>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="18" class="button__icon-svg button__icon-svg--copy">
-                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
-                    <path d="M6 22V20C6 17.79 7.79 16 10 16H14C16.21 16 18 17.79 18 20V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                  </svg>
-                </span>
-                Calcola Resilienza
-              </button>
-            </div>
-
-          </form>
+            {% endfor %}
         </div>
-        <!-- /Resilienza -->
-      </div>
-    </section>
-  </main>
+        {% endif %}
 
-</body>
+        <main>
+            <!-- MENU TRACE -->
+            <div class="main-title-nav">
+                    <div class="back-tittle">
+                        <a id="back" href="{% url 'cartella_paziente' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
+                        <h2 class="main-welcome-title">
+                            <span>{{ persona.surname|title }}</span>
+                            <span>{{ persona.name|title }}</span> |
+                            <span>Età: {{ persona.chronological_age }}</span>
+                            {% if persona.phone and persona.email %}
+                            |
+                            <span class="phone_span">
+                                <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
+                                Telefono: {{ persona.phone }}
+                            </span> |
+                            <span class="email_span">
+                                <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
+                                Email: {{ persona.email }}
+                            </span>
+                            {% endif %}
+                        </h2>
+                    </div>
+                
+                    <div class="main-menu-trace">
+                        <a href="{% url 'HomePage' %}">
+                            <img src="{% static 'image/Home.png' %}" alt="Home Page" title="Home Page" />
+                        </a>
+                        <p>»</p>
+                        <p>
+                            <a href="{% url 'cartella_paziente' persona.id %}">Cartella Paziente</a>
+                        </p>
+                        <p>»</p>
+                        <p class="breadcrumb">Resilienza</p>
+                    </div>
+                
+            </div>  
+
+            <div class="Banner-section">
+                <div class="container-title">
+                    
+                    <p class="image">🛡️</p>
+
+                    <div class="content-container">
+                        <h3>Resilienza - Composito</h3>
+                        <p>Media pesata di più misurazioni (30m, 60m, 24h)</p>
+                    </div>
+                </div>
+
+                <div class="etichetta-score">Composito: 60.5%</div>
+            </div>
+
+            <div class="elenco-resilienza">
+                <div class="header-card">
+                    <h3>Elenco misurazioni</h3> 
+                    <button id="open-btn">Nuova Misurazione</button>
+                </div>
+                
+                 <div class="Table-misurazioni">
+                  <table class="table table-striped align-middle">
+                    <thead>
+                      <tr>
+                        <th style="width:140px;">N° misurazione</th>
+                        <th style="width:140px;">Protocollo</th>
+                        <th style="width:220px;">Data</th>
+                        <th style="width:140px;">Action</th>
+                      </tr>
+                    </thead>
+                    
+                    <tbody>
+                      {% for m in misurazioni %}
+                        <tr>
+                          <!-- numerazione in ordine di data: 1 = più recente -->
+                          <td>#{{ forloop.counter }}</td>
+                          <td>
+                            {% if m.protocollo == '30m' %}30 m{% elif m.protocollo == '60m' %}60 m{% elif m.protocollo == '24h' %}24 h{% else %}-{% endif %}
+                          </td>
+                          <td>{{ m.data_misurazione|date:"d/m/Y H:i" }}</td>
+                          <td>
+                            <button
+                              type="button"
+                              class="btn btn-outline-primary btn-sm btn-view-more"
+                              data-id="{{ m.id }}"
+                            >
+                              View more
+                            </button>
+                          </td>
+                        </tr>
+
+                        <!-- payload nascosto con tutti i dettagli della misurazione -->
+                        <div id="view-data-{{ m.id }}" class="view-data" style="display:none;">
+                          <div class="info-bloc">
+                            <p><strong>Protocollo:</strong>
+                              {% if m.protocollo == '30m' %}30 m{% elif m.protocollo == '60m' %}60 m{% elif m.protocollo == '24h' %}24 h{% else %}-{% endif %}
+                            </p>
+                            <p><strong>Data:</strong> {{ m.data_misurazione|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Card selezionate:</strong>
+                              {% if m.selected_tests %}{{ m.selected_tests|join:", " }}{% else %}-{% endif %}
+                            </p>
+                          </div>
+
+                          <hr>
+
+                          <h5>HRV</h5>
+                          <table class="table table-sm">
+                            <tbody>
+                              <tr><td>rMSSD</td><td>{{ m.hrv_rmssd|default:"-" }}</td></tr>
+                              <tr><td>SDNN</td><td>{{ m.hrv_sdnn|default:"-" }}</td></tr>
+                              <tr><td>pNN50</td><td>{{ m.hrv_pnn50|default:"-" }}</td></tr>
+                              <tr><td>LF power</td><td>{{ m.hrv_lf_power|default:"-" }}</td></tr>
+                              <tr><td>HF power</td><td>{{ m.hrv_hf_power|default:"-" }}</td></tr>
+                              <tr><td>LF/HF</td><td>{{ m.hrv_lf_hf|default:"-" }}</td></tr>
+                            </tbody>
+                          </table>
+
+                          <h5>Pressione arteriosa</h5>
+                          <table class="table table-sm">
+                            <tbody>
+                              <tr><td>SBP media</td><td>{{ m.bp_sbp_mean|default:"-" }}</td></tr>
+                              <tr><td>DBP media</td><td>{{ m.bp_dbp_mean|default:"-" }}</td></tr>
+                              <tr><td>Pulse Pressure</td><td>{{ m.bp_pp_calc|default:"-" }}</td></tr>
+                              <tr><td>SD SBP</td><td>{{ m.bp_sd_sbp|default:"-" }}</td></tr>
+                              <tr><td>SD DBP</td><td>{{ m.bp_sd_dbp|default:"-" }}</td></tr>
+                              <tr><td>Morning surge</td><td>{{ m.bp_morning_surge|default:"-" }}</td></tr>
+                              <tr><td>Dipping notturno</td><td>{{ m.bp_nocturnal_dip|default:"-" }}</td></tr>
+                            </tbody>
+                          </table>
+
+                          <h5>Holter / Stabilità cardiaca</h5>
+                          <table class="table table-sm">
+                            <tbody>
+                              <tr><td>HR media riposo</td><td>{{ m.holter_hr_mean|default:"-" }}</td></tr>
+                              <tr><td>HR minima</td><td>{{ m.holter_hr_min|default:"-" }}</td></tr>
+                              <tr><td>HR massima</td><td>{{ m.holter_hr_max|default:"-" }}</td></tr>
+                              <tr><td>PAC / ora</td><td>{{ m.holter_pac_hour|default:"-" }}</td></tr>
+                              <tr><td>PVC / ora</td><td>{{ m.holter_pvc_hour|default:"-" }}</td></tr>
+                              <tr><td>AF burden %</td><td>{{ m.holter_af_burden|default:"-" }}</td></tr>
+                              <tr><td>Eventi ST (n°)</td><td>{{ m.holter_st_events|default:"-" }}</td></tr>
+                            </tbody>
+                          </table>
+
+                          {% if m.risultato %}
+                            <hr>
+                            <p><strong>Score composito:</strong> {{ m.risultato }}%</p>
+                          {% endif %}
+                        </div>
+                      {% empty %}
+                        <tr>
+                          <td colspan="4" class="text-center">Nessuna misurazione salvata.</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+            </div>
+
+
+
+
+
+
+
+
+
+
+        </main>
+
+        <script src="{% static 'js/cartella_paziente/resilienza.js' %}"></script>
+    </body>
 </html>

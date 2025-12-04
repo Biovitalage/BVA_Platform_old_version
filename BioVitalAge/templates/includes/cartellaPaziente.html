@@ -68,22 +68,34 @@
         <button class="button" onclick="window.location.href='{% url 'inizia_visita' persona.id %}'"> Inizia visita</button>
     </div>
 
-    <div class="card-paziente">
+    <form id="form-dati-paziente" method="post" class="card-paziente">
+        {% csrf_token %}
+
         <div class="tools-paziente">
-            <button id="btn-edit-dati" title="Modifica dati">
-                <img src="{% static 'image/modifica.png' %}">
+            <button
+                id="btn-edit-dati"
+                type="button"
+                title="Modifica dati"
+                data-edit-icon="{% static 'image/modifica.png' %}"
+                data-save-icon="{% static 'image/salva.png' %}"
+            >
+                <img
+                    id="img-edit-dati"
+                    src="{% static 'image/modifica.png' %}"
+                    alt="Modifica"
+                >
             </button>
 
-            <button id="btn-note" title="Note">
+            <button id="btn-note" type="button" title="Note">
                 <img src="{% static 'image/Note.png' %}" alt="Note">
             </button>
 
-            <button id="btn-allegati" title="Allegati"
-                onclick="window.location.href='{% url 'allegati' persona.id %}'">
+            <button id="btn-allegati" type="button" title="Allegati"
+                    onclick="window.location.href='{% url 'allegati' persona.id %}'">
                 <img src="{% static 'image/Allegati.png' %}" alt="Allegati">
             </button>
 
-            <button id="btn-privacy" title="Consenso al trattamento dati">
+            <button id="btn-privacy" type="button" title="Consenso al trattamento dati">
                 <img src="{% static 'image/privacy.png' %}" alt="Privacy">
             </button>
         </div>
@@ -99,53 +111,111 @@
         <div class="Dati-paziente-grid">
 
             <div class="grid-container">
+
                 <div class="field">
                     <p class="field-title">Età:</p>
-                    <input class="input-disabled" type="text" name="codice_fiscale"
-                        value="{{ persona.chronological_age |default:'non inserito' }}" disabled>
+                    <input
+                        class="input-disabled"
+                        type="text"
+                        name="chronological_age"
+                        value="{{ persona.chronological_age|default_if_none:'' }}"
+                        placeholder="non inserito"
+                        disabled
+                        data-editable="true"
+                    >
                 </div>
 
                 <div class="field">
                     <p class="field-title">Codice Fiscale:</p>
-                    <input class="input-disabled" type="text" name="codice_fiscale"
-                        value="{{ persona.codice_fiscale|default:'non inserito' }}" disabled>
+                    <input
+                        class="input-disabled"
+                        type="text"
+                        name="codice_fiscale"
+                        value="{{ persona.codice_fiscale|default_if_none:'' }}"
+                        placeholder="non inserito"
+                        disabled
+                        data-editable="true"
+                    >
                 </div>
 
                 <div class="field">
                     <p class="field-title">Data di Nascita:</p>
-                    <input class="input-disabled" type="text" name="dob"
-                        value="{{ persona.dob|date:'d/m/Y'|default:'non inserito' }}" disabled>
+                    <input
+                        class="input-disabled"
+                        type="text"
+                        name="dob"
+                        value="{% if persona.dob %}{{ persona.dob|date:'d/m/Y' }}{% endif %}"
+                        placeholder="non inserito"
+                        disabled
+                        data-editable="true"
+                    >
                 </div>
 
                 <div class="field">
                     <p class="field-title">Città di nascita:</p>
-                    <input class="input-disabled" type="text" name="place_of_birth"
-                        value="{{ persona.place_of_birth|title|default:'non inserito' }}" disabled>
+                    <input
+                        class="input-disabled"
+                        type="text"
+                        name="place_of_birth"
+                        value="{{ persona.place_of_birth|default_if_none:''|title }}"
+                        placeholder="non inserito"
+                        disabled
+                        data-editable="true"
+                    >
                 </div>
 
                 <div class="field">
                     <p class="field-title">Città di residenza:</p>
-                    <input class="input-disabled" type="text" name="residence"
-                        value="{{ persona.residence|title|default:'non inserito' }}" disabled>
+                    <input
+                        class="input-disabled"
+                        type="text"
+                        name="residence"
+                        value="{{ persona.residence|default_if_none:''|title }}"
+                        placeholder="non inserito"
+                        disabled
+                        data-editable="true"
+                    >
                 </div>
 
                 <div class="field">
                     <p class="field-title">CAP:</p>
-                    <input class="input-disabled" type="text" name="cap"
-                        value="{{ persona.cap|default:'non inserito' }}" disabled>
+                    <input
+                        class="input-disabled"
+                        type="text"
+                        name="cap"
+                        value="{{ persona.cap|default_if_none:'' }}"
+                        placeholder="non inserito"
+                        disabled
+                        data-editable="true"
+                    >
                 </div>
 
                 <div class="field">
                     <p class="field-title">Provincia:</p>
-                    <input class="input-disabled" type="text" name="province"
-                        value="{{ persona.province|default:'non inserito' }}" disabled>
+                    <input
+                        class="input-disabled"
+                        type="text"
+                        name="province"
+                        value="{{ persona.province|default_if_none:'' }}"
+                        placeholder="non inserito"
+                        disabled
+                        data-editable="true"
+                    >
                 </div>
 
                 <div class="field">
                     <p class="field-title">Genere:</p>
-                    <input class="input-disabled" type="text" name="gender"
-                        value="{{ persona.gender|default:'non inserito' }}" disabled>
+                    <input
+                        class="input-disabled"
+                        type="text"
+                        name="gender"
+                        value="{{ persona.gender|default_if_none:'' }}"
+                        placeholder="M / F"
+                        disabled
+                        data-editable="true"
+                    >
                 </div>
+
             </div>
 
             <div class="flex-container">
@@ -157,8 +227,11 @@
                         <div class="container-input-info">
                             <p>Ultima Visita</p>
                             <span class="type-two cursor-not-allowed">
-                                {% if prossimo_appuntamento %}{{ prossimo_appuntamento.data|date:"d/m/Y" }}
-                                {% else %}non presente.{% endif %}
+                                {% if ultimo_appuntamento %}
+                                    {{ ultimo_appuntamento.data|date:"d/m/Y" }}
+                                {% else %}
+                                    non presente.
+                                {% endif %}
                             </span>
                         </div>
                     </div>
@@ -189,10 +262,68 @@
                             </span>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
-    </div>
+    </form>
+
+    <script>
+    (function () {
+        const form = document.getElementById('form-dati-paziente');
+        if (!form) {
+            console.warn('form-dati-paziente non trovato');
+            return;
+        }
+
+        const btnEdit = document.getElementById('btn-edit-dati');
+        const imgEdit = document.getElementById('img-edit-dati');
+
+        if (!btnEdit || !imgEdit) {
+            console.warn('btn-edit-dati o img-edit-dati non trovati');
+            return;
+        }
+
+        const inputs = form.querySelectorAll('[data-editable="true"]');
+
+        const editIconUrl = btnEdit.dataset.editIcon || imgEdit.getAttribute('src');
+        const saveIconUrl = btnEdit.dataset.saveIcon || editIconUrl;
+
+        let isEditing = false;
+
+        btnEdit.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            console.log('Click su btn-edit-dati, isEditing =', isEditing);
+
+            if (!isEditing) {
+                // ENTRA IN MODIFICA
+                isEditing = true;
+                imgEdit.setAttribute('src', saveIconUrl);
+                btnEdit.setAttribute('title', 'Salva dati paziente');
+
+                inputs.forEach(function (input) {
+                    input.disabled = false;
+                    input.classList.remove('input-disabled');
+                    input.classList.add('input-enabled');
+                });
+
+            } else {
+                // SALVA: invio il form con action dedicata
+                let actionInput = form.querySelector('input[name="action"]');
+                if (!actionInput) {
+                    actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = 'action';
+                    form.appendChild(actionInput);
+                }
+                actionInput.value = 'update_dati_paziente';
+
+                form.submit();
+            }
+        });
+    })();
+    </script>
 
     <div class="container-second-row">
 

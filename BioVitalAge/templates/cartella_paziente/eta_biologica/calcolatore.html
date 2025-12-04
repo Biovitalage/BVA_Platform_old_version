@@ -3436,20 +3436,7 @@
             <div class="back-tittle">
                 <a id="back" href="{% url 'eta_biologica' persona.id %}"><img src="{% static 'image/Arrow_Back.png' %}"></a>
                 <h2 class="main-welcome-title">
-                    <span>{{ persona.surname|title }}</span>
-                    <span>{{ persona.name|title }}</span> |
-                    <span>Età: {{ persona.chronological_age }}</span>
-                    {% if persona.phone and persona.email %}
-                    |
-                    <span class="phone_span">
-                        <img src="{% static 'image/Phone.png' %}" width="20px" height="20px">
-                        Telefono: {{ persona.phone }}
-                    </span> |
-                    <span class="email_span">
-                        <img src="{% static 'image/Email_Violet.png' %}" width="20px" height="20px">
-                        Email: {{ persona.email }}
-                    </span>
-                    {% endif %}
+                    Calcolatore Età Biologica
                 </h2>
             </div>
 
@@ -11839,28 +11826,7 @@
                 </div>
             </div>
 
-            <div class="grid-container">
-                <div class="form-group">
-                    <label for="sbp">Pressione Sistolica (SBP)</label>
-                    <input type="number" id="sbp" name="sbp" step="1">
-                </div>
-                <div class="form-group">
-                    <label for="dbp">Pressione Diastolica (DBP)</label>
-                    <input type="number" id="dbp" name="dbp" step="1">
-                </div>
-                <div class="form-group">
-                    <label for="bmi">BMI</label>
-                    <input type="number" id="bmi" name="bmi" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label for="waist">Circonferenza vita (cm)</label>
-                    <input type="number" id="waist" name="waist" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label for="hba1c">HbA1c (%)</label>
-                    <input type="number" id="hba1c" name="hba1c" step="0.01">
-                </div>
-            </div>
+
 
             <div class="contenitore-genitore">
 

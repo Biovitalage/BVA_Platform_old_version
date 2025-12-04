@@ -68,6 +68,37 @@ from BioVitalAge.api.serializers import PazienteSerializer
 from BioVitalAge.api.serializers import NotaSerializer
 
 
+# ---- Import da restrutturare -----
+import hashlib
+import re
+from django.http import JsonResponse
+from django.utils import timezone
+from django.utils import timezone
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.http import HttpResponseServerError
+# views.py (estratto) — ETA' BIOLOGICA (nuovo clock GBR)
+from django.shortcuts import render, get_object_or_404
+from django.views import View
+from django.utils.decorators import method_decorator
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from .models import (
+    UtentiRegistratiCredenziali,
+    TabellaPazienti,
+    RefertiEtaBiologica,
+    DatiEstesiRefertiEtaBiologica,
+)
+
+# DOPO (coerente con BioVitalAge/funzioni_python/…)
+from .funzioni_python.decorators import catch_exceptions   
+from .funzioni_python.calcolo_score import calcola_score_organi, genera_report
+from .funzioni_python.biovitalage_wrapper import calculate_biological_age
+
+
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +116,6 @@ def get_user_role(request):
         return None
     
     return getattr(cred, 'role', None)
-
-
 
 
 #----------------------------------------
@@ -1043,10 +1072,6 @@ class CreaPazienteView(LoginRequiredMixin,View):
             #print(f"❌ Errore nel backend: {e}")  # DEBUG
             return JsonResponse({"success": False, "error": str(e)}, status=500)
 
-
-
-
-
 #----------------------------------------
 # ------ SEZIONE AGGIUNGI PAZIENTE -------
 #----------------------------------------
@@ -1079,11 +1104,6 @@ class IniziaVisitaView(LoginRequiredMixin, View):
 
         # IMPORTANTE: passa l'id perché la Cartella Paziente ha get(self, request, id)
         return redirect(reverse('cartella_paziente', kwargs={'id': paziente.id}))
-
-
-
-
-
 
 @method_decorator(catch_exceptions, name='dispatch')
 class InserisciPazienteView(LoginRequiredMixin, View):
@@ -1259,17 +1279,7 @@ class InserisciPazienteView(LoginRequiredMixin, View):
             return render(request, "includes/InserisciPaziente.html", context)
 
 
-
-
-
-
-
-
-
-
 # --- IMPORT AGGIUNTIVI ---
-import hashlib
-import re
 
 # --- UTILITY PER CODICE PIATTAFORMA ---
 def _slugify_compact(value: str) -> str:
@@ -1282,641 +1292,6 @@ def _make_platform_code(nome: str, dosaggio: str) -> str:
     slug = _slugify_compact(f"{nome}-{dosaggio}") or "item"
     digest = hashlib.sha1(base.encode('utf-8')).hexdigest()[:8]
     return f"PKG-{slug}-{digest}"
-
-
-@method_decorator(catch_exceptions, name='dispatch')
-class CartellaPazienteView(LoginRequiredMixin, View):
-
-    ICD10_ENDPOINT = 'http://www.icd10api.com/'
-
-    # ---------- GET ----------
-    def get(self, request, id):
-        role = get_user_role(request)
-
-        # ICD10 (come da tuo codice)
-        params = {'code': 'icd11', 'r': 'json', 'desc': 'long', 'type': 'cm'}
-        resp = requests.get(self.ICD10_ENDPOINT, params=params)
-        if resp.status_code != 200:
-            return JsonResponse({'error': 'Impossibile contattare ICD10API',
-                                 'status_code': resp.status_code}, status=502)
-        data_icd = resp.json()
-
-        # Paziente via ViewSet
-        ViewSetResult = PazienteViewSet()
-        ViewSetResult.request = request
-        persona = ViewSetResult.get_patient_info(id)
-
-        # NOTE del paziente
-        note_list = Nota.objects.filter(paziente=persona).order_by('-created_at')
-
-        dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-        dottori = UtentiRegistratiCredenziali.objects.all() if role else None
-
-        # Farmaci (paginati lato destra)
-        farmaci = Farmaco.objects.all()
-        paginator_farmaci = Paginator(farmaci, 3)
-        page_number_farmaci = request.GET.get('page')
-        farmaci_page = paginator_farmaci.get_page(page_number_farmaci)
-
-        # Indicatori
-        lista_filtered_value = ViewSetResult.get_datiEstesi_filtered(id)
-
-        # Problemi / rischi
-        problemi = Diagnosi.objects.filter(paziente=persona).values_list('problemi', flat=True)
-        rischi = Diagnosi.objects.filter(paziente=persona).values_list('rischi', flat=True)
-
-        # Indicatori performance
-        ultimo_referto_capacita_vitale = persona.referti_test.order_by('-data_ora_creazione').first()
-
-        # Storico appuntamenti (agenda, NON usato nella sezione VISITE del diario clinico)
-        storico_appuntamenti = (
-            Appointment.objects.filter(
-                Q(nome_paziente__icontains=persona.name.strip()) |
-                Q(cognome_paziente__icontains=persona.surname.strip())
-            ).order_by('data', 'orario')
-        )
-        today = now().date()
-        totale_appuntamenti = storico_appuntamenti.count()
-        ultimo_appuntamento = storico_appuntamenti.filter(data__lt=today).last() or None
-        prossimo_appuntamento = storico_appuntamenti.filter(data__gte=today).first() or None
-
-        # ==========================
-        #   VISITE + DIARIO CLINICO
-        # ==========================
-        visite_qs = Visita.objects.filter(paziente=persona).order_by('-data_visita', '-visita_numero')
-        visite_paginator = Paginator(visite_qs, 5)
-        visite_page_number = request.GET.get('visite_page')
-        visite_page = visite_paginator.get_page(visite_page_number)
-
-        # Liste “pure” per sezioni dedicate
-        farmaci_prescritti = PrescrizioneFarmaco.objects.filter(paziente=persona).order_by('-data_prescrizione')
-        accertamenti_qs = PrescrizioniEsami.objects.filter(paziente=persona).order_by('-data_visita')
-
-        # Diario MIX
-        diario = []
-        # Farmaci
-        for f in farmaci_prescritti:
-            diario.append({
-                'id': f.id, 'tipo': 'Farmaco', 'data': f.data_prescrizione,
-                'descrizione': f.farmaco.nome_farmaco, 'nome': f.farmaco.nome_farmaco,
-                'posologia': f.farmaco.dosaggio, 'diagnosi': f.diagnosi, 'nota': f.note_medico,
-            })
-        # Accertamenti
-        for a in accertamenti_qs:
-            diario.append({
-                'id': a.id, 'tipo': 'Accertamento', 'data': a.data_visita,
-                'descrizione': a.esami_prescritti, 'diagnosi': '', 'nota': '',
-            })
-        # Visite cliniche
-        for v in visite_qs:
-            diario.append({
-                'id': v.id, 'tipo': 'Visita', 'data': v.data_visita,
-                'descrizione': f"Visita n° {v.visita_numero}", 'diagnosi': '', 'nota': '',
-            })
-        # NOTE (come eventi del Diario)
-        for n in note_list:
-            diario.append({
-                'id': n.id,
-                'tipo': 'Nota',
-                'data': n.created_at,
-                'descrizione': n.titolo,
-                'diagnosi': '',
-                'nome': '',
-                'posologia': '',
-                'nota': n.contenuto,
-            })
-
-        # Normalizza a datetime aware e ordina
-        def _to_aware(dt_val):
-            tz = timezone.get_current_timezone()
-            if isinstance(dt_val, date) and not isinstance(dt_val, datetime):
-                dt_val = datetime.combine(dt_val, datetime.min.time())
-            if timezone.is_naive(dt_val):
-                return timezone.make_aware(dt_val, tz)
-            return timezone.localtime(dt_val, tz)
-
-        for e in diario:
-            e['data'] = _to_aware(e['data'])
-        diario.sort(key=lambda e: e['data'], reverse=True)
-
-        # --- elenco completo per modale ---
-        diario_full = list(diario)
-
-        # Paginazione del diario (8 elementi nel tab)
-        diario_paginator = Paginator(diario, 8)
-        diario_page_number = request.GET.get('diario_page')
-        diario_page = diario_paginator.get_page(diario_page_number)
-
-        # ==========================
-        #      SCORE ORGANI & BIO
-        # ==========================
-        punteggi_organi, dettagli_organi, report_testuale, score_js = {}, {}, None, {}
-        ultimo_referto = persona.referti.order_by('-data_ora_creazione').first()
-        if ultimo_referto:
-            try:
-                dati = ultimo_referto.dati_estesi
-                organi_esami = {
-                    "Cuore": ["Colesterolo Totale", "Colesterolo LDL", "Colesterolo HDL", "Trigliceridi",
-                              "PCR", "NT-proBNP", "Omocisteina", "Glicemia", "Insulina",
-                              "HOMA Test", "IR Test", "Creatinina", "Stress Ossidativo", "Omega Screening"],
-                    "Reni": ["Creatinina", "Azotemia", "Sodio", "Potassio", "Cloruri",
-                             "Fosforo", "Calcio", "Esame delle Urine"],
-                    "Fegato": ["Transaminasi GOT", "Transaminasi GPT", "Gamma-GT", "Bilirubina Totale",
-                               "Bilirubina Diretta", "Bilirubina Indiretta", "Fosfatasi Alcalina",
-                               "Albumina", "Proteine Totali"],
-                    "Cervello": ["Omocisteina", "Vitamina B12", "Vitamina D", "DHEA", "TSH", "FT3",
-                                 "FT4", "Omega-3 Index", "EPA", "DHA",
-                                 "Stress Ossidativo dROMS", "Stress Ossidativo PAT", "Stress Ossidativo OSI REDOX"],
-                    "Sistema Ormonale": ["TSH", "FT3", "FT4", "Insulina", "HOMA Test", "IR Test",
-                                         "Glicemia", "DHEA", "Testosterone", "17B-Estradiolo",
-                                         "Progesterone", "SHBG"],
-                    "Sangue": ["Emocromo - Globuli Rossi", "Emocromo - Emoglobina", "Emocromo - Ematocrito",
-                               "Emocromo - MCV", "Emocromo - MCH", "Emocromo - MCHC", "Emocromo - RDW",
-                               "Emocromo - Globuli Bianchi", "Emocromo - Neutrofili", "Emocromo - Linfociti",
-                               "Emocromo - Monociti", "Emocromo - Eosinofili", "Emocromo - Basofili",
-                               "Emocromo - Piastrine", "Ferritina", "Sideremia", "Transferrina"],
-                    "Sistema Immunitario": ["PCR", "Omocisteina", "TNF-A", "IL-6", "IL-10"],
-                }
-                TEST_FIELD_MAP = {
-                    "Colesterolo Totale": "tot_chol", "Colesterolo LDL": "ldl_chol", "Colesterolo HDL": "hdl_chol_m",
-                    "Trigliceridi": "trigl", "PCR": "pcr_c", "NT-proBNP": "nt_pro", "Omocisteina": "omocisteina",
-                    "Glicemia": "glicemy", "Insulina": "insulin", "HOMA Test": "homa", "IR Test": "ir",
-                    "Creatinina": "creatinine_m", "Stress Ossidativo": "osi", "Omega Screening": "o3o6_fatty_acid_quotient",
-                    "Azotemia": "azotemia", "Sodio": "na", "Potassio": "k", "Cloruri": "ci", "Fosforo": "p", "Calcio": "ca", "Esame delle Urine": "uro",
-                    "Transaminasi GOT": "got_m", "Transaminasi GPT": "gpt_m", "Gamma-GT": "g_gt_m",
-                    "Bilirubina Totale": "tot_bili", "Bilirubina Diretta": "direct_bili", "Bilirubina Indiretta": "indirect_bili",
-                    "Fosfatasi Alcalina": "a_photo_m", "Albumina": "albuminemia", "Proteine Totali": "tot_prot",
-                    "Vitamina B12": "v_b12", "Vitamina D": "v_d", "DHEA": "dhea_m", "TSH": "tsh", "FT3": "ft3", "FT4": "ft4",
-                    "Omega-3 Index": "o3_index", "EPA": "aa_epa", "DHA": "doco_acid",
-                    "Stress Ossidativo dROMS": "d_roms", "Stress Ossidativo PAT": "pat", "Stress Ossidativo OSI REDOX": "osi",
-                    "Testosterone": "testo_m", "17B-Estradiolo": "beta_es_m", "Progesterone": "prog_m", "SHBG": "shbg_m",
-                    "Emocromo - Globuli Rossi": "rbc", "Emocromo - Emoglobina": "hemoglobin", "Emocromo - Ematocrito": "hematocrit",
-                    "Emocromo - MCV": "mcv", "Emocromo - MCH": "mch", "Emocromo - MCHC": "mchc", "Emocromo - RDW": "rdw",
-                    "Emocromo - Globuli Bianchi": "wbc", "Emocromo - Neutrofili": "neutrophils_pct", "Emocromo - Linfociti": "lymphocytes_pct",
-                    "Emocromo - Monociti": "monocytes_pct", "Emocromo - Eosinofili": "eosinophils_pct", "Emocromo - Basofili": "basophils_pct",
-                    "Emocromo - Piastrine": "platelets",
-                    "Ferritina": "ferritin_m", "Sideremia": "sideremia", "Transferrina": "transferrin",
-                    "TNF-A": "tnf_a", "IL-6": "inter_6", "IL-10": "inter_10",
-                }
-                organi_valori = {
-                    organo: {test: getattr(dati, TEST_FIELD_MAP.get(test), None) for test in tests}
-                    for organo, tests in organi_esami.items()
-                }
-                valori_esami_raw = {test: val for vals in organi_valori.values() for test, val in vals.items() if val is not None}
-                sesso_paziente = getattr(persona, 'sesso', None)
-                punteggi_organi, dettagli_organi = calcola_score_organi(valori_esami_raw, sesso_paziente)
-                score_js = {organo.replace(' ', '_'): valore for organo, valore in punteggi_organi.items()}
-                report_testuale = genera_report(punteggi_organi, dettagli_organi, mostrar_dettagli=False)
-            except Exception:
-                pass
-
-        # Età / bio
-        referti_eta = persona.referti_eta_metabolica.order_by('-data_referto')
-        ultimo_referto_eta = referti_eta.first() if referti_eta.exists() else None
-        punteggio_eta_metabolica = (
-            ultimo_referto_eta.punteggio_finale
-            if ultimo_referto_eta and ultimo_referto_eta.punteggio_finale is not None
-            else (ultimo_referto_eta.eta_metabolica if ultimo_referto_eta else None)
-        )
-        dati_estesi_ultimo_bio = (
-            DatiEstesiRefertiEtaBiologica.objects
-            .filter(referto=persona.referti.order_by('-data_referto').first())
-            .first()
-        )
-        diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
-
-        # ==========================
-        #   VISITE DEL PAZIENTE
-        # ==========================
-        # Query base (ordina dalla più recente)
-        visite_qs = (
-            Visita.objects
-            .filter(paziente=persona)
-            .select_related('paziente')            # ottimizza FK
-            .order_by('-data_visita', '-visita_numero')
-        )
-
-        # Paginazione (se vuoi mostrarne un numero per pagina)
-        visite_paginator = Paginator(visite_qs, 5)
-        visite_page_number = request.GET.get('visite_page')
-        visite_page = visite_paginator.get_page(visite_page_number)
-
-        # Alcune utility utili al template
-        visite_count = visite_qs.count()
-        ultima_visita = visite_qs.first()                       # già ordinato desc
-        prossimo_numero_visita = visite_count + 1               # comodo per label “Visita n°”
-
-
-        context = {
-            'persona': persona,
-            'dottore': dottore,
-            'ultimo_referto_capacita_vitale': ultimo_referto_capacita_vitale,
-            'storico_appuntamenti': storico_appuntamenti,
-            'totale_appuntamenti': totale_appuntamenti,
-            'ultimo_appuntamento': ultimo_appuntamento,
-            'prossimo_appuntamento': prossimo_appuntamento,
-            'dottori': dottori,
-            'is_secretary': role == "secretary",
-            'diagnosi_list': diagnosi_list,
-            'icd10': data_icd,
-
-            # sezione Farmaci (destra)
-            'farmaci_page': farmaci_page,
-
-            # sezioni Diario (tab)
-            'farmaci_prescritti': farmaci_prescritti,
-            'accertamenti_qs': accertamenti_qs,
-            'diario_page': diario_page,
-            'diario_full': diario_full,
-
-            'visite_qs': visite_qs,                # lista completa (se serve)
-            'visite_page': visite_page,            # pagina corrente per tab/paginazione
-            'visite_count': visite_count,          # totale visite del paziente
-            'ultima_visita': ultima_visita,        # oggetto Visita più recente
-            'prossimo_numero_visita': prossimo_numero_visita,
-
-            # Indicatori
-            "Salute_del_cuore": lista_filtered_value[0],
-            "Salute_del_rene": lista_filtered_value[1],
-            "Salute_epatica": lista_filtered_value[2],
-            "Salute_cerebrale": lista_filtered_value[3],
-            "Salute_ormonale": lista_filtered_value[4],
-            "Salute_del_sangue": lista_filtered_value[5],
-            "Salute_immunitario": lista_filtered_value[6],
-
-            # Score JS + dettagli
-            'score': score_js,
-            'punteggi_organi': punteggi_organi,
-            'dettagli_organi': dettagli_organi,
-            'report_testuale': report_testuale,
-
-            # Note (se vuoi ancora usare la modale di creazione)
-            'note_list': note_list,
-
-            # Età / bio
-            'punteggio_eta_metabolica': punteggio_eta_metabolica,
-            'dati_estesi_ultimo_bio': dati_estesi_ultimo_bio,
-
-            # Problemi / Rischi
-            'problemi': problemi,
-            'rischi': rischi,
-        }
-        return render(request, "includes/cartellaPaziente.html", context)
-
-    # ---------- PATCH ----------
-    def patch(self, request, id):
-        try:
-            data = json.loads(request.body)
-            update_type = data.get('type')
-
-            if update_type == 'diario':
-                return self._update_diario(request, id, data)
-            elif update_type == 'farmaco':
-                return self._update_farmaco(request, id, data)
-            elif update_type == 'prescrizione_libera':
-                return self._update_prescrizione_libera(request, id, data)
-            else:
-                return JsonResponse({'success': False, 'error': 'Tipo di aggiornamento non riconosciuto'}, status=400)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'error': 'Dati JSON non validi'}, status=400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-    def _update_diario(self, request, id, data):
-        try:
-            entry_id = data.get('id')
-            diagnosi = data.get('diagnosi', '')
-            nota = data.get('nota', '')
-            prescrizione = PrescrizioneFarmaco.objects.filter(id=entry_id, paziente_id=id).first()
-            if prescrizione:
-                prescrizione.diagnosi = diagnosi
-                prescrizione.note_medico = nota
-                prescrizione.save()
-                return JsonResponse({'success': True})
-            return JsonResponse({'success': False, 'error': 'Voce diario non trovata'}, status=404)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-    def _update_farmaco(self, request, id, data):
-        try:
-            prescrizione_id = data.get('id')
-            nome_farmaco = data.get('nome_farmaco', '')
-            dosaggio = data.get('dosaggio', '')
-            prescrizione = PrescrizioneFarmaco.objects.filter(id=prescrizione_id, paziente_id=id).first()
-            if not prescrizione:
-                return JsonResponse({'success': False, 'error': 'Prescrizione non trovata'}, status=404)
-            farmaco, created = Farmaco.objects.get_or_create(
-                nome_farmaco=nome_farmaco, defaults={'dosaggio': dosaggio}
-            )
-            if not created and dosaggio:
-                farmaco.dosaggio = dosaggio
-                farmaco.save()
-            prescrizione.farmaco = farmaco
-            prescrizione.save()
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-    def _update_prescrizione_libera(self, request, id, data):
-        try:
-            prescrizione_id = data.get('id')
-            testo = data.get('testo', '')
-            prescrizione = PrescrizioneLibera.objects.filter(id=prescrizione_id, persona_id=id).first()
-            if not prescrizione:
-                return JsonResponse({'success': False, 'error': 'Prescrizione libera non trovata'}, status=404)
-            prescrizione.testo = testo
-            prescrizione.save()
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-    # ---------- POST ----------
-    def post(self, request, id):
-        role = get_user_role(request)
-
-        def parse_italian_date(value):
-            try:
-                return datetime.strptime(value, "%d/%m/%Y").date()
-            except (ValueError, TypeError):
-                return None
-
-        dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
-        persona = get_object_or_404(TabellaPazienti, id=id)
-
-        # NOTE del paziente anche in POST (per re-render coerente)
-        note_list = Nota.objects.filter(paziente=persona).order_by('-created_at')
-
-        dati_diagnosi = Diagnosi.objects.filter(paziente=persona)
-
-        # Farmaci (paginati lato destra)
-        farmaci = Farmaco.objects.all()
-        paginator_farmaci = Paginator(farmaci, 3)
-        page_number_farmaci = request.GET.get('page')
-        farmaci_page = paginator_farmaci.get_page(page_number_farmaci)
-
-        # ================================
-        # NUOVO: salvataggio massivo da modale (singoli + pacchetti)
-        # ================================
-        if request.POST.get('action') == 'save_prescrizioni':
-            try:
-                items_json = request.POST.get('items', '[]')
-                items = json.loads(items_json)
-
-                data_inizio_str = request.POST.get('data_inizio') or ''
-                data_fine_str = request.POST.get('data_fine') or ''
-                diagnosi_val = request.POST.get('diagnosi') or ''
-                note_medico_val = request.POST.get('note_medico') or ''
-                posologia_pers = request.POST.get('posologia_personalizzata') or ''
-
-                data_inizio_val = parse_italian_date(data_inizio_str) or now().date()
-                data_fine_val = parse_italian_date(data_fine_str)
-
-                created_count = 0
-                skipped_count = 0  # <--- conteggio duplicati/skip
-
-                for it in items:
-                    codice = (it.get('codice') or '').strip()
-                    nome = (it.get('nome') or '').strip()
-                    dosaggio = (it.get('dosaggio') or '').strip()
-
-                    if not (codice or nome):
-                        skipped_count += 1
-                        continue
-
-                    farmaco = None
-                    if codice:
-                        farmaco = Farmaco.objects.filter(codice_univoco_farmaco=codice).first()
-
-                    if not farmaco and nome:
-                        farmaco = Farmaco.objects.filter(
-                            nome_farmaco__iexact=nome,
-                            dosaggio__iexact=dosaggio
-                        ).first()
-
-                    if not farmaco:
-                        gen_code = _make_platform_code(nome or 'Farmaco', dosaggio or '')
-                        farmaco = Farmaco.objects.create(
-                            codice_univoco_farmaco=gen_code,
-                            nome_farmaco=nome or 'Farmaco',
-                            principio_attivo=nome or 'N/A',
-                            dosaggio=dosaggio or ''
-                        )
-
-                    # === controllo duplicato (stesse date) ===
-                    dup_qs = PrescrizioneFarmaco.objects.filter(
-                        paziente=persona,
-                        farmaco=farmaco,
-                        data_inizio=data_inizio_val,
-                    )
-                    if data_fine_val is None:
-                        dup_qs = dup_qs.filter(data_fine__isnull=True)
-                    else:
-                        dup_qs = dup_qs.filter(data_fine=data_fine_val)
-
-                    if dup_qs.exists():
-                        skipped_count += 1
-                        continue
-
-                    PrescrizioneFarmaco.objects.create(
-                        paziente=persona,
-                        medico=dottore,
-                        farmaco=farmaco,
-                        data_inizio=data_inizio_val,
-                        data_fine=data_fine_val,
-                        posologia_personalizzata=posologia_pers,
-                        note_medico=note_medico_val,
-                        diagnosi=diagnosi_val,
-                        stato='attiva'
-                    )
-                    created_count += 1
-
-                # Se è una chiamata AJAX, rispondi in JSON e NON ricaricare il template
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    # success True anche se created_count=0: il server non è in errore, ma segnaliamo i conti
-                    return JsonResponse({
-                        'success': True,
-                        'created': created_count,
-                        'skipped': skipped_count,
-                    })
-
-                # --- (fallback per submit normali) ---
-                request.POST = request.POST.copy()
-                request.POST['diario_page'] = request.POST.get('diario_page') or request.GET.get('diario_page')
-                request.POST['visite_page'] = request.POST.get('visite_page') or request.GET.get('visite_page')
-                request._prescrizioni_create_count = created_count
-
-            except Exception as e:
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'error': str(e)}, status=400)
-                return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-
-        # Creazione/aggiornamento diagnosi (come nel tuo codice)
-        if request.POST.get('data_nuova_diagnosi') and request.POST.get('descrizione_nuova_diagnosi'):
-            try:
-                data_diagnosi = datetime.strptime(request.POST.get('data_nuova_diagnosi'), "%Y-%m-%d").date()
-                descrizione = request.POST.get('descrizione_nuova_diagnosi')
-                problemi = request.POST.get('problemi', '')
-                nuova_diagnosi = Diagnosi.objects.create(
-                    paziente=persona, descrizione=descrizione, data_diagnosi=data_diagnosi,
-                    problemi=problemi, stato='attiva', gravita=1, risolta=False
-                )
-                diagnosi_id = str(nuova_diagnosi.id)
-            except Exception:
-                diagnosi_id = request.POST.get('diagnosi_id')
-        else:
-            diagnosi_id = request.POST.get('diagnosi_id')
-
-        problemi_val = request.POST.get('problemi')
-        rischi_val = request.POST.get('rischi')
-        data_diagnosi_val = request.POST.get('data_diagnosi')
-        note_diagnosi_val = request.POST.get('note_diagnosi')
-
-        if (problemi_val or rischi_val or data_diagnosi_val or note_diagnosi_val) and diagnosi_id and diagnosi_id != '__new__':
-            try:
-                diagnosi_obj = get_object_or_404(Diagnosi, id=diagnosi_id, paziente=persona)
-                if problemi_val is not None: diagnosi_obj.problemi = problemi_val
-                if rischi_val is not None:   diagnosi_obj.rischi = rischi_val
-                if data_diagnosi_val:
-                    parsed = parse_italian_date(data_diagnosi_val)
-                    if parsed: diagnosi_obj.data_diagnosi = parsed
-                if note_diagnosi_val is not None: diagnosi_obj.note = note_diagnosi_val
-                diagnosi_obj.save()
-            except Exception:
-                pass
-
-        # Ricalcoli ausiliari (come in GET)
-        today = now().date()
-        storico_app = Appointment.objects.filter(
-            Q(nome_paziente__icontains=persona.name.strip()) &
-            Q(cognome_paziente__icontains=persona.surname.strip())
-        ).order_by('data', 'orario')
-        ultimo_appuntamento = storico_app.filter(data__lt=today).last()
-        prossimo_appuntamento = storico_app.filter(data__gte=today).first()
-        ultimo_referto_capacita_vitale = persona.referti_test.order_by('-data_ora_creazione').first()
-
-        referti_recenti_eta = persona.referti_eta_metabolica.all().order_by('-data_referto')
-        ultimo_referto_eta_metabolica = referti_recenti_eta.first() if referti_recenti_eta.exists() else None
-
-        referti_recenti = persona.referti.all().order_by('-data_referto')
-        dati_estesi = DatiEstesiRefertiEtaBiologica.objects.filter(referto__in=referti_recenti)
-        ultimo_referto = referti_recenti.first() if referti_recenti else None
-        farmaci_prescritti = PrescrizioneFarmaco.objects.filter(paziente=persona).order_by('-data_prescrizione')
-
-        dati_estesi_ultimo_referto = None
-        if ultimo_referto:
-            dati_estesi_ultimo_referto = DatiEstesiRefertiEtaBiologica.objects.filter(referto=ultimo_referto).first()
-
-        diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
-
-        # VISITE + DIARIO come in GET
-        visite_qs = Visita.objects.filter(paziente=persona).order_by('-data_visita', '-visita_numero')
-        visite_paginator = Paginator(visite_qs, 5)
-        visite_page_number = request.POST.get('visite_page') or request.GET.get('visite_page')
-        visite_page = visite_paginator.get_page(visite_page_number)
-
-        accertamenti_qs = PrescrizioniEsami.objects.filter(paziente=persona).order_by('-data_visita')
-
-        diario = []
-        for f in farmaci_prescritti:
-            diario.append({
-                'id': f.id, 'tipo': 'Farmaco', 'data': f.data_prescrizione,
-                'descrizione': f.farmaco.nome_farmaco, 'nome': f.farmaco.nome_farmaco,
-                'posologia': f.farmaco.dosaggio, 'diagnosi': f.diagnosi, 'nota': f.note_medico,
-            })
-        for a in accertamenti_qs:
-            diario.append({
-                'id': a.id, 'tipo': 'Accertamento', 'data': a.data_visita,
-                'descrizione': a.esami_prescritti, 'diagnosi': '', 'nota': '',
-            })
-        for v in visite_qs:
-            diario.append({
-                'id': v.id, 'tipo': 'Visita', 'data': v.data_visita,
-                'descrizione': f"Visita n° {v.visita_numero}", 'diagnosi': '', 'nota': '',
-            })
-        for n in note_list:
-            diario.append({
-                'id': n.id,
-                'tipo': 'Nota',
-                'data': n.created_at,
-                'descrizione': n.titolo,
-                'diagnosi': '',
-                'nome': '',
-                'posologia': '',
-                'nota': n.contenuto,
-            })
-
-        def _to_aware(dt_val):
-            tz = timezone.get_current_timezone()
-            if isinstance(dt_val, date) and not isinstance(dt_val, datetime):
-                dt_val = datetime.combine(dt_val, datetime.min.time())
-            if timezone.is_naive(dt_val):
-                return timezone.make_aware(dt_val, tz)
-            return timezone.localtime(dt_val, tz)
-
-        for e in diario:
-            e['data'] = _to_aware(e['data'])
-        diario.sort(key=lambda e: e['data'], reverse=True)
-
-        diario_full = list(diario)
-
-        diario_paginator = Paginator(diario, 8)
-        diario_page_number = request.POST.get('diario_page') or request.GET.get('diario_page')
-        diario_page = diario_paginator.get_page(diario_page_number)
-
-        context = {
-            'persona': persona,
-            'referti_recenti': referti_recenti,
-            'dati_estesi': dati_estesi,
-            'dati_estesi_ultimo_referto': dati_estesi_ultimo_referto,
-            'dottore': dottore,
-            'referti_test_recenti': ultimo_referto,
-            'ultimo_appuntamento': ultimo_appuntamento,
-            'prossimo_appuntamento': prossimo_appuntamento,
-
-            # destra
-            'farmaci_page': farmaci_page,
-            'farmaci_prescritti': farmaci_prescritti,
-
-            # sezioni Diario
-            'accertamenti_qs': accertamenti_qs,
-            'visite_qs': visite_qs,
-            'diario_page': diario_page,
-            'diario_full': diario_full,
-            'visite_page': visite_page,
-
-            'dati_diagnosi': dati_diagnosi,
-            'diagnosi_list': diagnosi_list,
-            'ultimo_referto_eta_metabolica': ultimo_referto_eta_metabolica,
-            'ultimo_referto_capacita_vitale': ultimo_referto_capacita_vitale,
-
-            # Note per eventuale modale di creazione
-            'note_list': note_list,
-
-            "success": True,
-        }
-        return render(request, "includes/cartellaPaziente.html", context)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -2059,200 +1434,6 @@ class GetFarmaciPazienteView(LoginRequiredMixin, View):
         except Exception as e:
             return JsonResponse({'success': False, 'error': f'Errore: {str(e)}'}, status=500)
 
-# VIEW NOTA
-@method_decorator(catch_exceptions, name='dispatch')
-class CartellaPazienteNote(LoginRequiredMixin,View):
-
-        def post(self, request, id):
-
-            role = get_user_role(request)
-            persona = get_object_or_404(TabellaPazienti, id=id)
-            nota_id = request.POST.get('nota_id')
-            titolo_nota = request.POST.get('titolo_nota')
-            contenuto_nota = request.POST.get('contenuto_nota')
-
-            # Se il form delle note è stato inviato (identificato dalla presenza del titolo o del contenuto)
-            if titolo_nota or contenuto_nota:
-                if nota_id:
-                    nota = get_object_or_404(Nota, id=nota_id, paziente=persona)
-                    nota.titolo = titolo_nota
-                    nota.contenuto = contenuto_nota
-                    nota.save()
-                    messages.success(request, 'Nota aggiornata con successo!')
-                else:
-                    Nota.objects.create(
-                        paziente=persona,
-                        titolo=titolo_nota,
-                        contenuto=contenuto_nota
-                    )
-                    messages.success(request, 'Nota creata con successo!')
-                    return redirect('cartella_paziente', id=id)
-
-            return redirect('cartella_paziente', id=id)
-
-from django.http import JsonResponse
-
-from django.utils import timezone
-
-class CartellaPazienteProblemi(LoginRequiredMixin, View):
-    def post(self, request, id):
-        """
-        Riceve una richiesta POST dal front-end per aggiornare il campo 'problemi'
-        del model Diagnosi relativo al paziente specificato.
-        Ora renderizza la tabella delle diagnosi aggiornata.
-        """
-        persona = get_object_or_404(TabellaPazienti, id=id)
-        problema_request = request.POST.get('problemi', '').strip()
-
-        if not problema_request:
-            # Puoi anche mostrare un messaggio di errore nella tabella
-            diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
-            context = {
-                'persona': persona,
-                'diagnosi_list': diagnosi_list,
-                'errore': 'Nessun problema fornito.'
-            }
-            return render(request, "cartella_paziente/sezioni_storico/diagnosi.html", context)
-
-        # Recupera la diagnosi più recente o ne crea una nuova se non esiste
-        diagnosi = Diagnosi.objects.filter(paziente=persona).order_by('-id').first()
-        if not diagnosi:
-            diagnosi = Diagnosi(paziente=persona, data_diagnosi=timezone.now().date())
-        elif not diagnosi.data_diagnosi:
-            diagnosi.data_diagnosi = timezone.now().date()
-
-        diagnosi.problemi = problema_request
-        diagnosi.save()
-
-        # Recupera tutte le diagnosi aggiornate per la tabella
-        diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
-
-        context = {
-            'persona': persona,
-            'diagnosi_list': diagnosi_list,
-            'success': True,
-        }
-        return render(request, "cartella_paziente/sezioni_storico/diagnosi.html", context)
-
-
-# VIEW NOTA
-@method_decorator(catch_exceptions, name='dispatch')
-class NotaListCreateAPIView(generics.ListCreateAPIView):
-    serializer_class = NotaSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        # /api/pazienti/<pk>/note/
-        paziente_id = self.kwargs['paziente_pk']
-        return Nota.objects.filter(paziente_id=paziente_id)
-
-    def perform_create(self, serializer):
-        paziente = get_object_or_404(
-            TabellaPazienti,
-            pk=self.kwargs['paziente_pk']
-        )
-        serializer.save(paziente=paziente)   # autori/dottori qui se servono
-            # ▼▼▼ mostri gli errori se la validazione fallisce
-        if not serializer.is_valid():
-            print("VALIDATION ERRORS →", serializer.errors)
-            raise serializers.ValidationError(serializer.errors)
-
-        serializer.save(paziente=paziente)
-
-@method_decorator(catch_exceptions, name='dispatch')
-class NotaRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = NotaSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Nota.objects.filter(paziente_id=self.kwargs['paziente_pk'])
-
-
-# VIEW DIARIO CLINICO
-@method_decorator(catch_exceptions, name='dispatch')
-def normalize_datetime_for_sorting(date_value):
-    """
-    Normalizza date/datetime per il sorting gestendo timezone
-    """
-    if date_value is None:
-        return timezone.now().replace(year=1900)
-
-    if isinstance(date_value, date) and not isinstance(date_value, datetime):
-        dt = datetime.combine(date_value, datetime.min.time())
-    elif isinstance(date_value, datetime):
-        dt = date_value
-    else:
-        return timezone.now().replace(year=1900)
-
-    if timezone.is_aware(dt):
-        dt = timezone.localtime(dt).replace(tzinfo=None)
-
-    return dt
-
-class DiarioCLinicoView(LoginRequiredMixin,View):
-    def get(self, request, id):
-        dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user) 
-        persona = get_object_or_404(TabellaPazienti, id=id)
-
-        # Farmaci prescritti
-        farmaci = PrescrizioneFarmaco.objects.filter(paziente=persona).order_by('-data_prescrizione')
-
-        # Accertamenti (PrescrizioniEsami)
-        accertamenti = PrescrizioniEsami.objects.filter(paziente=persona).order_by('-data_visita')
-
-        # Prescrizioni libere
-        prescrizioni_libere = PrescrizioneLibera.objects.filter(persona=persona).order_by('-data_creazione')
-
-        # Visite/Appuntamenti
-        visite = Appointment.objects.filter(paziente=persona).order_by('-data')
-
-        # Unifica tutto in un'unica lista/dizionario per il diario
-        diario = []
-        for f in farmaci:
-            diario.append({
-                'tipo': 'Farmaco',
-                'data': f.data_prescrizione,
-                'descrizione': f.farmaco.nome_farmaco,
-                'diagnosi': f.diagnosi,
-                'nota': f.note_medico,
-            })
-        for a in accertamenti:
-            diario.append({
-                'tipo': 'Accertamento',
-                'data': a.data_visita,
-                'descrizione': a.esami_prescritti,
-                'diagnosi': '',
-                'nota': '',
-            })
-        for pl in prescrizioni_libere:
-            diario.append({
-                'tipo': 'PrescrizioneLibera',
-                'data': pl.data_creazione,
-                'descrizione': pl.testo,
-                'diagnosi': '',
-                'nota': '',
-            })
-        for v in visite:
-            diario.append({
-                'tipo': 'Visita',
-                'data': v.data,
-                'descrizione': v.tipologia_visita,
-                'diagnosi': '',
-                'nota': v.note,
-            })
-        
-
-        # Ordina per data decrescente
-        diario.sort(key=lambda x: x['data'], reverse=True)
-        print(diario)
-
-        context = {
-            'persona': persona,
-            'diario': diario,
-            # ... altri dati già presenti
-        }
-        return render(request, 'includes/cartellaPaziente.html', context)
-
 
 
 # VIEW STORICO
@@ -2332,13 +1513,6 @@ class EsamiView(View):
 
         return render(request, 'cartella_paziente/sezioni_storico/esami.html', context)
     
-
-
-
-
-from django.utils import timezone
-from django.contrib import messages
-from django.shortcuts import redirect
 
 @method_decorator(catch_exceptions, name='dispatch')
 class TerapiaView(View):
@@ -2446,8 +1620,6 @@ class TerapiaView(View):
 
         messages.error(request, "Richiesta non valida.")
         return redirect(request.path)
-
-
 
 # ELIMINA TERAPIA FUNZIONE
 @method_decorator(catch_exceptions, name='dispatch')
@@ -2751,7 +1923,6 @@ class AllegatiView(View):
         return render(request, "cartella_paziente/sezioni_storico/allegati.html", context)
 
 ## DOWNLOAD ALLEGATI
-from django.http import HttpResponseServerError
 
 @method_decorator(login_required, name='dispatch')
 class DownloadAllegatoView(View):
@@ -3090,7 +2261,6 @@ class DatiBaseView(LoginRequiredMixin,View):
     
 
         return render(request, "cartella_paziente/dati_base/dati_base.html", context)  
-
 
 ## SEZIONE ETA' METABOLICA
 @method_decorator(catch_exceptions, name='dispatch')
@@ -3470,7 +2640,6 @@ class RefertiComposizioneView(LoginRequiredMixin,View):
         }
 
         return render(request, 'cartella_paziente/eta_metabolica/elencoReferti.html', context)
-
 
 ## SEZIONE CAPACITA' VITALE
 @method_decorator(catch_exceptions, name='dispatch')
@@ -3893,27 +3062,6 @@ class StampaRefertoView(LoginRequiredMixin,View):
         }
 
         return render(request, "cartella_paziente/capacita_vitale/EtaVitale.html", context)
-
-
-# views.py (estratto) — ETA' BIOLOGICA (nuovo clock GBR)
-from django.shortcuts import render, get_object_or_404
-from django.views import View
-from django.utils.decorators import method_decorator
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-from .models import (
-    UtentiRegistratiCredenziali,
-    TabellaPazienti,
-    RefertiEtaBiologica,
-    DatiEstesiRefertiEtaBiologica,
-)
-
-# DOPO (coerente con BioVitalAge/funzioni_python/…)
-from .funzioni_python.decorators import catch_exceptions   
-from .funzioni_python.calcolo_score import calcola_score_organi, genera_report
-from .funzioni_python.biovitalage_wrapper import calculate_biological_age
-
 
 def safe_float(data, key, default=0.0):
     try:
@@ -4356,57 +3504,6 @@ class CalcolatoreRender(LoginRequiredMixin, View):
         messages.success(request, "Calcolo età biologica salvato correttamente.")
         return render(request, "cartella_paziente/orologi/orologi_home.html", context)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @method_decorator(catch_exceptions, name='dispatch')
 class ElencoRefertiView(LoginRequiredMixin,View):
 
@@ -4700,18 +3797,6 @@ class GrafiAndamentoBiologica(LoginRequiredMixin, View):
        
         return render(request, "cartella_paziente/eta_biologica/grafici.html", context)
 
-
-
-
-
-
-
-
-
-
-
-
-
 ## SEZIONE RESILIENZA
 @method_decorator(catch_exceptions, name='dispatch')
 class ResilienzaView(LoginRequiredMixin, View):
@@ -4817,8 +3902,6 @@ class ResilienzaView(LoginRequiredMixin, View):
         messages.success(request, f"Misurazione di resilienza salvata (ID {obj.id}).")
         return redirect('resilienza', persona_id=persona_id)
 
-
-
 ## SEZIONE PIANO TERAPEUTICO
 @method_decorator(catch_exceptions, name='dispatch')
 class PianoTerapeutico(LoginRequiredMixin,View):
@@ -4876,8 +3959,6 @@ class PrescrizioniView(LoginRequiredMixin,View):
         )
 
         return redirect('piano_terapeutico', persona_id)
-
-
 
 # TO DEFINE
 @method_decorator(catch_exceptions, name='dispatch')
@@ -4946,16 +4027,11 @@ class UpdatePersonaContactView(LoginRequiredMixin,View):
         }
         return render(request, "cartella_paziente/capacita_vitale/EtaVitale.html", context)
     
-
 @method_decorator(catch_exceptions, name='dispatch')
 class RefertoView(LoginRequiredMixin,View):
     def get(self, request, referto_id):
         referto = RefertiEtaBiologica.objects.get(id=referto_id)
         return render(request, 'cartella_paziente/eta_biologica//Referto.html', {'data_referto': referto.data_referto})
-
-
-
-
 
 ## SEZIONE MICROIDIOTA
 @method_decorator(catch_exceptions, name='dispatch')
@@ -5021,8 +4097,6 @@ class MicrobiotaAddView(LoginRequiredMixin, View):
 
         return render(request, "cartella_paziente/microbiota/microbiota.html" , context)
 
-
-
 def _clean_value_for_model(model_cls, field_name, raw_val):
     """
     Normalizza il valore in base al tipo campo del MODELLO:
@@ -5052,7 +4126,6 @@ def _clean_value_for_model(model_cls, field_name, raw_val):
 
     # Default: ritorna il valore così com'è
     return val
-
 
 @method_decorator(catch_exceptions, name='dispatch')
 class ElencoVisiteView(LoginRequiredMixin, View):
@@ -5158,16 +4231,6 @@ class ElencoVisiteView(LoginRequiredMixin, View):
         }
         return render(request, "cartella_paziente/visite.html", context)
 
-
-
-
-
-
-
-
-
-
-
 @method_decorator(catch_exceptions, name='dispatch')
 class GetVisitaView(LoginRequiredMixin, View):
     def get(self, request, visita_id):
@@ -5259,14 +4322,7 @@ class GetVisitaView(LoginRequiredMixin, View):
             "rh_factor": d(getattr(visita, "rh_factor", None)),
         }
         return JsonResponse(data, status=200)
-    
-
-
-
-
-
-
-
+   
 @method_decorator(catch_exceptions, name='dispatch')
 class OrologiView(LoginRequiredMixin, View):
     def get(self, request, persona_id):
@@ -5281,3 +4337,812 @@ class OrologiView(LoginRequiredMixin, View):
         }
 
         return render(request, "cartella_paziente/orologi/orologi_home.html", context)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#-----------------------------------------
+# ------ SEZIONE CARTELLA PAZIENTE -------
+#-----------------------------------------
+
+@method_decorator(catch_exceptions, name='dispatch')
+class CartellaPazienteView(LoginRequiredMixin, View):
+    """View che gestisce il rendering della cartella Paziente"""
+ 
+    def _get_role(self, request, id):
+        """Ritorna il ruolo dell'utente"""
+        role = get_user_role(request)
+        dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
+
+        viewset = PazienteViewSet()
+        viewset.request = request
+        persona = viewset.get_patient_info(id)
+
+        return persona, dottore, role
+
+    def _get_note(self, persona):
+        """Ritorna le note in ordine decrescente dell'utente"""
+        return Nota.objects.filter(paziente=persona).order_by('-created_at')
+
+    def _get_farmaci_base(self):
+        """Ritorna l'elenco dei farmaci"""
+        farmaci = Farmaco.objects.all()
+        paginator = Paginator(farmaci, 3)
+        return paginator
+
+    def _get_indicatori_base(self, viewset, paziente_id):
+        """Ritorna i dati estesi filtrati"""
+        return viewset.get_datiEstesi_filtered(paziente_id)
+
+    def _get_appuntamenti(self, persona):
+        """Ritorna lo storico appuntamenti"""
+        today = now().date()
+        storico = Appointment.objects.filter(
+            Q(nome_paziente__icontains=persona.name.strip()) |
+            Q(cognome_paziente__icontains=persona.surname.strip())
+        ).order_by('data', 'orario')
+
+        return {
+            'storico_appuntamenti': storico,
+            'totale_appuntamenti': storico.count(),
+            'ultimo_appuntamento': storico.filter(data__lt=today).last() or None,
+            'prossimo_appuntamento': storico.filter(data__gte=today).first() or None,
+        }
+
+    def _get_visite(self, request, persona):
+        """Ritorna l'elenco delle visite"""
+        visite_qs = (
+            Visita.objects
+            .filter(paziente=persona)
+            .select_related('paziente')
+            .order_by('-data_visita', '-visita_numero')
+        )
+        paginator = Paginator(visite_qs, 5)
+        page_number = request.GET.get('visite_page') or request.POST.get('visite_page')
+        visite_page = paginator.get_page(page_number)
+
+        visite_count = visite_qs.count()
+        ultima_visita = visite_qs.first()
+        prossimo_numero_visita = visite_count + 1
+
+        return {
+            'visite_qs': visite_qs,
+            'visite_page': visite_page,
+            'visite_count': visite_count,
+            'ultima_visita': ultima_visita,
+            'prossimo_numero_visita': prossimo_numero_visita,
+        }
+
+    def _get_prescrizioni_e_accertamenti(self, persona):
+        """Ritorna le prescrizioni e accertamenti"""
+        farmaci_prescritti = (
+            PrescrizioneFarmaco.objects
+            .filter(paziente=persona)
+            .select_related('farmaco', 'medico')
+            .order_by('-data_prescrizione')
+        )
+        accertamenti_qs = (
+            PrescrizioniEsami.objects
+            .filter(paziente=persona)
+            .order_by('-data_visita')
+        )
+        return farmaci_prescritti, accertamenti_qs
+
+    @staticmethod
+    def _to_aware(dt_val):
+        tz = timezone.get_current_timezone()
+        if isinstance(dt_val, date) and not isinstance(dt_val, datetime):
+            dt_val = datetime.combine(dt_val, datetime.min.time())
+        if timezone.is_naive(dt_val):
+            return timezone.make_aware(dt_val, tz)
+        return timezone.localtime(dt_val, tz)
+
+    def _build_diario(self, note_list, farmaci_prescritti, accertamenti_qs, visite_qs, request):
+        """Funzione che costruisce il diario clinico del paziente"""
+        diario = []
+
+        # Farmaci
+        for f in farmaci_prescritti:
+            diario.append({
+                'id': f.id,
+                'tipo': 'Farmaco',
+                'data': f.data_prescrizione,
+                'descrizione': f.farmaco.nome_farmaco,
+                'nome': f.farmaco.nome_farmaco,
+                'posologia': f.farmaco.dosaggio,
+                'diagnosi': f.diagnosi,
+                'nota': f.note_medico,
+            })
+
+        # Accertamenti
+        for a in accertamenti_qs:
+            diario.append({
+                'id': a.id,
+                'tipo': 'Accertamento',
+                'data': a.data_visita,
+                'descrizione': a.esami_prescritti,
+                'diagnosi': '',
+                'nota': '',
+            })
+
+        # Visite
+        for v in visite_qs:
+            diario.append({
+                'id': v.id,
+                'tipo': 'Visita',
+                'data': v.data_visita,
+                'descrizione': f"Visita n° {v.visita_numero}",
+                'diagnosi': '',
+                'nota': '',
+            })
+
+        # Note
+        for n in note_list:
+            diario.append({
+                'id': n.id,
+                'tipo': 'Nota',
+                'data': n.created_at,
+                'descrizione': n.titolo,
+                'diagnosi': '',
+                'nome': '',
+                'posologia': '',
+                'nota': n.contenuto,
+            })
+
+        # Normalizza date e ordina
+        for e in diario:
+            e['data'] = self._to_aware(e['data'])
+
+        diario.sort(key=lambda e: e['data'], reverse=True)
+        diario_full = list(diario)
+
+        paginator = Paginator(diario, 8)
+        diario_page_number = request.GET.get('diario_page') or request.POST.get('diario_page')
+        diario_page = paginator.get_page(diario_page_number)
+
+        return diario_page, diario_full
+
+    def _get_score_organi_e_bio(self, persona):
+        """Ritorna gli score degli organi"""
+
+        punteggi_organi, dettagli_organi, report_testuale, score_js = {}, {}, None, {}
+
+        # Referto "complesso" con dati estesi
+        ultimo_referto = persona.referti.order_by('-data_ora_creazione').first()
+
+        if ultimo_referto:
+            try:
+                dati = ultimo_referto.dati_estesi
+
+                organi_esami = {
+                    "Cuore": [
+                        "Colesterolo Totale", "Colesterolo LDL", "Colesterolo HDL", "Trigliceridi",
+                        "PCR", "NT-proBNP", "Omocisteina", "Glicemia", "Insulina",
+                        "HOMA Test", "IR Test", "Creatinina", "Stress Ossidativo", "Omega Screening"
+                    ],
+                    "Reni": ["Creatinina", "Azotemia", "Sodio", "Potassio", "Cloruri",
+                             "Fosforo", "Calcio", "Esame delle Urine"],
+                    "Fegato": [
+                        "Transaminasi GOT", "Transaminasi GPT", "Gamma-GT", "Bilirubina Totale",
+                        "Bilirubina Diretta", "Bilirubina Indiretta", "Fosfatasi Alcalina",
+                        "Albumina", "Proteine Totali"
+                    ],
+                    "Cervello": [
+                        "Omocisteina", "Vitamina B12", "Vitamina D", "DHEA", "TSH", "FT3",
+                        "FT4", "Omega-3 Index", "EPA", "DHA",
+                        "Stress Ossidativo dROMS", "Stress Ossidativo PAT", "Stress Ossidativo OSI REDOX"
+                    ],
+                    "Sistema Ormonale": [
+                        "TSH", "FT3", "FT4", "Insulina", "HOMA Test", "IR Test",
+                        "Glicemia", "DHEA", "Testosterone", "17B-Estradiolo",
+                        "Progesterone", "SHBG"
+                    ],
+                    "Sangue": [
+                        "Emocromo - Globuli Rossi", "Emocromo - Emoglobina", "Emocromo - Ematocrito",
+                        "Emocromo - MCV", "Emocromo - MCH", "Emocromo - MCHC", "Emocromo - RDW",
+                        "Emocromo - Globuli Bianchi", "Emocromo - Neutrofili", "Emocromo - Linfociti",
+                        "Emocromo - Monociti", "Emocromo - Eosinofili", "Emocromo - Basofili",
+                        "Emocromo - Piastrine", "Ferritina", "Sideremia", "Transferrina"
+                    ],
+                    "Sistema Immunitario": ["PCR", "Omocisteina", "TNF-A", "IL-6", "IL-10"],
+                }
+
+                TEST_FIELD_MAP = {
+                    "Colesterolo Totale": "tot_chol", "Colesterolo LDL": "ldl_chol", "Colesterolo HDL": "hdl_chol_m",
+                    "Trigliceridi": "trigl", "PCR": "pcr_c", "NT-proBNP": "nt_pro", "Omocisteina": "omocisteina",
+                    "Glicemia": "glicemy", "Insulina": "insulin", "HOMA Test": "homa", "IR Test": "ir",
+                    "Creatinina": "creatinine_m", "Stress Ossidativo": "osi",
+                    "Omega Screening": "o3o6_fatty_acid_quotient",
+                    "Azotemia": "azotemia", "Sodio": "na", "Potassio": "k", "Cloruri": "ci",
+                    "Fosforo": "p", "Calcio": "ca", "Esame delle Urine": "uro",
+                    "Transaminasi GOT": "got_m", "Transaminasi GPT": "gpt_m", "Gamma-GT": "g_gt_m",
+                    "Bilirubina Totale": "tot_bili", "Bilirubina Diretta": "direct_bili",
+                    "Bilirubina Indiretta": "indirect_bili",
+                    "Fosfatasi Alcalina": "a_photo_m", "Albumina": "albuminemia", "Proteine Totali": "tot_prot",
+                    "Vitamina B12": "v_b12", "Vitamina D": "v_d", "DHEA": "dhea_m", "TSH": "tsh",
+                    "FT3": "ft3", "FT4": "ft4", "Omega-3 Index": "o3_index", "EPA": "aa_epa",
+                    "DHA": "doco_acid",
+                    "Stress Ossidativo dROMS": "d_roms", "Stress Ossidativo PAT": "pat",
+                    "Stress Ossidativo OSI REDOX": "osi",
+                    "Testosterone": "testo_m", "17B-Estradiolo": "beta_es_m", "Progesterone": "prog_m",
+                    "SHBG": "shbg_m",
+                    "Emocromo - Globuli Rossi": "rbc", "Emocromo - Emoglobina": "hemoglobin",
+                    "Emocromo - Ematocrito": "hematocrit",
+                    "Emocromo - MCV": "mcv", "Emocromo - MCH": "mch", "Emocromo - MCHC": "mchc",
+                    "Emocromo - RDW": "rdw",
+                    "Emocromo - Globuli Bianchi": "wbc",
+                    "Emocromo - Neutrofili": "neutrophils_pct",
+                    "Emocromo - Linfociti": "lymphocytes_pct",
+                    "Emocromo - Monociti": "monocytes_pct",
+                    "Emocromo - Eosinofili": "eosinophils_pct",
+                    "Emocromo - Basofili": "basophils_pct",
+                    "Emocromo - Piastrine": "platelets",
+                    "Ferritina": "ferritin_m", "Sideremia": "sideremia",
+                    "Transferrina": "transferrin",
+                    "TNF-A": "tnf_a", "IL-6": "inter_6", "IL-10": "inter_10",
+                }
+
+                organi_valori = {
+                    organo: {test: getattr(dati, TEST_FIELD_MAP.get(test), None) for test in tests}
+                    for organo, tests in organi_esami.items()
+                }
+
+                valori_esami_raw = {
+                    test: val
+                    for vals in organi_valori.values()
+                    for test, val in vals.items()
+                    if val is not None
+                }
+
+                sesso_paziente = getattr(persona, 'sesso', None)
+                punteggi_organi, dettagli_organi = calcola_score_organi(valori_esami_raw, sesso_paziente)
+                score_js = {organo.replace(' ', '_'): valore for organo, valore in punteggi_organi.items()}
+                report_testuale = genera_report(punteggi_organi, dettagli_organi, mostrar_dettagli=False)
+
+            except Exception:
+                pass
+
+        # Età metabolica / referti bio
+        referti_eta = persona.referti_eta_metabolica.order_by('-data_referto')
+        ultimo_referto_eta = referti_eta.first() if referti_eta.exists() else None
+
+        punteggio_eta_metabolica = (
+            ultimo_referto_eta.punteggio_finale
+            if ultimo_referto_eta and ultimo_referto_eta.punteggio_finale is not None
+            else (ultimo_referto_eta.eta_metabolica if ultimo_referto_eta else None)
+        )
+
+        dati_estesi_ultimo_bio = (
+            DatiEstesiRefertiEtaBiologica.objects
+            .filter(referto=persona.referti.order_by('-data_referto').first())
+            .first()
+        )
+
+        return {
+            'referti_test_recenti': ultimo_referto,
+            'punteggi_organi': punteggi_organi,
+            'dettagli_organi': dettagli_organi,
+            'report_testuale': report_testuale,
+            'score': score_js,
+            'punteggio_eta_metabolica': punteggio_eta_metabolica,
+            'dati_estesi_ultimo_bio': dati_estesi_ultimo_bio,
+        }
+
+    def _get_diagnosi(self, persona):
+        """Ritorna l'elenco delle diagnosi"""
+        diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
+        problemi = diagnosi_list.values_list('problemi', flat=True)
+        rischi = diagnosi_list.values_list('rischi', flat=True)
+        return diagnosi_list, problemi, rischi
+
+    def _update_diario(self, request, id, data):
+        """Funzione per aggiornare il diario clinico"""
+        try:
+            entry_id = data.get('id')
+            diagnosi = data.get('diagnosi', '')
+            nota = data.get('nota', '')
+            prescrizione = PrescrizioneFarmaco.objects.filter(id=entry_id, paziente_id=id).first()
+            if prescrizione:
+                prescrizione.diagnosi = diagnosi
+                prescrizione.note_medico = nota
+                prescrizione.save()
+                return JsonResponse({'success': True})
+            return JsonResponse({'success': False, 'error': 'Voce diario non trovata'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    def _update_farmaco(self, request, id, data):
+        try:
+            prescrizione_id = data.get('id')
+            nome_farmaco = data.get('nome_farmaco', '')
+            dosaggio = data.get('dosaggio', '')
+            prescrizione = PrescrizioneFarmaco.objects.filter(id=prescrizione_id, paziente_id=id).first()
+            if not prescrizione:
+                return JsonResponse({'success': False, 'error': 'Prescrizione non trovata'}, status=404)
+            farmaco, created = Farmaco.objects.get_or_create(
+                nome_farmaco=nome_farmaco, defaults={'dosaggio': dosaggio}
+            )
+            if not created and dosaggio:
+                farmaco.dosaggio = dosaggio
+                farmaco.save()
+            prescrizione.farmaco = farmaco
+            prescrizione.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    def _update_prescrizione_libera(self, request, id, data):
+        try:
+            prescrizione_id = data.get('id')
+            testo = data.get('testo', '')
+            prescrizione = PrescrizioneLibera.objects.filter(id=prescrizione_id, persona_id=id).first()
+            if not prescrizione:
+                return JsonResponse({'success': False, 'error': 'Prescrizione libera non trovata'}, status=404)
+            prescrizione.testo = testo
+            prescrizione.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    def _build_context(self, request, persona, dottore, role):
+        """
+        Punto unico che costruisce il context per GET e per POST (dopo salvataggi).
+        """
+        note_list = self._get_note(persona)
+        farmaci_paginator = self._get_farmaci_base()
+        farmaci_page = farmaci_paginator.get_page(request.GET.get('page') or request.POST.get('page'))
+
+        viewset = PazienteViewSet()
+        viewset.request = request
+        lista_filtered_value = self._get_indicatori_base(viewset, persona.id)
+
+        appuntamenti_ctx = self._get_appuntamenti(persona)
+        visite_ctx = self._get_visite(request, persona)
+        farmaci_prescritti, accertamenti_qs = self._get_prescrizioni_e_accertamenti(persona)
+        diario_page, diario_full = self._build_diario(
+            note_list,
+            farmaci_prescritti,
+            accertamenti_qs,
+            visite_ctx['visite_qs'],
+            request,
+        )
+        score_ctx = self._get_score_organi_e_bio(persona)
+        diagnosi_list, problemi, rischi = self._get_diagnosi(persona)
+
+        ultimo_referto_capacita_vitale = persona.referti_test.order_by('-data_ora_creazione').first()
+
+        context = {
+            'persona': persona,
+            'dottore': dottore,
+            'dottori': UtentiRegistratiCredenziali.objects.all() if role else None,
+            'is_secretary': role == "secretary",
+
+            # appuntamenti
+            **appuntamenti_ctx,
+
+            # visite
+            **visite_ctx,
+
+            # farmaci (colonna destra)
+            'farmaci_page': farmaci_page,
+
+            # diario
+            'farmaci_prescritti': farmaci_prescritti,
+            'accertamenti_qs': accertamenti_qs,
+            'diario_page': diario_page,
+            'diario_full': diario_full,
+
+            # indicatori performance
+            "Salute_del_cuore": lista_filtered_value[0],
+            "Salute_del_rene": lista_filtered_value[1],
+            "Salute_epatica": lista_filtered_value[2],
+            "Salute_cerebrale": lista_filtered_value[3],
+            "Salute_ormonale": lista_filtered_value[4],
+            "Salute_del_sangue": lista_filtered_value[5],
+            "Salute_immunitario": lista_filtered_value[6],
+
+            # score e bio
+            **score_ctx,
+            'ultimo_referto_capacita_vitale': ultimo_referto_capacita_vitale,
+
+            # diagnosi
+            'diagnosi_list': diagnosi_list,
+            'problemi': problemi,
+            'rischi': rischi,
+
+            # note
+            'note_list': note_list,
+        }
+
+        return context
+
+    def get(self, request, id):
+        persona, dottore, role = self._get_role(request, id)
+        context = self._build_context(request, persona, dottore, role)
+        return render(request, "includes/cartellaPaziente.html", context)
+
+    def post(self, request, id):
+        persona = get_object_or_404(TabellaPazienti, id=id)
+        dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
+
+        def parse_italian_date(value):
+            try:
+                return datetime.strptime(value, "%d/%m/%Y").date()
+            except (ValueError, TypeError):
+                return None
+
+        action = request.POST.get('action')
+
+        # 0) Aggiornamento dati anagrafici paziente (btn-edit-dati)
+        if action == 'update_dati_paziente':
+            try:
+                # Campi base
+                persona.codice_fiscale = request.POST.get('codice_fiscale') or None
+                persona.residence = request.POST.get('residence') or None
+                persona.cap = request.POST.get('cap') or None
+                persona.province = request.POST.get('province') or None
+                persona.place_of_birth = request.POST.get('place_of_birth') or None
+                persona.gender = request.POST.get('gender') or None
+
+                # Data di nascita e calcolo età cronologica
+                dob_str = request.POST.get('dob')
+                dob_val = parse_italian_date(dob_str)
+                if dob_val:
+                    persona.dob = dob_val
+                    today = now().date()
+                    age = today.year - dob_val.year - (
+                        (today.month, today.day) < (dob_val.month, dob_val.day)
+                    )
+                    persona.chronological_age = age
+                else:
+                    # Se non è stata inserita/valida la data, uso l'età inserita a mano
+                    age_str = (request.POST.get('chronological_age') or '').strip()
+                    if age_str:
+                        try:
+                            persona.chronological_age = int(age_str)
+                        except (ValueError, TypeError):
+                            pass
+
+                persona.save()
+
+                role = get_user_role(request)
+                context = self._build_context(request, persona, dottore, role)
+                context["success_anagrafica"] = True
+                return render(request, "includes/cartellaPaziente.html", context)
+
+            except Exception as e:
+                role = get_user_role(request)
+                context = self._build_context(request, persona, dottore, role)
+                context["error_anagrafica"] = str(e)
+                return render(request, "includes/cartellaPaziente.html", context)
+
+        # 1) Salvataggio prescrizioni (AJAX o form normale)
+        if request.POST.get('action') == 'save_prescrizioni':
+            try:
+                items_json = request.POST.get('items', '[]')
+                items = json.loads(items_json)
+
+                data_inizio_str = request.POST.get('data_inizio') or ''
+                data_fine_str = request.POST.get('data_fine') or ''
+                diagnosi_val = request.POST.get('diagnosi') or ''
+                note_medico_val = request.POST.get('note_medico') or ''
+                posologia_pers = request.POST.get('posologia_personalizzata') or ''
+
+                data_inizio_val = parse_italian_date(data_inizio_str) or now().date()
+                data_fine_val = parse_italian_date(data_fine_str)
+
+                created_count = 0
+                skipped_count = 0
+
+                for it in items:
+                    codice = (it.get('codice') or '').strip()
+                    nome = (it.get('nome') or '').strip()
+                    dosaggio = (it.get('dosaggio') or '').strip()
+
+                    if not (codice or nome):
+                        skipped_count += 1
+                        continue
+
+                    farmaco = None
+                    if codice:
+                        farmaco = Farmaco.objects.filter(codice_univoco_farmaco=codice).first()
+
+                    if not farmaco and nome:
+                        farmaco = Farmaco.objects.filter(
+                            nome_farmaco__iexact=nome,
+                            dosaggio__iexact=dosaggio
+                        ).first()
+
+                    if not farmaco:
+                        gen_code = _make_platform_code(nome or 'Farmaco', dosaggio or '')
+                        farmaco = Farmaco.objects.create(
+                            codice_univoco_farmaco=gen_code,
+                            nome_farmaco=nome or 'Farmaco',
+                            principio_attivo=nome or 'N/A',
+                            dosaggio=dosaggio or ''
+                        )
+
+                    dup_qs = PrescrizioneFarmaco.objects.filter(
+                        paziente=persona,
+                        farmaco=farmaco,
+                        data_inizio=data_inizio_val,
+                    )
+                    if data_fine_val is None:
+                        dup_qs = dup_qs.filter(data_fine__isnull=True)
+                    else:
+                        dup_qs = dup_qs.filter(data_fine=data_fine_val)
+
+                    if dup_qs.exists():
+                        skipped_count += 1
+                        continue
+
+                    PrescrizioneFarmaco.objects.create(
+                        paziente=persona,
+                        medico=dottore,
+                        farmaco=farmaco,
+                        data_inizio=data_inizio_val,
+                        data_fine=data_fine_val,
+                        posologia_personalizzata=posologia_pers,
+                        note_medico=note_medico_val,
+                        diagnosi=diagnosi_val,
+                        stato='attiva'
+                    )
+                    created_count += 1
+
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'created': created_count,
+                        'skipped': skipped_count,
+                    })
+
+            except Exception as e:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': str(e)}, status=400)
+                messages.error(request, f"Errore nel salvataggio delle prescrizioni: {e}")
+
+        # 2) Gestione Diagnosi (nuova o update)
+        if request.POST.get('data_nuova_diagnosi') and request.POST.get('descrizione_nuova_diagnosi'):
+            try:
+                data_diagnosi = datetime.strptime(request.POST.get('data_nuova_diagnosi'), "%Y-%m-%d").date()
+                descrizione = request.POST.get('descrizione_nuova_diagnosi')
+                problemi = request.POST.get('problemi', '')
+                Diagnosi.objects.create(
+                    paziente=persona,
+                    descrizione=descrizione,
+                    data_diagnosi=data_diagnosi,
+                    problemi=problemi,
+                    stato='attiva',
+                    gravita=1,
+                    risolta=False
+                )
+            except Exception:
+                pass
+        else:
+            diagnosi_id = request.POST.get('diagnosi_id')
+            if diagnosi_id and diagnosi_id != '__new__':
+                problemi_val = request.POST.get('problemi')
+                rischi_val = request.POST.get('rischi')
+                data_diagnosi_val = request.POST.get('data_diagnosi')
+                note_diagnosi_val = request.POST.get('note_diagnosi')
+
+                try:
+                    diagnosi_obj = get_object_or_404(Diagnosi, id=diagnosi_id, paziente=persona)
+                    if problemi_val is not None:
+                        diagnosi_obj.problemi = problemi_val
+                    if rischi_val is not None:
+                        diagnosi_obj.rischi = rischi_val
+                    if data_diagnosi_val:
+                        parsed = parse_italian_date(data_diagnosi_val)
+                        if parsed:
+                            diagnosi_obj.data_diagnosi = parsed
+                    if note_diagnosi_val is not None:
+                        diagnosi_obj.note = note_diagnosi_val
+                    diagnosi_obj.save()
+                except Exception:
+                    pass
+
+        # Alla fine: ricarica la cartella paziente con il context completo
+        role = get_user_role(request)
+        context = self._build_context(request, persona, dottore, role)
+        context["success"] = True
+        return render(request, "includes/cartellaPaziente.html", context)
+
+
+
+
+
+
+
+
+
+@method_decorator(catch_exceptions, name='dispatch')
+class NotaListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = NotaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        paziente_id = self.kwargs['paziente_pk']
+        return Nota.objects.filter(paziente_id=paziente_id)
+
+    def perform_create(self, serializer):
+        paziente = get_object_or_404(TabellaPazienti, pk=self.kwargs['paziente_pk'])
+        serializer.save(paziente=paziente)
+
+@method_decorator(catch_exceptions, name='dispatch')
+class NotaRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = NotaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Nota.objects.filter(paziente_id=self.kwargs['paziente_pk'])
+
+@method_decorator(catch_exceptions, name='dispatch')
+class CartellaPazienteNote(LoginRequiredMixin, View):
+
+    def post(self, request, id):
+        persona = get_object_or_404(TabellaPazienti, id=id)
+        nota_id = request.POST.get('nota_id')
+        titolo = (request.POST.get('titolo_nota') or '').strip()
+        contenuto = (request.POST.get('contenuto_nota') or '').strip()
+
+        if not (titolo or contenuto):
+            messages.error(request, "Titolo o contenuto della nota obbligatori.")
+            return redirect('cartella_paziente', id=id)
+
+        if nota_id:
+            nota = get_object_or_404(Nota, id=nota_id, paziente=persona)
+            nota.titolo = titolo
+            nota.contenuto = contenuto
+            nota.save()
+            messages.success(request, 'Nota aggiornata con successo!')
+        else:
+            Nota.objects.create(paziente=persona, titolo=titolo, contenuto=contenuto)
+            messages.success(request, 'Nota creata con successo!')
+
+        return redirect('cartella_paziente', id=id)
+
+@method_decorator(catch_exceptions, name='dispatch')
+class CartellaPazienteProblemi(LoginRequiredMixin, View):
+    def post(self, request, id):
+        """
+        Aggiorna il campo 'problemi' dell'ultima diagnosi del paziente
+        e ritorna il template parziale della tabella diagnosi.
+        """
+        persona = get_object_or_404(TabellaPazienti, id=id)
+        problema_request = (request.POST.get('problemi') or '').strip()
+
+        if not problema_request:
+            diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
+            context = {
+                'persona': persona,
+                'diagnosi_list': diagnosi_list,
+                'errore': 'Nessun problema fornito.'
+            }
+            return render(request, "cartella_paziente/sezioni_storico/diagnosi.html", context)
+
+        diagnosi = Diagnosi.objects.filter(paziente=persona).order_by('-id').first()
+        if not diagnosi:
+            diagnosi = Diagnosi(paziente=persona, data_diagnosi=timezone.now().date())
+        elif not diagnosi.data_diagnosi:
+            diagnosi.data_diagnosi = timezone.now().date()
+
+        diagnosi.problemi = problema_request
+        diagnosi.save()
+
+        diagnosi_list = Diagnosi.objects.filter(paziente=persona).order_by('-data_diagnosi', '-id')
+
+        context = {
+            'persona': persona,
+            'diagnosi_list': diagnosi_list,
+            'success': True,
+        }
+        return render(request, "cartella_paziente/sezioni_storico/diagnosi.html", context)
+
+def normalize_datetime_for_sorting(date_value):
+    """
+    Normalizza date/datetime per il sorting gestendo timezone.
+    (Funzione generica, se ti serve altrove).
+    """
+    if date_value is None:
+        return timezone.now().replace(year=1900)
+
+    if isinstance(date_value, date) and not isinstance(date_value, datetime):
+        dt = datetime.combine(date_value, datetime.min.time())
+    elif isinstance(date_value, datetime):
+        dt = date_value
+    else:
+        return timezone.now().replace(year=1900)
+
+    if timezone.is_aware(dt):
+        dt = timezone.localtime(dt).replace(tzinfo=None)
+
+    return dt
+
+@method_decorator(catch_exceptions, name='dispatch')
+class DiarioCLinicoView(LoginRequiredMixin, View):
+    """
+    Se ti serve una view separata SOLO per il diario (timeline),
+    altrimenti puoi anche eliminarla se non viene usata nelle URL.
+    """
+
+    def get(self, request, id):
+        dottore = get_object_or_404(UtentiRegistratiCredenziali, user=request.user)
+        persona = get_object_or_404(TabellaPazienti, id=id)
+
+        farmaci = PrescrizioneFarmaco.objects.filter(paziente=persona).order_by('-data_prescrizione')
+        accertamenti = PrescrizioniEsami.objects.filter(paziente=persona).order_by('-data_visita')
+        prescrizioni_libere = PrescrizioneLibera.objects.filter(persona=persona).order_by('-data_creazione')
+        visite = Appointment.objects.filter(paziente=persona).order_by('-data')
+
+        diario = []
+        for f in farmaci:
+            diario.append({
+                'tipo': 'Farmaco',
+                'data': f.data_prescrizione,
+                'descrizione': f.farmaco.nome_farmaco,
+                'diagnosi': f.diagnosi,
+                'nota': f.note_medico,
+            })
+        for a in accertamenti:
+            diario.append({
+                'tipo': 'Accertamento',
+                'data': a.data_visita,
+                'descrizione': a.esami_prescritti,
+                'diagnosi': '',
+                'nota': '',
+            })
+        for pl in prescrizioni_libere:
+            diario.append({
+                'tipo': 'PrescrizioneLibera',
+                'data': pl.data_creazione,
+                'descrizione': pl.testo,
+                'diagnosi': '',
+                'nota': '',
+            })
+        for v in visite:
+            diario.append({
+                'tipo': 'Visita',
+                'data': v.data,
+                'descrizione': v.tipologia_visita,
+                'diagnosi': '',
+                'nota': v.note,
+            })
+
+        diario.sort(key=lambda x: normalize_datetime_for_sorting(x['data']), reverse=True)
+
+        context = {
+            'persona': persona,
+            'dottore': dottore,
+            'diario': diario,
+        }
+        return render(request, 'includes/cartellaPaziente.html', context)
